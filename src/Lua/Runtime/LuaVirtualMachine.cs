@@ -666,7 +666,10 @@ public static partial class LuaVirtualMachine
                         var va = stack.UnsafeGet(RA);
                         if (!va.TryRead<LuaFunction>(out var func))
                         {
-                            if (!va.TryGetMetamethod(Metamethods.Call, out var metamethod) && !metamethod.TryRead<LuaFunction>(out func))
+                            if (va.TryGetMetamethod(Metamethods.Call, out var metamethod) && metamethod.TryRead<LuaFunction>(out func))
+                            {   
+                            }
+                            else
                             {
                                 LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(state, chunk, pc), "call", metamethod);
                             }
