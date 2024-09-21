@@ -5,12 +5,12 @@ namespace Lua.Standard.Base;
 
 public sealed class GetMetatableFunction : LuaFunction
 {
-    public const string Name = "getmetatable";
+    public override string Name => "getmetatable";
     public static readonly GetMetatableFunction Instance = new();
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        ThrowIfArgumentNotExists(context, Name, 0);
+        ThrowIfArgumentNotExists(context, 0);
 
         var obj = context.Arguments[0];
 

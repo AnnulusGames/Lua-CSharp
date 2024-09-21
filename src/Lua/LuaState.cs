@@ -61,7 +61,7 @@ public sealed class LuaState
         return callStack.Peek();
     }
 
-    internal Tracebacks GetTracebacks()
+    public Tracebacks GetTracebacks()
     {
         return new()
         {

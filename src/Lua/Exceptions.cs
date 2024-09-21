@@ -68,12 +68,7 @@ public class LuaRuntimeException(Tracebacks tracebacks, string message) : LuaExc
         throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' ({string.Join(" or ", expected)} expected)");
     }
 
-    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName, LuaValueType expected)
-    {
-        throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got no value)");
-    }
-
-    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName, LuaValueType expected, LuaValueType actual)
+    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName, string expected, string actual)
     {
         throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got {actual})");
     }

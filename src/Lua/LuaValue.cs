@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Lua.Runtime;
 
 namespace Lua;
 
@@ -279,5 +280,59 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.UserData => referenceValue?.ToString(),
             _ => "",
         };
+    }
+
+    public static bool TryGetLuaValueType(Type type, out LuaValueType result)
+    {
+        if (type == typeof(double) || type == typeof(float) || type == typeof(int) || type == typeof(long))
+        {
+            result = LuaValueType.Number;
+            return true;
+        }
+        else if (type == typeof(bool))
+        {
+            result = LuaValueType.Boolean;
+            return true;
+        }
+        else if (type == typeof(string))
+        {
+            result = LuaValueType.String;
+            return true;
+        }
+        else if (type == typeof(LuaFunction) || type.IsSubclassOf(typeof(LuaFunction)))
+        {
+            result = LuaValueType.Function;
+            return true;
+        }
+        else if (type == typeof(LuaTable))
+        {
+            result = LuaValueType.Table;
+            return true;
+        }
+
+        result = default;
+        return false;
+    }
+
+    internal async ValueTask<int> CallToStringAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    {
+        if (this.TryGetMetamethod(Metamethods.ToString, out var metamethod))
+        {
+            if (!metamethod.TryRead<LuaFunction>(out var func))
+            {
+                LuaRuntimeException.AttemptInvalidOperation(context.State.GetTracebacks(), "call", metamethod);
+            }
+
+            context.State.Push(value);
+            return await func.InvokeAsync(context with
+            {
+                ArgumentCount = 1,
+            }, buffer, cancellationToken);
+        }
+        else
+        {
+            buffer.Span[0] = value.ToString()!;
+            return 1;
+        }
     }
 }

@@ -2,7 +2,7 @@ namespace Lua.Standard.Base;
 
 public sealed class ErrorFunction : LuaFunction
 {
-    public const string Name = "error";
+    public override string Name => "error";
     public static readonly ErrorFunction Instance = new();
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)

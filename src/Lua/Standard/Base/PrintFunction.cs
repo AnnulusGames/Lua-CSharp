@@ -1,11 +1,8 @@
-
-using Lua.Runtime;
-
 namespace Lua.Standard.Base;
 
 public sealed class PrintFunction : LuaFunction
 {
-    public const string Name = "print";
+    public override string Name => "print";
     public static readonly PrintFunction Instance = new();
 
     LuaValue[] buffer = new LuaValue[1];
@@ -14,7 +11,7 @@ public sealed class PrintFunction : LuaFunction
     {
         for (int i = 0; i < context.ArgumentCount; i++)
         {
-            await ToStringFunction.ToStringCore(context, context.Arguments[i], this.buffer, cancellationToken);
+            await context.Arguments[i].CallToStringAsync(context, this.buffer, cancellationToken);
             Console.Write(this.buffer[0]);
             Console.Write('\t');
         }
