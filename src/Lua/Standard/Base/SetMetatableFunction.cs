@@ -10,9 +10,9 @@ public sealed class SetMetatableFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = ReadArgument<LuaTable>(context, 0);
-
-        var arg1 = context.Arguments[1];
+        var arg0 = context.ReadArgument<LuaTable>(0);
+        var arg1 = context.ReadArgument(1);
+        
         if (arg1.Type is not (LuaValueType.Nil or LuaValueType.Table))
         {
             LuaRuntimeException.BadArgument(context.State.GetTracebacks(), 2, Name, [LuaValueType.Nil, LuaValueType.Table]);

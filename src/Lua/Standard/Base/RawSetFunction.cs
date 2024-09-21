@@ -8,9 +8,9 @@ public sealed class RawSetFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = ReadArgument<LuaTable>(context, 0);
-        var arg1 = ReadArgument(context, 1);
-        var arg2 = ReadArgument(context, 2);
+        var arg0 = context.ReadArgument<LuaTable>(0);
+        var arg1 = context.ReadArgument(1);
+        var arg2 = context.ReadArgument(2);
 
         arg0[arg1] = arg2;
         return new(0);

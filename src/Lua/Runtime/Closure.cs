@@ -23,6 +23,8 @@ public sealed class Closure : LuaFunction
     public Chunk Proto => proto;
     public ReadOnlySpan<UpValue> UpValues => upValues.AsSpan();
 
+    public override string Name => Proto.Name;
+
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.State.GetCurrentFrame(), buffer, cancellationToken);
