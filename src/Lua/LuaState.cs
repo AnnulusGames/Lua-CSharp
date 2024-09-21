@@ -13,10 +13,12 @@ public sealed class LuaState
 
     LuaTable environment;
     internal UpValue EnvUpValue { get; }
+    bool isRunning;
 
     internal LuaStack Stack => stack;
 
     public LuaTable Environment => environment;
+    public bool IsRunning => Volatile.Read(ref isRunning);
 
     public static LuaState Create()
     {
@@ -29,6 +31,29 @@ public sealed class LuaState
         EnvUpValue = UpValue.Closed(environment);
     }
 
+    public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
+    {
+        ThrowIfRunning();
+
+        Volatile.Write(ref isRunning, true);
+        try
+        {
+            return await new Closure(this, chunk).InvokeAsync(new()
+            {
+                State = this,
+                ArgumentCount = 0,
+                StackPosition = 0,
+                SourcePosition = null,
+                RootChunkName = chunk.Name ?? DefaultChunkName,
+                ChunkName = chunk.Name ?? DefaultChunkName,
+            }, buffer, cancellationToken);
+        }
+        finally
+        {
+            Volatile.Write(ref isRunning, false);
+        }
+    }
+
     public ReadOnlySpan<LuaValue> GetStackValues()
     {
         return stack.AsSpan();
@@ -36,13 +61,8 @@ public sealed class LuaState
 
     public void Push(LuaValue value)
     {
+        ThrowIfRunning();
         stack.Push(value);
-    }
-
-    internal void Reset()
-    {
-        stack.Clear();
-        callStack.Clear();
     }
 
     internal void PushCallStackFrame(CallStackFrame frame)
@@ -104,6 +124,14 @@ public sealed class LuaState
         for (int i = 0; i < span.Length; i++)
         {
             Console.WriteLine($"LuaStack [{i}]\t{span[i]}");
+        }
+    }
+
+    void ThrowIfRunning()
+    {
+        if (Volatile.Read(ref isRunning))
+        {
+            throw new InvalidOperationException("the lua state is currently running");
         }
     }
 }
