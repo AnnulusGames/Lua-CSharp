@@ -323,7 +323,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 LuaRuntimeException.AttemptInvalidOperation(context.State.GetTracebacks(), "call", metamethod);
             }
 
-            context.State.Push(value);
+            context.State.Push(this);
             return await func.InvokeAsync(context with
             {
                 ArgumentCount = 1,
@@ -331,7 +331,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         }
         else
         {
-            buffer.Span[0] = value.ToString()!;
+            buffer.Span[0] = ToString()!;
             return 1;
         }
     }
