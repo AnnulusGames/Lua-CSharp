@@ -48,4 +48,42 @@ internal static class MathEx
 
         return newSize;
     }
+
+    const long DBL_EXP_MASK = 0x7ff0000000000000L;
+    const int DBL_MANT_BITS = 52;
+    const long DBL_SGN_MASK = -1 - 0x7fffffffffffffffL;
+    const long DBL_MANT_MASK = 0x000fffffffffffffL;
+    const long DBL_EXP_CLR_MASK = DBL_SGN_MASK | DBL_MANT_MASK;
+
+    public static (double m, int e) Frexp(double d)
+    {
+        var bits = BitConverter.DoubleToInt64Bits(d);
+        var exp = (int)((bits & DBL_EXP_MASK) >> DBL_MANT_BITS);
+        var e = 0;
+
+        if (exp == 0x7ff || d == 0D)
+            d += d;
+        else
+        {
+            // Not zero and finite.
+            e = exp - 1022;
+            if (exp == 0)
+            {
+                // Subnormal, scale d so that it is in [1, 2).
+                d *= BitConverter.Int64BitsToDouble(0x4350000000000000L); // 2^54
+                bits = BitConverter.DoubleToInt64Bits(d);
+                exp = (int)((bits & DBL_EXP_MASK) >> DBL_MANT_BITS);
+                e = exp - 1022 - 54;
+            }
+            // Set exponent to -1 so that d is in [0.5, 1).
+            d = BitConverter.Int64BitsToDouble((bits & DBL_EXP_CLR_MASK) | 0x3fe0000000000000L);
+        }
+
+        return (d, e);
+    }
+
+    public static (int i, double f) Modf(double d)
+    {
+        return ((int)Math.Truncate(d), d % 1.0);
+    }
 }
