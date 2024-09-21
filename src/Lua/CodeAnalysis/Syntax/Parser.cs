@@ -545,7 +545,7 @@ public ref struct Parser
         {
             SyntaxTokenType.Identifier => enumerator.GetNext(true).Type switch
             {
-                SyntaxTokenType.LParen => ParseCallFunctionExpression(ref enumerator),
+                SyntaxTokenType.LParen or SyntaxTokenType.String => ParseCallFunctionExpression(ref enumerator),
                 SyntaxTokenType.LSquare or SyntaxTokenType.Dot or SyntaxTokenType.Colon => ParseTableAccessExpression(ref enumerator, null),
                 _ => new IdentifierNode(enumerator.Current.Text, enumerator.Current.Position),
             },
@@ -855,6 +855,11 @@ public ref struct Parser
 
     ExpressionNode[] ParseCallFunctionArguments(ref SyntaxTokenEnumerator enumerator)
     {
+        if (enumerator.Current.Type is SyntaxTokenType.String)
+        {
+            return [new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position)];
+        }
+
         // check and skip '('
         CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.LParen, out _);
 
