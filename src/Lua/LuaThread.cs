@@ -3,6 +3,7 @@ namespace Lua;
 public sealed class LuaThread
 {
     LuaThreadStatus status;
+    bool isProtectedMode;
     LuaState threadState;
     Task<int>? functionTask;
 
@@ -10,10 +11,12 @@ public sealed class LuaThread
     TaskCompletionSource<object?> yield = new();
 
     public LuaThreadStatus Status => status;
+    public bool IsProtectedMode => isProtectedMode;
     public LuaFunction Function { get; }
 
-    internal LuaThread(LuaState state, LuaFunction function)
+    internal LuaThread(LuaState state, LuaFunction function, bool isProtectedMode)
     {
+        this.isProtectedMode = isProtectedMode;
         threadState = state.CreateCoroutineState();
         Function = function;
         function.thread = this;
@@ -21,9 +24,18 @@ public sealed class LuaThread
 
     public async Task<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
-        if (status is LuaThreadStatus.Running or LuaThreadStatus.Dead)
+        if (status is LuaThreadStatus.Dead)
         {
-            throw new Exception(); // TODO:
+            if (IsProtectedMode)
+            {
+                buffer.Span[0] = false;
+                buffer.Span[1] = "cannot resume dead coroutine";
+                return 2;
+            }
+            else
+            {
+                throw new InvalidOperationException("cannot resume dead coroutine");
+            }
         }
 
         if (status is LuaThreadStatus.Normal)
@@ -63,10 +75,17 @@ public sealed class LuaThread
 
         if (!completedTask.IsCompletedSuccessfully)
         {
-            status = LuaThreadStatus.Dead;
-            buffer.Span[0] = false;
-            buffer.Span[1] = completedTask.Exception.InnerException.Message;
-            return 2;
+            if (IsProtectedMode)
+            {
+                status = LuaThreadStatus.Dead;
+                buffer.Span[0] = false;
+                buffer.Span[1] = completedTask.Exception.InnerException.Message;
+                return 2;
+            }
+            else
+            {
+                throw completedTask.Exception.InnerException;
+            }
         }
 
         if (completedTask == resumeTask)
@@ -94,7 +113,7 @@ public sealed class LuaThread
     {
         if (status is not LuaThreadStatus.Running)
         {
-            throw new Exception(); // TODO:
+            throw new InvalidOperationException("cannot call yield on a coroutine that is not currently running");
         }
 
         if (cancellationToken.IsCancellationRequested)

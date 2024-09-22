@@ -28,6 +28,10 @@ public abstract partial class LuaFunction
         {
             return await InvokeAsyncCore(context, buffer, cancellationToken);
         }
+        catch (Exception ex) when (ex is not LuaException)
+        {
+            throw new LuaRuntimeException(state.GetTracebacks(), ex.Message);
+        }
         finally
         {
             state.PopCallStackFrame();
