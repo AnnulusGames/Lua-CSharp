@@ -1,4 +1,5 @@
 using Lua.Standard.Base;
+using Lua.Standard.Coroutines;
 using Lua.Standard.Mathematics;
 
 namespace Lua.Standard;
@@ -69,5 +70,17 @@ public static class OpenLibExtensions
         }
 
         state.Environment["math"] = table;
+    }
+    
+    public static void OpenCoroutineLibrary(this LuaState state)
+    {
+        var table = new LuaTable(0, 6);
+        table[CoroutineCreateFunction.FunctionName] = new CoroutineCreateFunction();
+        table[CoroutineResumeFunction.FunctionName] = new CoroutineResumeFunction();
+        table[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
+        table[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
+        table[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
+
+        state.Environment["coroutine"] = table;
     }
 }

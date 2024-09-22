@@ -4,6 +4,11 @@ namespace Lua;
 
 public abstract partial class LuaFunction
 {
+    internal LuaThread? thread;
+    public LuaThread? Thread => thread;
+
+    public virtual string Name => GetType().Name;
+
     public async ValueTask<int> InvokeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var state = context.State;
@@ -29,6 +34,5 @@ public abstract partial class LuaFunction
         }
     }
 
-    public virtual string Name => GetType().Name;
     protected abstract ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken);
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Lua.Internal;
 using Lua.Runtime;
 
@@ -25,10 +26,21 @@ public sealed class LuaState
         return new();
     }
 
+    internal LuaState CreateCoroutineState()
+    {
+        return new LuaState(this);
+    }
+
     LuaState()
     {
         environment = new();
         EnvUpValue = UpValue.Closed(environment);
+    }
+
+    LuaState(LuaState parent)
+    {
+        environment = parent.Environment;
+        EnvUpValue = parent.EnvUpValue;
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -38,7 +50,8 @@ public sealed class LuaState
         Volatile.Write(ref isRunning, true);
         try
         {
-            return await new Closure(this, chunk).InvokeAsync(new()
+            var closure = new Closure(this, chunk);
+            return await closure.InvokeAsync(new()
             {
                 State = this,
                 ArgumentCount = 0,
@@ -59,6 +72,8 @@ public sealed class LuaState
         return stack.AsSpan();
     }
 
+    public int StackCount => stack.Count;
+
     public void Push(LuaValue value)
     {
         ThrowIfRunning();
@@ -74,6 +89,25 @@ public sealed class LuaState
     {
         var frame = callStack.Pop();
         stack.PopUntil(frame.Base);
+    }
+
+    internal ReadOnlySpan<CallStackFrame> GetCallStackSpan()
+    {
+        return callStack.AsSpan();
+    }
+
+    public bool TryGetCurrentThread([NotNullWhen(true)] out LuaThread? result)
+    {
+        var span = GetCallStackSpan();
+        
+        for (int i = 0; i < span.Length; i++)
+        {
+            result = span[i].Function.Thread;
+            if (result != null) return true;
+        }
+
+        result = default;
+        return false;
     }
 
     public CallStackFrame GetCurrentFrame()
