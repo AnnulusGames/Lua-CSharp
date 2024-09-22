@@ -37,6 +37,10 @@ public sealed class LuaThread
                 throw new InvalidOperationException("cannot resume dead coroutine");
             }
         }
+        else if (status is LuaThreadStatus.Running)
+        {
+            throw new InvalidOperationException("cannot resume running coroutine");
+        }
 
         if (status is LuaThreadStatus.Normal)
         {
