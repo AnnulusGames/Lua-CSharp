@@ -49,12 +49,24 @@ public static class OpenLibExtensions
 
     public static void OpenBasicLibrary(this LuaState state)
     {
+        // basic
         state.Environment["_G"] = state.Environment;
         state.Environment["_VERSION"] = "Lua 5.2";
         foreach (var func in baseFunctions)
         {
             state.Environment[func.Name] = func;
         }
+
+        // coroutine
+        var coroutine = new LuaTable(0, 6);
+        coroutine[CoroutineCreateFunction.FunctionName] = new CoroutineCreateFunction();
+        coroutine[CoroutineResumeFunction.FunctionName] = new CoroutineResumeFunction();
+        coroutine[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
+        coroutine[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
+        coroutine[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
+        coroutine[CoroutineWrapFunction.FunctionName] = new CoroutineWrapFunction();
+
+        state.Environment["coroutine"] = coroutine;
     }
 
     public static void OpenMathLibrary(this LuaState state)
@@ -70,18 +82,5 @@ public static class OpenLibExtensions
         }
 
         state.Environment["math"] = table;
-    }
-
-    public static void OpenCoroutineLibrary(this LuaState state)
-    {
-        var table = new LuaTable(0, 6);
-        table[CoroutineCreateFunction.FunctionName] = new CoroutineCreateFunction();
-        table[CoroutineResumeFunction.FunctionName] = new CoroutineResumeFunction();
-        table[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
-        table[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
-        table[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
-        table[CoroutineWrapFunction.FunctionName] = new CoroutineWrapFunction();
-
-        state.Environment["coroutine"] = table;
     }
 }
