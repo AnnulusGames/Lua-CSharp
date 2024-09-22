@@ -1,6 +1,6 @@
 namespace Lua;
 
-public enum LuaThreadStatus
+public enum LuaThreadStatus : byte
 {
     Normal,
     Suspended,
