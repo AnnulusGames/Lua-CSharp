@@ -27,14 +27,15 @@ public sealed class Closure : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.State.GetCurrentFrame(), buffer, cancellationToken);
+        return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.State.CurrentThread.GetCurrentFrame(), buffer, cancellationToken);
     }
 
     static UpValue GetUpValueFromDescription(LuaState state, Chunk proto, UpValueInfo description)
     {
         if (description.IsInRegister)
         {
-            return state.GetOrAddUpValue(state.GetCurrentFrame().Base + description.Index);
+            var thread = state.CurrentThread;
+            return state.GetOrAddUpValue(thread, thread.GetCurrentFrame().Base + description.Index);
         }
         else if (description.Index == -1) // -1 is global environment
         {

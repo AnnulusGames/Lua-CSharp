@@ -12,8 +12,14 @@ public readonly record struct LuaFunctionExecutionContext
     public string? RootChunkName { get; init; }
     public string? ChunkName { get; init; }
 
-    public int FrameBase => State.GetCurrentFrame().Base;
-    public ReadOnlySpan<LuaValue> Arguments => State.GetStackValues().Slice(FrameBase, ArgumentCount);
+    public ReadOnlySpan<LuaValue> Arguments
+    {
+        get
+        {
+            var thread = State.CurrentThread;
+            return thread.GetStackValues().Slice(thread.GetCurrentFrame().Base, ArgumentCount);
+        }
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public LuaValue ReadArgument(int index)
@@ -30,13 +36,14 @@ public readonly record struct LuaFunctionExecutionContext
         var arg = Arguments[index];
         if (!arg.TryRead<T>(out var argValue))
         {
+            var thread = State.CurrentThread;
             if (LuaValue.TryGetLuaValueType(typeof(T), out var type))
             {
-                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, State.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, thread.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
             }
             else
             {
-                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, State.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, thread.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
             }
         }
 
@@ -47,7 +54,7 @@ public readonly record struct LuaFunctionExecutionContext
     {
         if (ArgumentCount <= index)
         {
-            LuaRuntimeException.BadArgument(State.GetTracebacks(), index + 1, State.GetCurrentFrame().Function.Name);
+            LuaRuntimeException.BadArgument(State.GetTracebacks(), index + 1, State.CurrentThread.GetCurrentFrame().Function.Name);
         }
     }
 }

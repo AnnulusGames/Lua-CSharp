@@ -10,7 +10,7 @@ public sealed class CoroutineStatusFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = context.ReadArgument<LuaThread>(0);
-        buffer.Span[0] = thread.Status switch
+        buffer.Span[0] = thread.GetStatus() switch
         {
             LuaThreadStatus.Normal => "normal",
             LuaThreadStatus.Suspended => "suspended",
