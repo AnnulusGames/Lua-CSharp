@@ -85,15 +85,4 @@ public struct FastStackCore<T>
         array.AsSpan(0, tail).Clear();
         tail = 0;
     }
-
-    public void CopyTo(ref FastStackCore<T> destination)
-    {
-        if (destination.array.Length < array.Length)
-        {
-            Array.Resize(ref destination.array, array.Length);
-        }
-
-        array.AsSpan().CopyTo(destination.array);
-        destination.tail = tail;
-    }
 }

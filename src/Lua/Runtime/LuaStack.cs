@@ -94,13 +94,6 @@ public class LuaStack(int initialSize = 256)
 #endif
     }
 
-    public void CopyTo(LuaStack destination)
-    {
-        destination.EnsureCapacity(top);
-        array.AsSpan().CopyTo(destination.array);
-        destination.top = top;
-    }
-
     static void ThrowEmptyStack()
     {
         throw new InvalidOperationException("Empty stack");
