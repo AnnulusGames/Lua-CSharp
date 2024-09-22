@@ -1,13 +1,25 @@
+using System.Threading.Tasks.Sources;
+using Lua.Internal;
+
 namespace Lua;
 
-public sealed class LuaThread
+public sealed class LuaThread : IValueTaskSource<LuaThread.YieldContext>, IValueTaskSource<LuaThread.ResumeContext>
 {
+    struct YieldContext
+    {
+    }
+
+    struct ResumeContext
+    {
+        public LuaValue[] Results;
+    }
+
     LuaThreadStatus status;
     LuaState threadState;
-    Task<int>? functionTask;
+    ValueTask<int> functionTask;
 
-    TaskCompletionSource<LuaValue[]> resume = new();
-    TaskCompletionSource<object?> yield = new();
+    ManualResetValueTaskSourceCore<ResumeContext> resume;
+    ManualResetValueTaskSourceCore<YieldContext> yield;
 
     public LuaThreadStatus Status => status;
     public bool IsProtectedMode { get; }
@@ -21,7 +33,7 @@ public sealed class LuaThread
         function.SetCurrentThread(this);
     }
 
-    public async Task<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
+    public async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
         if (status is LuaThreadStatus.Dead)
         {
@@ -57,90 +69,136 @@ public sealed class LuaThread
                 ArgumentCount = context.ArgumentCount - 1,
                 ChunkName = Function.Name,
                 RootChunkName = context.RootChunkName,
-            }, buffer[1..], cancellationToken).AsTask();
+            }, buffer[1..], cancellationToken).Preserve();
         }
         else
         {
             status = LuaThreadStatus.Running;
+            yield.SetResult(new());
+        }
 
-            if (cancellationToken.IsCancellationRequested)
+        var resumeTask = new ValueTask<ResumeContext>(this, resume.Version);
+
+        CancellationTokenRegistration registration = default;
+        if (cancellationToken.CanBeCanceled)
+        {
+            registration = cancellationToken.UnsafeRegister(static x =>
             {
-                yield.TrySetCanceled();
+                var thread = (LuaThread)x!;
+                thread.yield.SetException(new OperationCanceledException());
+            }, this);
+        }
+
+        try
+        {
+            (var index, var result0, var result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
+
+            if (index == 0)
+            {
+                var results = result0.Results;
+
+                buffer.Span[0] = true;
+                for (int i = 0; i < results.Length; i++)
+                {
+                    buffer.Span[i + 1] = results[i];
+                }
+
+                return results.Length + 1;
             }
             else
             {
-                yield.TrySetResult(null);
+                status = LuaThreadStatus.Dead;
+                buffer.Span[0] = true;
+                return 1 + functionTask!.Result;
             }
         }
-
-        var resumeTask = resume.Task;
-        var completedTask = await Task.WhenAny(resumeTask, functionTask!);
-
-        if (!completedTask.IsCompletedSuccessfully)
+        catch (Exception ex) when (ex is not OperationCanceledException)
         {
             if (IsProtectedMode)
             {
                 status = LuaThreadStatus.Dead;
                 buffer.Span[0] = false;
-                buffer.Span[1] = completedTask.Exception.InnerException.Message;
+                buffer.Span[1] = ex.Message;
                 return 2;
             }
             else
             {
-                throw completedTask.Exception.InnerException;
+                throw;
             }
         }
-
-        if (completedTask == resumeTask)
+        finally
         {
-            resume = new();
-            var results = resumeTask.Result;
-
-            buffer.Span[0] = true;
-            for (int i = 0; i < results.Length; i++)
-            {
-                buffer.Span[i + 1] = results[i];
-            }
-
-            return results.Length + 1;
-        }
-        else
-        {
-            status = LuaThreadStatus.Dead;
-            buffer.Span[0] = true;
-            return 1 + functionTask!.Result;
+            registration.Dispose();
+            resume.Reset();
         }
     }
 
-    public async Task Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default)
+    public async ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default)
     {
         if (status is not LuaThreadStatus.Running)
         {
             throw new InvalidOperationException("cannot call yield on a coroutine that is not currently running");
         }
 
-        if (cancellationToken.IsCancellationRequested)
+        resume.SetResult(new()
         {
-            resume.TrySetCanceled();
-        }
-        else
-        {
-            resume.TrySetResult(context.Arguments.ToArray());
-        }
+            Results = context.Arguments.ToArray(),
+        });
 
         status = LuaThreadStatus.Suspended;
 
-RETRY:
+        CancellationTokenRegistration registration = default;
+        if (cancellationToken.CanBeCanceled)
+        {
+            registration = cancellationToken.UnsafeRegister(static x =>
+            {
+                var thread = (LuaThread)x!;
+                thread.yield.SetException(new OperationCanceledException());
+            }, this);
+        }
+
+    RETRY:
         try
         {
-            await yield.Task;
+            await new ValueTask<YieldContext>(this, yield.Version);
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
-            yield = new();
+            yield.Reset();
             goto RETRY;
         }
 
-        yield = new();
+        registration.Dispose();
+        yield.Reset();
+    }
+
+    YieldContext IValueTaskSource<YieldContext>.GetResult(short token)
+    {
+        return yield.GetResult(token);
+    }
+
+    ValueTaskSourceStatus IValueTaskSource<YieldContext>.GetStatus(short token)
+    {
+        return yield.GetStatus(token);
+    }
+
+    void IValueTaskSource<YieldContext>.OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
+    {
+        yield.OnCompleted(continuation, state, token, flags);
+    }
+
+    ResumeContext IValueTaskSource<ResumeContext>.GetResult(short token)
+    {
+        return resume.GetResult(token);
+    }
+
+    ValueTaskSourceStatus IValueTaskSource<ResumeContext>.GetStatus(short token)
+    {
+        return resume.GetStatus(token);
+    }
+
+    void IValueTaskSource<ResumeContext>.OnCompleted(Action<object?> continuation, object? state, short token, ValueTaskSourceOnCompletedFlags flags)
+    {
+        resume.OnCompleted(continuation, state, token, flags);
     }
 }
