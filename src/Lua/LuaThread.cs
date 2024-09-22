@@ -28,105 +28,112 @@ public sealed class LuaThread : IValueTaskSource<LuaThread.YieldContext>, IValue
     internal LuaThread(LuaState state, LuaFunction function, bool isProtectedMode)
     {
         IsProtectedMode = isProtectedMode;
-        threadState = state.CreateCoroutineState();
+        threadState = state;
         Function = function;
-        function.SetCurrentThread(this);
     }
 
     public async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
-        switch ((LuaThreadStatus)Volatile.Read(ref status))
+        context.State.ThreadStack.Push(this);
+        try
         {
-            case LuaThreadStatus.Normal:
-                Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
+            switch ((LuaThreadStatus)Volatile.Read(ref status))
+            {
+                case LuaThreadStatus.Normal:
+                    Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
 
-                // first argument is LuaThread object
-                for (int i = 0; i < context.ArgumentCount - 1; i++)
+                    // first argument is LuaThread object
+                    for (int i = 0; i < context.ArgumentCount - 1; i++)
+                    {
+                        threadState.Push(context.Arguments[i + 1]);
+                    }
+
+                    functionTask = Function.InvokeAsync(new()
+                    {
+                        State = threadState,
+                        ArgumentCount = context.ArgumentCount - 1,
+                        ChunkName = Function.Name,
+                        RootChunkName = context.RootChunkName,
+                    }, buffer[1..], cancellationToken).Preserve();
+
+                    break;
+                case LuaThreadStatus.Suspended:
+                    Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
+                    yield.SetResult(new());
+                    break;
+                case LuaThreadStatus.Running:
+                    throw new InvalidOperationException("cannot resume running coroutine");
+                case LuaThreadStatus.Dead:
+                    if (IsProtectedMode)
+                    {
+                        buffer.Span[0] = false;
+                        buffer.Span[1] = "cannot resume dead coroutine";
+                        return 2;
+                    }
+                    else
+                    {
+                        throw new InvalidOperationException("cannot resume dead coroutine");
+                    }
+            }
+
+            var resumeTask = new ValueTask<ResumeContext>(this, resume.Version);
+
+            CancellationTokenRegistration registration = default;
+            if (cancellationToken.CanBeCanceled)
+            {
+                registration = cancellationToken.UnsafeRegister(static x =>
                 {
-                    threadState.Push(context.Arguments[i + 1]);
+                    var thread = (LuaThread)x!;
+                    thread.yield.SetException(new OperationCanceledException());
+                }, this);
+            }
+
+            try
+            {
+                (var index, var result0, var result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
+
+                if (index == 0)
+                {
+                    var results = result0.Results;
+
+                    buffer.Span[0] = true;
+                    for (int i = 0; i < results.Length; i++)
+                    {
+                        buffer.Span[i + 1] = results[i];
+                    }
+
+                    return results.Length + 1;
                 }
-
-                functionTask = Function.InvokeAsync(new()
+                else
                 {
-                    State = threadState,
-                    ArgumentCount = context.ArgumentCount - 1,
-                    ChunkName = Function.Name,
-                    RootChunkName = context.RootChunkName,
-                }, buffer[1..], cancellationToken).Preserve();
-
-                break;
-            case LuaThreadStatus.Suspended:
-                Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
-                yield.SetResult(new());
-                break;
-            case LuaThreadStatus.Running:
-                throw new InvalidOperationException("cannot resume running coroutine");
-            case LuaThreadStatus.Dead:
+                    Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
+                    buffer.Span[0] = true;
+                    return 1 + functionTask!.Result;
+                }
+            }
+            catch (Exception ex) when (ex is not OperationCanceledException)
+            {
                 if (IsProtectedMode)
                 {
+                    Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
-                    buffer.Span[1] = "cannot resume dead coroutine";
+                    buffer.Span[1] = ex.Message;
                     return 2;
                 }
                 else
                 {
-                    throw new InvalidOperationException("cannot resume dead coroutine");
+                    throw;
                 }
-        }
-
-        var resumeTask = new ValueTask<ResumeContext>(this, resume.Version);
-
-        CancellationTokenRegistration registration = default;
-        if (cancellationToken.CanBeCanceled)
-        {
-            registration = cancellationToken.UnsafeRegister(static x =>
-            {
-                var thread = (LuaThread)x!;
-                thread.yield.SetException(new OperationCanceledException());
-            }, this);
-        }
-
-        try
-        {
-            (var index, var result0, var result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
-
-            if (index == 0)
-            {
-                var results = result0.Results;
-
-                buffer.Span[0] = true;
-                for (int i = 0; i < results.Length; i++)
-                {
-                    buffer.Span[i + 1] = results[i];
-                }
-
-                return results.Length + 1;
             }
-            else
+            finally
             {
-                Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
-                buffer.Span[0] = true;
-                return 1 + functionTask!.Result;
-            }
-        }
-        catch (Exception ex) when (ex is not OperationCanceledException)
-        {
-            if (IsProtectedMode)
-            {
-                Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
-                buffer.Span[0] = false;
-                buffer.Span[1] = ex.Message;
-                return 2;
-            }
-            else
-            {
-                throw;
+                registration.Dispose();
+                resume.Reset();
             }
         }
         finally
         {
-            registration.Dispose();
-            resume.Reset();
+            context.State.ThreadStack.Pop();
         }
     }
 

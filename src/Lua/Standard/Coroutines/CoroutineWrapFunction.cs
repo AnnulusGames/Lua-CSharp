@@ -10,7 +10,7 @@ public sealed class CoroutineWrapFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.ReadArgument<LuaFunction>(0);
-        var thread = new LuaThread(context.State, arg0, false);
+        var thread = context.State.CreateThread(arg0, false);
         buffer.Span[0] = new Wrapper(thread);
         return new(1);
     }

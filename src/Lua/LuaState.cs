@@ -8,17 +8,31 @@ public sealed class LuaState
 {
     public const string DefaultChunkName = "chunk";
 
-    LuaStack stack = new();
-    FastStackCore<CallStackFrame> callStack;
-    FastList<UpValue> openUpValues;
+    class GlobalState
+    {
+        public FastStackCore<LuaThread> threadStack;
+        public FastListCore<UpValue> openUpValues;
+        public readonly LuaTable environment;
+        public readonly UpValue envUpValue;
 
-    LuaTable environment;
-    internal UpValue EnvUpValue { get; }
+        public GlobalState(LuaState state)
+        {
+            environment = new();
+            envUpValue = UpValue.Closed(state, environment);
+        }
+    }
+
+    readonly GlobalState globalState;
+
+    readonly LuaStack stack = new();
+    FastStackCore<CallStackFrame> callStack;
     bool isRunning;
 
     internal LuaStack Stack => stack;
+    internal UpValue EnvUpValue => globalState.envUpValue;
+    internal ref FastStackCore<LuaThread> ThreadStack => ref globalState.threadStack;
 
-    public LuaTable Environment => environment;
+    public LuaTable Environment => globalState.environment;
     public bool IsRunning => Volatile.Read(ref isRunning);
 
     public static LuaState Create()
@@ -26,23 +40,14 @@ public sealed class LuaState
         return new();
     }
 
-    internal LuaState CreateCoroutineState()
-    {
-        return new LuaState(this);
-    }
-
     LuaState()
     {
-        environment = new();
-        EnvUpValue = UpValue.Closed(this, environment);
-        openUpValues = new();
+        globalState = new(this);
     }
 
     LuaState(LuaState parent)
     {
-        environment = parent.Environment;
-        EnvUpValue = parent.EnvUpValue;
-        openUpValues = parent.openUpValues;
+        globalState = parent.globalState;
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -98,18 +103,14 @@ public sealed class LuaState
         return callStack.AsSpan();
     }
 
+    public LuaThread CreateThread(LuaFunction function, bool isProtectedMode = true)
+    {
+        return new LuaThread(new LuaState(this), function, isProtectedMode);
+    }
+
     public bool TryGetCurrentThread([NotNullWhen(true)] out LuaThread? result)
     {
-        var span = GetCallStackSpan();
-
-        for (int i = 0; i < span.Length; i++)
-        {
-            result = span[i].Function.Thread;
-            if (result != null) return true;
-        }
-
-        result = default;
-        return false;
+        return ThreadStack.TryPeek(out result);
     }
 
     public CallStackFrame GetCurrentFrame()
@@ -127,7 +128,7 @@ public sealed class LuaState
 
     internal UpValue GetOrAddUpValue(int registerIndex)
     {
-        foreach (var upValue in openUpValues.AsSpan())
+        foreach (var upValue in globalState.openUpValues.AsSpan())
         {
             if (upValue.RegisterIndex == registerIndex && upValue.State == this)
             {
@@ -136,12 +137,13 @@ public sealed class LuaState
         }
 
         var newUpValue = UpValue.Open(this, registerIndex);
-        openUpValues.Add(newUpValue);
+        globalState.openUpValues.Add(newUpValue);
         return newUpValue;
     }
 
     internal void CloseUpValues(int frameBase)
     {
+        var openUpValues = globalState.openUpValues;
         for (int i = 0; i < openUpValues.Length; i++)
         {
             var upValue = openUpValues[i];
