@@ -303,7 +303,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitCallTableMethodExpressionNode(CallTableMethodExpressionNode node, ScopeCompilationContext context)
     {
-        CompileTableMethod(node, context, false, 1);
+        CompileTableMethod(node, context, false, -1);
         return true;
     }
 
@@ -487,7 +487,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitCallFunctionExpressionNode(CallFunctionExpressionNode node, ScopeCompilationContext context)
     {
-        CompileCallFunctionExpression(node, context, false, 1);
+        CompileCallFunctionExpression(node, context, false, -1);
         return true;
     }
 
