@@ -11,6 +11,7 @@ public enum LuaValueType : byte
     String,
     Number,
     Function,
+    Thread,
     UserData,
     Table,
 }
@@ -114,6 +115,22 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 {
                     break;
                 }
+            case LuaValueType.Thread:
+                if (t == typeof(LuaThread))
+                {
+                    var v = (LuaThread)referenceValue!;
+                    result = Unsafe.As<LuaThread, T>(ref v);
+                    return true;
+                }
+                else if (t == typeof(object))
+                {
+                    result = (T)referenceValue!;
+                    return true;
+                }
+                else
+                {
+                    break;
+                }
             case LuaValueType.UserData:
                 if (referenceValue is T userData)
                 {
@@ -187,6 +204,12 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         referenceValue = value;
     }
 
+    public LuaValue(LuaThread value)
+    {
+        type = LuaValueType.Thread;
+        referenceValue = value;
+    }
+
     public LuaValue(object? value)
     {
         type = LuaValueType.UserData;
@@ -218,6 +241,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(value);
     }
 
+    public static implicit operator LuaValue(LuaThread value)
+    {
+        return new(value);
+    }
+
     public override int GetHashCode()
     {
         var valueHash = type switch
@@ -227,6 +255,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.String => Read<string>().GetHashCode(),
             LuaValueType.Number => Read<double>().GetHashCode(),
             LuaValueType.Function => Read<LuaFunction>().GetHashCode(),
+            LuaValueType.Thread => Read<LuaThread>().GetHashCode(),
             LuaValueType.Table => Read<LuaTable>().GetHashCode(),
             LuaValueType.UserData => referenceValue == null ? 0 : referenceValue.GetHashCode(),
             _ => 0,
@@ -246,6 +275,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.String => Read<string>().Equals(other.Read<string>()),
             LuaValueType.Number => Read<double>().Equals(other.Read<double>()),
             LuaValueType.Function => Read<LuaFunction>().Equals(other.Read<LuaFunction>()),
+            LuaValueType.Thread => Read<LuaThread>().Equals(other.Read<LuaThread>()),
             LuaValueType.Table => Read<LuaTable>().Equals(other.Read<LuaTable>()),
             LuaValueType.UserData => referenceValue == other.referenceValue,
             _ => false,
@@ -276,6 +306,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.String => Read<string>().ToString(),
             LuaValueType.Number => Read<double>().ToString(),
             LuaValueType.Function => Read<LuaFunction>().ToString(),
+            LuaValueType.Thread => Read<LuaThread>().ToString(),
             LuaValueType.Table => Read<LuaTable>().ToString(),
             LuaValueType.UserData => referenceValue?.ToString(),
             _ => "",
@@ -307,6 +338,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         else if (type == typeof(LuaTable))
         {
             result = LuaValueType.Table;
+            return true;
+        }
+        else if (type == typeof(LuaThread))
+        {
+            result = LuaValueType.Thread;
             return true;
         }
 

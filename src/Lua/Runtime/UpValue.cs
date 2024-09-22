@@ -7,24 +7,26 @@ public sealed class UpValue
 {
     LuaValue value;
 
+    public LuaThread Thread { get; }
     public bool IsClosed { get; private set; }
     public int RegisterIndex { get; private set; }
 
-    UpValue()
+    UpValue(LuaThread thread)
     {
+        Thread = thread;
     }
 
-    public static UpValue Open(int registerIndex)
+    public static UpValue Open(LuaThread thread, int registerIndex)
     {
-        return new()
+        return new(thread)
         {
             RegisterIndex = registerIndex
         };
     }
 
-    public static UpValue Closed(LuaValue value)
+    public static UpValue Closed(LuaThread thread, LuaValue value)
     {
-        return new()
+        return new(thread)
         {
             IsClosed = true,
             value = value
@@ -32,7 +34,7 @@ public sealed class UpValue
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public LuaValue GetValue(LuaState state)
+    public LuaValue GetValue()
     {
         if (IsClosed)
         {
@@ -40,12 +42,12 @@ public sealed class UpValue
         }
         else
         {
-            return state.Stack.UnsafeGet(RegisterIndex);
+            return Thread.Stack.UnsafeGet(RegisterIndex);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void SetValue(LuaState state, LuaValue value)
+    public void SetValue(LuaValue value)
     {
         if (IsClosed)
         {
@@ -53,16 +55,16 @@ public sealed class UpValue
         }
         else
         {
-            state.Stack.UnsafeGet(RegisterIndex) = value;
+            Thread.Stack.UnsafeGet(RegisterIndex) = value;
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void Close(LuaState state)
+    public void Close()
     {
         if (!IsClosed)
         {
-            value = state.Stack.UnsafeGet(RegisterIndex);
+            value = Thread.Stack.UnsafeGet(RegisterIndex);
         }
 
         IsClosed = true;

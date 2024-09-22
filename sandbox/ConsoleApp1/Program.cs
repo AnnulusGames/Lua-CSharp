@@ -5,31 +5,59 @@ using Lua;
 using Lua.Standard;
 
 var state = LuaState.Create();
-state.OpenBaseLibrary();
+state.OpenBasicLibrary();
 
 try
 {
     var source =
-@"
-metatable = {
-    __add = function(a, b)
-        local t = { }
+"""
+-- メインコルーチンの定義
+local co_main = coroutine.create(function ()
+    print("Main coroutine starts")
 
-        for i = 1, #a do
-            t[i] = a[i] + b[i]
+    -- コルーチンAの定義
+    local co_a = coroutine.create(function()
+        for i = 1, 3 do
+            print("Coroutine A, iteration "..i)
+            coroutine.yield()
         end
+        print("Coroutine A ends")
+    end)
 
-        return t
+    --コルーチンBの定義
+    local co_b = coroutine.create(function()
+        print("Coroutine B starts")
+        coroutine.yield()-- 一時停止
+        print("Coroutine B resumes")
+    end)
+
+    -- コルーチンCの定義(コルーチンBを呼び出す)
+    local co_c = coroutine.create(function()
+        print("Coroutine C starts")
+        coroutine.resume(co_b)-- コルーチンBを実行
+        print("Coroutine C calls B and resumes")
+        coroutine.yield()-- 一時停止
+        print("Coroutine C resumes")
+    end)
+
+    -- コルーチンAとCの交互実行
+    for _ = 1, 2 do
+            coroutine.resume(co_a)
+        coroutine.resume(co_c)
     end
-}
 
-local a = { 1, 2, 3 }
-local b = { 4, 5, 6 }
+    -- コルーチンAを再開し完了させる
+    coroutine.resume(co_a)
 
-setmetatable(a, metatable)
+    -- コルーチンCを再開し完了させる
+    coroutine.resume(co_c)
 
-return a + b
-";
+    print("Main coroutine ends")
+end)
+
+--メインコルーチンを開始
+coroutine.resume(co_main)
+""";
 
     var syntaxTree = LuaSyntaxTree.Parse(source, "main.lua");
 

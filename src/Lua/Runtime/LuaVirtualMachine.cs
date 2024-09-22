@@ -8,7 +8,8 @@ public static partial class LuaVirtualMachine
 {
     internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, Closure closure, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var stack = state.Stack;
+        var thread = state.CurrentThread;
+        var stack = thread.Stack;
         var chunk = closure.Proto;
 
         for (var pc = 0; pc < chunk.Instructions.Length; pc++)
@@ -47,7 +48,7 @@ public static partial class LuaVirtualMachine
                     {
                         stack.EnsureCapacity(RA + 1);
                         var upValue = closure.UpValues[instruction.B];
-                        stack.UnsafeGet(RA) = upValue.GetValue(state);
+                        stack.UnsafeGet(RA) = upValue.GetValue();
                         stack.NotifyTop(RA + 1);
                         break;
                     }
@@ -56,7 +57,7 @@ public static partial class LuaVirtualMachine
                         stack.EnsureCapacity(RA + 1);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var upValue = closure.UpValues[instruction.B];
-                        var table = upValue.GetValue(state);
+                        var table = upValue.GetValue();
                         var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
                         stack.UnsafeGet(RA) = value;
                         stack.NotifyTop(RA + 1);
@@ -78,14 +79,14 @@ public static partial class LuaVirtualMachine
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
                         var upValue = closure.UpValues[instruction.A];
-                        var table = upValue.GetValue(state);
+                        var table = upValue.GetValue();
                         await SetTableValue(state, chunk, pc, table, vb, vc, cancellationToken);
                         break;
                     }
                 case OpCode.SetUpVal:
                     {
                         var upValue = closure.UpValues[instruction.B];
-                        upValue.SetValue(state, stack.UnsafeGet(RA));
+                        upValue.SetValue(stack.UnsafeGet(RA));
                         break;
                     }
                 case OpCode.SetTable:
@@ -498,7 +499,7 @@ public static partial class LuaVirtualMachine
                     pc += instruction.SBx;
                     if (instruction.A != 0)
                     {
-                        state.CloseUpValues(instruction.A);
+                        state.CloseUpValues(thread, instruction.A);
                     }
                     break;
                 case OpCode.Eq:
@@ -711,7 +712,7 @@ public static partial class LuaVirtualMachine
                     break;
                 case OpCode.TailCall:
                     {
-                        state.CloseUpValues(frame.Base);
+                        state.CloseUpValues(thread, frame.Base);
 
                         var va = stack.UnsafeGet(RA);
                         if (!va.TryRead<LuaFunction>(out var func))
@@ -736,7 +737,7 @@ public static partial class LuaVirtualMachine
                     }
                 case OpCode.Return:
                     {
-                        state.CloseUpValues(frame.Base);
+                        state.CloseUpValues(thread, frame.Base);
 
                         var retCount = instruction.B - 1;
 
@@ -880,7 +881,7 @@ public static partial class LuaVirtualMachine
 #endif
     static async ValueTask<LuaValue> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, CancellationToken cancellationToken)
     {
-        var stack = state.Stack;
+        var stack = state.CurrentThread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
         if (isTable && t.TryGetValue(key, out var result))
@@ -931,7 +932,7 @@ public static partial class LuaVirtualMachine
 #endif
     static async ValueTask SetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, CancellationToken cancellationToken)
     {
-        var stack = state.Stack;
+        var stack = state.CurrentThread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
         if (isTable && t.ContainsKey(key))
@@ -977,7 +978,7 @@ public static partial class LuaVirtualMachine
 
     static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaState state, LuaFunction function, Instruction instruction, int RA, bool isTailCall)
     {
-        var stack = state.Stack;
+        var stack = state.CurrentThread.Stack;
 
         var argumentCount = instruction.B - 1;
         if (instruction.B == 0)
@@ -991,7 +992,7 @@ public static partial class LuaVirtualMachine
         // Therefore, a call can be made without allocating new registers.
         if (isTailCall)
         {
-            var currentBase = state.GetCurrentFrame().Base;
+            var currentBase = state.CurrentThread.GetCurrentFrame().Base;
             var stackBuffer = stack.GetBuffer();
             stackBuffer.Slice(newBase, argumentCount).CopyTo(stackBuffer.Slice(currentBase, argumentCount));
             newBase = currentBase;
@@ -1031,15 +1032,15 @@ public static partial class LuaVirtualMachine
 
     static Tracebacks GetTracebacks(LuaState state, Chunk chunk, int pc)
     {
-        var frame = state.GetCurrentFrame();
-        state.PushCallStackFrame(frame with
+        var frame = state.CurrentThread.GetCurrentFrame();
+        state.CurrentThread.PushCallStackFrame(frame with
         {
             CallPosition = chunk.SourcePositions[pc],
             ChunkName = chunk.Name,
             RootChunkName = chunk.GetRoot().Name,
         });
         var tracebacks = state.GetTracebacks();
-        state.PopCallStackFrame();
+        state.CurrentThread.PopCallStackFrame();
 
         return tracebacks;
     }

@@ -29,7 +29,7 @@ internal static class LuaRuntimeExtensions
         buffer.AsSpan().Clear();
         try
         {
-            return await function.InvokeAsync(context, cancellationToken);
+            return await function.InvokeAsync(context, buffer, cancellationToken);
         }
         finally
         {

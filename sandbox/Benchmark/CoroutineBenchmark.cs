@@ -3,7 +3,7 @@ using Lua;
 using MoonSharp.Interpreter;
 
 [Config(typeof(BenchmarkConfig))]
-public class AddBenchmark
+public class CoroutineBenchmark
 {
     BenchmarkCore core = new();
     LuaValue[] buffer = new LuaValue[1];
@@ -11,7 +11,7 @@ public class AddBenchmark
     [GlobalSetup]
     public void GlobalSetup()
     {
-        core.Setup("add.lua");
+        core.Setup("coroutine.lua");
     }
 
     [Benchmark(Description = "MoonSharp (RunString)")]

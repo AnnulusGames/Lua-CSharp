@@ -7,18 +7,27 @@ public sealed class LuaState
 {
     public const string DefaultChunkName = "chunk";
 
-    LuaStack stack = new();
-    FastStackCore<CallStackFrame> callStack;
+    readonly LuaMainThread mainThread = new();
     FastListCore<UpValue> openUpValues;
-
-    LuaTable environment;
-    internal UpValue EnvUpValue { get; }
+    FastStackCore<LuaThread> threadStack;
+    readonly LuaTable environment;
+    readonly UpValue envUpValue;
     bool isRunning;
 
-    internal LuaStack Stack => stack;
+    internal UpValue EnvUpValue => envUpValue;
+    internal ref FastStackCore<LuaThread> ThreadStack => ref threadStack;
+    internal ref FastListCore<UpValue> OpenUpValues => ref openUpValues;
 
     public LuaTable Environment => environment;
-    public bool IsRunning => Volatile.Read(ref isRunning);
+    public LuaMainThread MainThread => mainThread;
+    public LuaThread CurrentThread
+    {
+        get
+        {
+            if (threadStack.TryPeek(out var thread)) return thread;
+            return mainThread;
+        }
+    }
 
     public static LuaState Create()
     {
@@ -28,7 +37,7 @@ public sealed class LuaState
     LuaState()
     {
         environment = new();
-        EnvUpValue = UpValue.Closed(environment);
+        envUpValue = UpValue.Closed(mainThread, environment);
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -38,7 +47,8 @@ public sealed class LuaState
         Volatile.Write(ref isRunning, true);
         try
         {
-            return await new Closure(this, chunk).InvokeAsync(new()
+            var closure = new Closure(this, chunk);
+            return await closure.InvokeAsync(new()
             {
                 State = this,
                 ArgumentCount = 0,
@@ -54,76 +64,50 @@ public sealed class LuaState
         }
     }
 
-    public ReadOnlySpan<LuaValue> GetStackValues()
-    {
-        return stack.AsSpan();
-    }
-
     public void Push(LuaValue value)
     {
         ThrowIfRunning();
-        stack.Push(value);
+        mainThread.Stack.Push(value);
     }
 
-    internal void PushCallStackFrame(CallStackFrame frame)
+    public LuaThread CreateThread(LuaFunction function, bool isProtectedMode = true)
     {
-        callStack.Push(frame);
-    }
-
-    internal void PopCallStackFrame()
-    {
-        var frame = callStack.Pop();
-        stack.PopUntil(frame.Base);
-    }
-
-    public CallStackFrame GetCurrentFrame()
-    {
-        return callStack.Peek();
+        return new LuaCoroutine(this, function, isProtectedMode);
     }
 
     public Tracebacks GetTracebacks()
     {
-        return new()
-        {
-            StackFrames = callStack.AsSpan()[1..].ToArray()
-        };
+        return MainThread.GetTracebacks();
     }
 
-    internal UpValue GetOrAddUpValue(int registerIndex)
+    internal UpValue GetOrAddUpValue(LuaThread thread, int registerIndex)
     {
         foreach (var upValue in openUpValues.AsSpan())
         {
-            if (upValue.RegisterIndex == registerIndex)
+            if (upValue.RegisterIndex == registerIndex && upValue.Thread == thread)
             {
                 return upValue;
             }
         }
 
-        var newUpValue = UpValue.Open(registerIndex);
+        var newUpValue = UpValue.Open(thread, registerIndex);
         openUpValues.Add(newUpValue);
         return newUpValue;
     }
 
-    internal void CloseUpValues(int frameBase)
+    internal void CloseUpValues(LuaThread thread, int frameBase)
     {
         for (int i = 0; i < openUpValues.Length; i++)
         {
             var upValue = openUpValues[i];
+            if (upValue.Thread != thread) continue;
+
             if (upValue.RegisterIndex >= frameBase)
             {
-                upValue.Close(this);
+                upValue.Close();
                 openUpValues.RemoveAtSwapback(i);
                 i--;
             }
-        }
-    }
-
-    internal void DumpStackValues()
-    {
-        var span = GetStackValues();
-        for (int i = 0; i < span.Length; i++)
-        {
-            Console.WriteLine($"LuaStack [{i}]\t{span[i]}");
         }
     }
 

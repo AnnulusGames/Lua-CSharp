@@ -1,4 +1,5 @@
 using Lua.Standard.Base;
+using Lua.Standard.Coroutines;
 using Lua.Standard.Mathematics;
 
 namespace Lua.Standard;
@@ -46,14 +47,26 @@ public static class OpenLibExtensions
         TanhFunction.Instance,
     ];
 
-    public static void OpenBaseLibrary(this LuaState state)
+    public static void OpenBasicLibrary(this LuaState state)
     {
+        // basic
         state.Environment["_G"] = state.Environment;
         state.Environment["_VERSION"] = "Lua 5.2";
         foreach (var func in baseFunctions)
         {
             state.Environment[func.Name] = func;
         }
+
+        // coroutine
+        var coroutine = new LuaTable(0, 6);
+        coroutine[CoroutineCreateFunction.FunctionName] = new CoroutineCreateFunction();
+        coroutine[CoroutineResumeFunction.FunctionName] = new CoroutineResumeFunction();
+        coroutine[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
+        coroutine[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
+        coroutine[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
+        coroutine[CoroutineWrapFunction.FunctionName] = new CoroutineWrapFunction();
+
+        state.Environment["coroutine"] = coroutine;
     }
 
     public static void OpenMathLibrary(this LuaState state)
