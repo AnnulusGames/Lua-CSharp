@@ -140,20 +140,4 @@ RETRY:
 
         yield = new();
     }
-
-    public Task<int> Close(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
-    {
-        if (status is LuaThreadStatus.Normal or LuaThreadStatus.Running)
-        {
-            throw new Exception(); // TODO:
-        }
-
-        threadState.CloseUpValues(0);
-        yield.TrySetCanceled();
-
-        status = LuaThreadStatus.Dead;
-
-        buffer.Span[0] = true;
-        return Task.FromResult(1);
-    }
 }
