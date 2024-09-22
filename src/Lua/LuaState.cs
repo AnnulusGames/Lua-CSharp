@@ -10,7 +10,7 @@ public sealed class LuaState
 
     LuaStack stack = new();
     FastStackCore<CallStackFrame> callStack;
-    FastListCore<UpValue> openUpValues;
+    FastList<UpValue> openUpValues;
 
     LuaTable environment;
     internal UpValue EnvUpValue { get; }
@@ -34,13 +34,15 @@ public sealed class LuaState
     LuaState()
     {
         environment = new();
-        EnvUpValue = UpValue.Closed(environment);
+        EnvUpValue = UpValue.Closed(this, environment);
+        openUpValues = new();
     }
 
     LuaState(LuaState parent)
     {
         environment = parent.Environment;
         EnvUpValue = parent.EnvUpValue;
+        openUpValues = parent.openUpValues;
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -99,7 +101,7 @@ public sealed class LuaState
     public bool TryGetCurrentThread([NotNullWhen(true)] out LuaThread? result)
     {
         var span = GetCallStackSpan();
-        
+
         for (int i = 0; i < span.Length; i++)
         {
             result = span[i].Function.Thread;
@@ -127,13 +129,13 @@ public sealed class LuaState
     {
         foreach (var upValue in openUpValues.AsSpan())
         {
-            if (upValue.RegisterIndex == registerIndex)
+            if (upValue.RegisterIndex == registerIndex && upValue.State == this)
             {
                 return upValue;
             }
         }
 
-        var newUpValue = UpValue.Open(registerIndex);
+        var newUpValue = UpValue.Open(this, registerIndex);
         openUpValues.Add(newUpValue);
         return newUpValue;
     }
@@ -143,9 +145,11 @@ public sealed class LuaState
         for (int i = 0; i < openUpValues.Length; i++)
         {
             var upValue = openUpValues[i];
+            if (upValue.State != this) continue;
+
             if (upValue.RegisterIndex >= frameBase)
             {
-                upValue.Close(this);
+                upValue.Close();
                 openUpValues.RemoveAtSwapback(i);
                 i--;
             }

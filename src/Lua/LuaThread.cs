@@ -3,7 +3,6 @@ namespace Lua;
 public sealed class LuaThread
 {
     LuaThreadStatus status;
-    bool isProtectedMode;
     LuaState threadState;
     Task<int>? functionTask;
 
@@ -11,15 +10,15 @@ public sealed class LuaThread
     TaskCompletionSource<object?> yield = new();
 
     public LuaThreadStatus Status => status;
-    public bool IsProtectedMode => isProtectedMode;
+    public bool IsProtectedMode { get; }
     public LuaFunction Function { get; }
 
     internal LuaThread(LuaState state, LuaFunction function, bool isProtectedMode)
     {
-        this.isProtectedMode = isProtectedMode;
+        IsProtectedMode = isProtectedMode;
         threadState = state.CreateCoroutineState();
         Function = function;
-        function.thread = this;
+        function.SetCurrentThread(this);
     }
 
     public async Task<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)

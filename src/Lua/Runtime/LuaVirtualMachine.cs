@@ -47,7 +47,7 @@ public static partial class LuaVirtualMachine
                     {
                         stack.EnsureCapacity(RA + 1);
                         var upValue = closure.UpValues[instruction.B];
-                        stack.UnsafeGet(RA) = upValue.GetValue(state);
+                        stack.UnsafeGet(RA) = upValue.GetValue();
                         stack.NotifyTop(RA + 1);
                         break;
                     }
@@ -56,7 +56,7 @@ public static partial class LuaVirtualMachine
                         stack.EnsureCapacity(RA + 1);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var upValue = closure.UpValues[instruction.B];
-                        var table = upValue.GetValue(state);
+                        var table = upValue.GetValue();
                         var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
                         stack.UnsafeGet(RA) = value;
                         stack.NotifyTop(RA + 1);
@@ -78,14 +78,14 @@ public static partial class LuaVirtualMachine
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
                         var upValue = closure.UpValues[instruction.A];
-                        var table = upValue.GetValue(state);
+                        var table = upValue.GetValue();
                         await SetTableValue(state, chunk, pc, table, vb, vc, cancellationToken);
                         break;
                     }
                 case OpCode.SetUpVal:
                     {
                         var upValue = closure.UpValues[instruction.B];
-                        upValue.SetValue(state, stack.UnsafeGet(RA));
+                        upValue.SetValue(stack.UnsafeGet(RA));
                         break;
                     }
                 case OpCode.SetTable:

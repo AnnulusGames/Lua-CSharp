@@ -4,8 +4,13 @@ namespace Lua;
 
 public abstract partial class LuaFunction
 {
-    internal LuaThread? thread;
+    LuaThread? thread;
     public LuaThread? Thread => thread;
+
+    internal void SetCurrentThread(LuaThread thread)
+    {
+        this.thread = thread;
+    }
 
     public virtual string Name => GetType().Name;
 

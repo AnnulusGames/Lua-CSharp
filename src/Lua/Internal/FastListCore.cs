@@ -85,12 +85,10 @@ public struct FastListCore<T>
         AsSpan().CopyTo(destination.AsSpan());
     }
 
-    public readonly T this[int index]
+    public ref T this[int index]
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => array![index];
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        set => array![index] = value;
+        get => ref array![index];
     }
 
     public readonly int Length
