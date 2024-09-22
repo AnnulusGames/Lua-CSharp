@@ -10,7 +10,7 @@ public class MetatableTests
     public void SetUp()
     {
         state = LuaState.Create();
-        state.OpenBaseLibrary();
+        state.OpenBasicLibrary();
     }
 
     [Test]

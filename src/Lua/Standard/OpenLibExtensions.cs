@@ -47,7 +47,7 @@ public static class OpenLibExtensions
         TanhFunction.Instance,
     ];
 
-    public static void OpenBaseLibrary(this LuaState state)
+    public static void OpenBasicLibrary(this LuaState state)
     {
         state.Environment["_G"] = state.Environment;
         state.Environment["_VERSION"] = "Lua 5.2";
@@ -71,7 +71,7 @@ public static class OpenLibExtensions
 
         state.Environment["math"] = table;
     }
-    
+
     public static void OpenCoroutineLibrary(this LuaState state)
     {
         var table = new LuaTable(0, 6);
