@@ -565,15 +565,26 @@ public ref struct Parser
 
         if (result == null) return false;
 
+        // table access
+        enumerator.SkipEoL();
+        
+        var nextType = enumerator.GetNext().Type;
+        if (nextType is SyntaxTokenType.LSquare or SyntaxTokenType.Dot or SyntaxTokenType.Colon)
+        {
+            MoveNextWithValidation(ref enumerator);
+            result = ParseTableAccessExpression(ref enumerator, result);
+        }
+
+        // binary expression
         while (true)
         {
-            enumerator.SkipEoL();
-
             var opPrecedence = GetPrecedence(enumerator.GetNext().Type);
             if (precedence >= opPrecedence) break;
 
             MoveNextWithValidation(ref enumerator);
             result = ParseBinaryExpression(ref enumerator, opPrecedence, result);
+
+            enumerator.SkipEoL();
         }
 
         return true;
@@ -877,10 +888,10 @@ public ref struct Parser
 
             MoveNextWithValidation(ref enumerator);
             enumerator.SkipEoL();
-        }
 
-        // check ')'
-        CheckCurrent(ref enumerator, SyntaxTokenType.RParen);
+            // check ')'
+            CheckCurrent(ref enumerator, SyntaxTokenType.RParen);
+        }
 
         return arguments;
     }
