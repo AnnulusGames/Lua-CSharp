@@ -80,6 +80,7 @@ public static class OpenLibExtensions
         table[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
         table[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
         table[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
+        table[CoroutineWrapFunction.FunctionName] = new CoroutineWrapFunction();
 
         state.Environment["coroutine"] = table;
     }
