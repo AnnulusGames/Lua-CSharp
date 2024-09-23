@@ -18,5 +18,6 @@ public static class Metamethods
     public const string Le = "__le";
     public const string Call = "__call";
     public const string Concat = "__concat";
+    public const string IPairs = "__ipairs";
     public new const string ToString = "__tostring";
 }
