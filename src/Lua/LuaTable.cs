@@ -111,7 +111,7 @@ public sealed class LuaTable
             if (index > 0 && index <= array.Length)
             {
                 value = array[index - 1];
-                return true;
+                return value.Type is not LuaValueType.Nil;
             }
         }
 
