@@ -299,7 +299,6 @@ public ref struct Lexer
         {
             var quote = c1;
             var stringStartOffset = offset;
-            Advance(1);
 
             while (span.Length > offset)
             {

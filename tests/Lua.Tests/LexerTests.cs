@@ -67,6 +67,7 @@ public class LexerTests
     }
 
     [Test]
+    [TestCase("\"\"")]
     [TestCase("\"hello\"")]
     [TestCase("\"1.23\"")]
     [TestCase("\"1-2-3-4-5\"")]

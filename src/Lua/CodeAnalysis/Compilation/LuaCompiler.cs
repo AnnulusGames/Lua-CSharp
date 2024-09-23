@@ -79,11 +79,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     // vararg
     public bool VisitVariableArgumentsExpressionNode(VariableArgumentsExpressionNode node, ScopeCompilationContext context)
     {
-        CompileVariableArgumentsExpression(node, context);
+        CompileVariableArgumentsExpression(node, context, 1);
         return true;
     }
 
-    void CompileVariableArgumentsExpression(VariableArgumentsExpressionNode node, ScopeCompilationContext context, int resultCount = -1)
+    void CompileVariableArgumentsExpression(VariableArgumentsExpressionNode node, ScopeCompilationContext context, int resultCount)
     {
         context.PushInstruction(Instruction.VarArg(context.StackPosition, (ushort)(resultCount == -1 ? 0 : resultCount + 1)), node.Position, true);
     }
@@ -213,16 +213,32 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                     case ListTableConstructorField listItem:
                         context.StackPosition = (byte)(p + currentArrayChunkSize - 50 * (arrayBlock - 1));
 
-                        listItem.Expression.Accept(this, context);
-
                         // For the last element, we need to take into account variable arguments and multiple return values.
                         if (listItem == lastField)
                         {
+                            switch (listItem.Expression)
+                            {
+                                case CallFunctionExpressionNode call:
+                                    CompileCallFunctionExpression(call, context, false, -1);
+                                    break;
+                                case CallTableMethodExpressionNode method:
+                                    CompileTableMethod(method, context, false, -1);
+                                    break;
+                                case VariableArgumentsExpressionNode varArg:
+                                    CompileVariableArgumentsExpression(varArg, context, -1);
+                                    break;
+                                default:
+                                    listItem.Expression.Accept(this, context);
+                                    break;
+                            }
+
                             context.PushInstruction(Instruction.SetList(tableRegisterIndex, 0, arrayBlock), listItem.Position);
                             currentArrayChunkSize = 0;
                         }
                         else
                         {
+                            listItem.Expression.Accept(this, context);
+
                             currentArrayChunkSize++;
 
                             if (currentArrayChunkSize == 50)
