@@ -1,4 +1,4 @@
-using Lua.Standard.Base;
+using Lua.Standard.Basic;
 using Lua.Standard.Coroutines;
 using Lua.Standard.Mathematics;
 

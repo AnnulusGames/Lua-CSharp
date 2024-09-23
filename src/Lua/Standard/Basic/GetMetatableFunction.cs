@@ -1,7 +1,7 @@
 
 using Lua.Runtime;
 
-namespace Lua.Standard.Base;
+namespace Lua.Standard.Basic;
 
 public sealed class GetMetatableFunction : LuaFunction
 {
@@ -11,7 +11,7 @@ public sealed class GetMetatableFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.ReadArgument(0);
-        
+
         if (arg0.TryRead<LuaTable>(out var table))
         {
             if (table.Metatable == null)

@@ -1,4 +1,4 @@
-namespace Lua.Standard.Base;
+namespace Lua.Standard.Basic;
 
 public sealed class ErrorFunction : LuaFunction
 {

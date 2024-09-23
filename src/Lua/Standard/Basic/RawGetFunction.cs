@@ -1,5 +1,5 @@
 
-namespace Lua.Standard.Base;
+namespace Lua.Standard.Basic;
 
 public sealed class RawGetFunction : LuaFunction
 {
