@@ -20,7 +20,7 @@ public sealed class RawLenFunction : LuaFunction
         }
         else
         {
-            LuaRuntimeException.BadArgument(context.State.GetTracebacks(), 2, Name, [LuaValueType.String, LuaValueType.Table]);
+            LuaRuntimeException.BadArgument(context.State.GetTraceback(), 2, Name, [LuaValueType.String, LuaValueType.Table]);
         }
 
         return new(1);

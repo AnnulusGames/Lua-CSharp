@@ -15,12 +15,12 @@ public sealed class SetMetatableFunction : LuaFunction
 
         if (arg1.Type is not (LuaValueType.Nil or LuaValueType.Table))
         {
-            LuaRuntimeException.BadArgument(context.State.GetTracebacks(), 2, Name, [LuaValueType.Nil, LuaValueType.Table]);
+            LuaRuntimeException.BadArgument(context.State.GetTraceback(), 2, Name, [LuaValueType.Nil, LuaValueType.Table]);
         }
 
         if (arg0.Metatable != null && arg0.Metatable.TryGetValue(Metamethods.Metatable, out _))
         {
-            throw new LuaRuntimeException(context.State.GetTracebacks(), "cannot change a protected metatable");
+            throw new LuaRuntimeException(context.State.GetTraceback(), "cannot change a protected metatable");
         }
         else if (arg1.Type is LuaValueType.Nil)
         {

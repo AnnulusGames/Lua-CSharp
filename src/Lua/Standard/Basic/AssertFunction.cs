@@ -17,7 +17,7 @@ public sealed class AssertFunction : LuaFunction
                 message = context.ReadArgument<string>(1);
             }
 
-            throw new LuaAssertionException(context.State.GetTracebacks(), message);
+            throw new LuaAssertionException(context.State.GetTraceback(), message);
         }
 
         return new(0);

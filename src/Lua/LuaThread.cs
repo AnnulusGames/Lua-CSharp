@@ -24,7 +24,7 @@ public abstract class LuaThread
         return stack.AsSpan();
     }
 
-    internal Tracebacks GetTracebacks()
+    internal Traceback GetTraceback()
     {
         return new()
         {

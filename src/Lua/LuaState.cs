@@ -74,9 +74,9 @@ public sealed class LuaState
         return new LuaCoroutine(this, function, isProtectedMode);
     }
 
-    public Tracebacks GetTracebacks()
+    public Traceback GetTraceback()
     {
-        return MainThread.GetTracebacks();
+        return MainThread.GetTraceback();
     }
 
     internal UpValue GetOrAddUpValue(LuaThread thread, int registerIndex)

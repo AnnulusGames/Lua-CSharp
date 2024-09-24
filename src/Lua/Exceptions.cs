@@ -44,39 +44,39 @@ public class LuaParseException(string? chunkName, SourcePosition position, strin
     public override string Message => $"{ChunkName ?? "<anonymous.lua>"}:{(Position == null ? "" : $"{Position.Value}:")} {base.Message}";
 }
 
-public class LuaRuntimeException(Tracebacks tracebacks, string message) : LuaException(message)
+public class LuaRuntimeException(Traceback traceback, string message) : LuaException(message)
 {
-    public Tracebacks Tracebacks { get; } = tracebacks;
+    public Traceback Traceback { get; } = traceback;
 
-    public static void AttemptInvalidOperation(Tracebacks tracebacks, string op, LuaValue a, LuaValue b)
+    public static void AttemptInvalidOperation(Traceback traceback, string op, LuaValue a, LuaValue b)
     {
-        throw new LuaRuntimeException(tracebacks, $"attempt to {op} a '{a.Type}' with a '{b.Type}'");
+        throw new LuaRuntimeException(traceback, $"attempt to {op} a '{a.Type}' with a '{b.Type}'");
     }
 
-    public static void AttemptInvalidOperation(Tracebacks tracebacks, string op, LuaValue a)
+    public static void AttemptInvalidOperation(Traceback traceback, string op, LuaValue a)
     {
-        throw new LuaRuntimeException(tracebacks, $"attempt to {op} a '{a.Type}' value");
+        throw new LuaRuntimeException(traceback, $"attempt to {op} a '{a.Type}' value");
     }
 
-    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName)
+    public static void BadArgument(Traceback traceback, int argumentId, string functionName)
     {
-        throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' (value expected)");
+        throw new LuaRuntimeException(traceback, $"bad argument #{argumentId} to '{functionName}' (value expected)");
     }
 
-    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName, LuaValueType[] expected)
+    public static void BadArgument(Traceback traceback, int argumentId, string functionName, LuaValueType[] expected)
     {
-        throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' ({string.Join(" or ", expected)} expected)");
+        throw new LuaRuntimeException(traceback, $"bad argument #{argumentId} to '{functionName}' ({string.Join(" or ", expected)} expected)");
     }
 
-    public static void BadArgument(Tracebacks tracebacks, int argumentId, string functionName, string expected, string actual)
+    public static void BadArgument(Traceback traceback, int argumentId, string functionName, string expected, string actual)
     {
-        throw new LuaRuntimeException(tracebacks, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got {actual})");
+        throw new LuaRuntimeException(traceback, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got {actual})");
     }
 
-    public override string Message => $"{Tracebacks.RootChunkName}:{Tracebacks.LastPosition.Line}: {base.Message}{(Tracebacks.StackFrames.Length > 0 ? $"\n{Tracebacks}" : "")}";
+    public override string Message => $"{Traceback.RootChunkName}:{Traceback.LastPosition.Line}: {base.Message}{(Traceback.StackFrames.Length > 0 ? $"\n{Traceback}" : "")}";
 }
 
-public class LuaAssertionException(Tracebacks tracebacks, string message) : LuaRuntimeException(tracebacks, message)
+public class LuaAssertionException(Traceback traceback, string message) : LuaRuntimeException(traceback, message)
 {
     public override string ToString()
     {
