@@ -9,6 +9,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 {
     public static readonly LuaCompiler Default = new();
 
+    public Chunk Compile(string source, string? chunkName = null)
+    {
+        return Compile(LuaSyntaxTree.Parse(source, chunkName), chunkName);
+    }
+
     /// <summary>
     /// Returns a compiled chunk of the syntax tree.
     /// </summary>

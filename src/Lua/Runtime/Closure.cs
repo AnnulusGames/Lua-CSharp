@@ -7,7 +7,7 @@ public sealed class Closure : LuaFunction
     Chunk proto;
     FastListCore<UpValue> upValues;
 
-    public Closure(LuaState state, Chunk proto)
+    public Closure(LuaState state, Chunk proto, LuaTable? environment = null)
     {
         this.proto = proto;
 
@@ -15,7 +15,7 @@ public sealed class Closure : LuaFunction
         for (int i = 0; i < proto.UpValues.Length; i++)
         {
             var description = proto.UpValues[i];
-            var upValue = GetUpValueFromDescription(state, proto, description);
+            var upValue = GetUpValueFromDescription(state, environment == null ? state.EnvUpValue : UpValue.Closed(state.CurrentThread, environment), proto, description);
             upValues.Add(upValue);
         }
     }
@@ -30,7 +30,7 @@ public sealed class Closure : LuaFunction
         return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.State.CurrentThread.GetCurrentFrame(), buffer, cancellationToken);
     }
 
-    static UpValue GetUpValueFromDescription(LuaState state, Chunk proto, UpValueInfo description)
+    static UpValue GetUpValueFromDescription(LuaState state, UpValue envUpValue, Chunk proto, UpValueInfo description)
     {
         if (description.IsInRegister)
         {
@@ -39,11 +39,11 @@ public sealed class Closure : LuaFunction
         }
         else if (description.Index == -1) // -1 is global environment
         {
-            return state.EnvUpValue;
+            return envUpValue;
         }
         else
         {
-            return GetUpValueFromDescription(state, proto.Parent!, proto.Parent!.UpValues[description.Index]);
+            return GetUpValueFromDescription(state, envUpValue, proto.Parent!, proto.Parent!.UpValues[description.Index]);
         }
     }
 }
