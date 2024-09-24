@@ -66,8 +66,7 @@ public sealed class LuaState
 
     public void Push(LuaValue value)
     {
-        ThrowIfRunning();
-        mainThread.Stack.Push(value);
+        CurrentThread.Stack.Push(value);
     }
 
     public LuaThread CreateThread(LuaFunction function, bool isProtectedMode = true)
