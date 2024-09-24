@@ -1,6 +1,5 @@
 using System.Runtime.CompilerServices;
 using Lua.Internal;
-using Lua.Runtime;
 
 namespace Lua;
 
@@ -132,6 +131,51 @@ public sealed class LuaTable
         }
 
         return dictionary.ContainsKey(key);
+    }
+
+    public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
+    {
+        var index = -1;
+        if (key.Type is LuaValueType.Nil)
+        {
+            index = 0;
+        }
+        else if (TryGetInteger(key, out var integer) && integer > 0 && integer <= array.Length)
+        {
+            index = integer;
+        }
+
+        if (index != -1)
+        {
+            var span = array.AsSpan(index);
+            for (int i = 0; i < span.Length; i++)
+            {
+                if (span[i].Type is not LuaValueType.Nil)
+                {
+                    return new(index + i + 1, span[i]);
+                }
+            }
+
+            foreach (var pair in dictionary)
+            {
+                return pair;
+            }
+        }
+        else
+        {
+            var foundKey = false;
+            foreach (var pair in dictionary)
+            {
+                if (foundKey) return pair;
+
+                if (pair.Key.Equals(key))
+                {
+                    foundKey = true;
+                }
+            }
+        }
+
+        return default;
     }
 
     public void Clear()
