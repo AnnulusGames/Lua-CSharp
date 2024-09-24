@@ -14,4 +14,18 @@ public class TableTests
         Assert.That(table["bar"], Is.EqualTo(new LuaValue(2)));
         Assert.That(table[true], Is.EqualTo(new LuaValue("baz")));
     }
+
+    [Test]
+    public void Test_EnsureCapacity()
+    {
+        var table = new LuaTable(2, 2);
+        table[32] = 10; // hash part
+
+        for (int i = 1; i <= 31; i++)
+        {
+            table[i] = 10;
+        }
+
+        Assert.That(table[32], Is.EqualTo(new LuaValue(10)));
+    }
 }

@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using Lua.Internal;
 using Lua.Runtime;
 
 namespace Lua;
@@ -147,15 +148,37 @@ public sealed class LuaTable
     {
         if (array.Length >= newCapacity) return;
 
-        var newSize = array.Length;
-        if (newSize == 0) newSize = 8;
+        var prevLength = array.Length;
+        var newLength = array.Length;
+        if (newLength == 0) newLength = 8;
 
-        while (newSize < newCapacity)
+        while (newLength < newCapacity)
         {
-            newSize *= 2;
+            newLength *= 2;
         }
 
-        Array.Resize(ref array, newSize);
+        Array.Resize(ref array, newLength);
+
+        using var indexList = new PooledList<(int, LuaValue)>(dictionary.Count);
+
+        // Move some of the elements of the hash part to a newly allocated array
+        foreach (var kv in dictionary)
+        {
+            if (kv.Key.TryRead<double>(out var d) && MathEx.IsInteger(d))
+            {
+                var index = (int)d;
+                if (index > prevLength && index <= newLength)
+                {
+                    indexList.Add((index, kv.Value));
+                }
+            }
+        }
+
+        foreach ((var index, var value) in indexList.AsSpan())
+        {
+            dictionary.Remove(index);
+            array[index - 1] = value;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
