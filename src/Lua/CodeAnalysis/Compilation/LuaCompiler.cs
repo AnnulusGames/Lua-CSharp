@@ -272,11 +272,13 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
                 context.StackPosition = p;
             }
-        }
 
-        if (currentArrayChunkSize > 0)
-        {
-            context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)currentArrayChunkSize, arrayBlock), node.Position);
+            if (currentArrayChunkSize > 0)
+            {
+                context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)currentArrayChunkSize, arrayBlock), node.Position);
+                currentArrayChunkSize = 0;
+                arrayBlock = 1;
+            }
         }
 
         context.Function.Instructions[newTableInstructionIndex].B = (ushort)(currentArrayChunkSize + (arrayBlock - 1) * 50);
