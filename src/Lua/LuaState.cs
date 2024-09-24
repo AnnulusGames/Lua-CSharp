@@ -76,7 +76,14 @@ public sealed class LuaState
 
     public Traceback GetTraceback()
     {
-        return MainThread.GetTraceback();
+        // TODO: optimize
+        return new()
+        {
+            StackFrames = threadStack.AsSpan().ToArray()
+                .Append(MainThread)
+                .SelectMany(x => x.GetStackFrames())
+                .ToArray()
+        };
     }
 
     internal UpValue GetOrAddUpValue(LuaThread thread, int registerIndex)
