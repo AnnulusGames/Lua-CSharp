@@ -11,7 +11,7 @@ public static class CompositeModuleLoader
                 loader1.Exists(moduleName);
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             if (loader0.Exists(moduleName))
             {
@@ -36,7 +36,7 @@ public static class CompositeModuleLoader
                 loader2.Exists(moduleName);
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             if (loader0.Exists(moduleName))
             {
@@ -67,7 +67,7 @@ public static class CompositeModuleLoader
                 loader3.Exists(moduleName);
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             if (loader0.Exists(moduleName))
             {
@@ -104,7 +104,7 @@ public static class CompositeModuleLoader
                 loader4.Exists(moduleName);
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             if (loader0.Exists(moduleName))
             {
@@ -147,7 +147,7 @@ public static class CompositeModuleLoader
                 loader5.Exists(moduleName);
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             if (loader0.Exists(moduleName))
             {
@@ -196,7 +196,7 @@ public static class CompositeModuleLoader
             return false;
         }
 
-        public ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+        public ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
         {
             foreach (var loader in loaders)
             {

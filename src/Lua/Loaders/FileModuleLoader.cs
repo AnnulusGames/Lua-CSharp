@@ -10,8 +10,11 @@ public sealed class FileModuleLoader : ILuaModuleLoader
         return File.Exists(moduleName);
     }
 
-    public async ValueTask<LuaValue> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
+    public async ValueTask<LuaModule> LoadAsync(string moduleName, CancellationToken cancellationToken = default)
     {
-        return await File.ReadAllTextAsync(moduleName, cancellationToken);
+        var path = moduleName;
+        if (!Path.HasExtension(path)) path += ".lua";
+        var text = await File.ReadAllTextAsync(path, cancellationToken);
+        return new LuaModule(moduleName, text);
     }
 }
