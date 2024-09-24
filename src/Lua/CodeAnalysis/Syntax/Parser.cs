@@ -687,6 +687,7 @@ public ref struct Parser
                 case SyntaxTokenType.RCurly:
                     goto RETURN;
                 case SyntaxTokenType.EndOfLine:
+                case SyntaxTokenType.SemiColon:
                 case SyntaxTokenType.Comma:
                     continue;
                 case SyntaxTokenType.LSquare:
