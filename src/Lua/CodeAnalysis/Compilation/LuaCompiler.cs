@@ -1024,20 +1024,21 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             var expression = expressions[i];
             var remaining = expressions.Length - i + 1;
             var isLast = i == expressions.Length - 1;
+            var resultCount = isLast ? (minimumCount == -1 ? -1 : remaining) : 1;
 
             if (expression is CallFunctionExpressionNode call)
             {
-                CompileCallFunctionExpression(call, context, false, isLast ? remaining : 1);
+                CompileCallFunctionExpression(call, context, false, resultCount);
                 isLastFunction = isLast;
             }
             else if (expression is CallTableMethodExpressionNode method)
             {
-                CompileTableMethod(method, context, false, isLast ? remaining : 1);
+                CompileTableMethod(method, context, false, resultCount);
                 isLastFunction = isLast;
             }
             else if (expression is VariableArgumentsExpressionNode varArg)
             {
-                CompileVariableArgumentsExpression(varArg, context, isLast ? remaining : 1);
+                CompileVariableArgumentsExpression(varArg, context, resultCount);
                 isLastFunction = isLast;
             }
             else
