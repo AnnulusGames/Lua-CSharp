@@ -8,6 +8,10 @@ public sealed class RawEqualFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var arg0 = context.ReadArgument(0);
+        var arg1 = context.ReadArgument(1);
+
+        buffer.Span[0] = arg0 == arg1;
+        return new(1);
     }
 }
