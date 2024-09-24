@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using Lua.Runtime;
+using Lua.Internal;
 
 namespace Lua;
 
@@ -111,7 +111,7 @@ public sealed class LuaTable
             if (index > 0 && index <= array.Length)
             {
                 value = array[index - 1];
-                return true;
+                return value.Type is not LuaValueType.Nil;
             }
         }
 
@@ -133,6 +133,51 @@ public sealed class LuaTable
         return dictionary.ContainsKey(key);
     }
 
+    public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
+    {
+        var index = -1;
+        if (key.Type is LuaValueType.Nil)
+        {
+            index = 0;
+        }
+        else if (TryGetInteger(key, out var integer) && integer > 0 && integer <= array.Length)
+        {
+            index = integer;
+        }
+
+        if (index != -1)
+        {
+            var span = array.AsSpan(index);
+            for (int i = 0; i < span.Length; i++)
+            {
+                if (span[i].Type is not LuaValueType.Nil)
+                {
+                    return new(index + i + 1, span[i]);
+                }
+            }
+
+            foreach (var pair in dictionary)
+            {
+                return pair;
+            }
+        }
+        else
+        {
+            var foundKey = false;
+            foreach (var pair in dictionary)
+            {
+                if (foundKey) return pair;
+
+                if (pair.Key.Equals(key))
+                {
+                    foundKey = true;
+                }
+            }
+        }
+
+        return default;
+    }
+
     public void Clear()
     {
         dictionary.Clear();
@@ -147,15 +192,37 @@ public sealed class LuaTable
     {
         if (array.Length >= newCapacity) return;
 
-        var newSize = array.Length;
-        if (newSize == 0) newSize = 8;
+        var prevLength = array.Length;
+        var newLength = array.Length;
+        if (newLength == 0) newLength = 8;
 
-        while (newSize < newCapacity)
+        while (newLength < newCapacity)
         {
-            newSize *= 2;
+            newLength *= 2;
         }
 
-        Array.Resize(ref array, newSize);
+        Array.Resize(ref array, newLength);
+
+        using var indexList = new PooledList<(int, LuaValue)>(dictionary.Count);
+
+        // Move some of the elements of the hash part to a newly allocated array
+        foreach (var kv in dictionary)
+        {
+            if (kv.Key.TryRead<double>(out var d) && MathEx.IsInteger(d))
+            {
+                var index = (int)d;
+                if (index > prevLength && index <= newLength)
+                {
+                    indexList.Add((index, kv.Value));
+                }
+            }
+        }
+
+        foreach ((var index, var value) in indexList.AsSpan())
+        {
+            dictionary.Remove(index);
+            array[index - 1] = value;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

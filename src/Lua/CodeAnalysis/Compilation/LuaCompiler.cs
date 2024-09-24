@@ -9,6 +9,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 {
     public static readonly LuaCompiler Default = new();
 
+    public Chunk Compile(string source, string? chunkName = null)
+    {
+        return Compile(LuaSyntaxTree.Parse(source, chunkName), chunkName);
+    }
+
     /// <summary>
     /// Returns a compiled chunk of the syntax tree.
     /// </summary>
@@ -272,11 +277,13 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
                 context.StackPosition = p;
             }
-        }
 
-        if (currentArrayChunkSize > 0)
-        {
-            context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)currentArrayChunkSize, arrayBlock), node.Position);
+            if (currentArrayChunkSize > 0)
+            {
+                context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)currentArrayChunkSize, arrayBlock), node.Position);
+                currentArrayChunkSize = 0;
+                arrayBlock = 1;
+            }
         }
 
         context.Function.Instructions[newTableInstructionIndex].B = (ushort)(currentArrayChunkSize + (arrayBlock - 1) * 50);
@@ -1022,20 +1029,21 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             var expression = expressions[i];
             var remaining = expressions.Length - i + 1;
             var isLast = i == expressions.Length - 1;
+            var resultCount = isLast ? (minimumCount == -1 ? -1 : remaining) : 1;
 
             if (expression is CallFunctionExpressionNode call)
             {
-                CompileCallFunctionExpression(call, context, false, isLast ? remaining : 1);
+                CompileCallFunctionExpression(call, context, false, resultCount);
                 isLastFunction = isLast;
             }
             else if (expression is CallTableMethodExpressionNode method)
             {
-                CompileTableMethod(method, context, false, isLast ? remaining : 1);
+                CompileTableMethod(method, context, false, resultCount);
                 isLastFunction = isLast;
             }
             else if (expression is VariableArgumentsExpressionNode varArg)
             {
-                CompileVariableArgumentsExpression(varArg, context, isLast ? remaining : 1);
+                CompileVariableArgumentsExpression(varArg, context, resultCount);
                 isLastFunction = isLast;
             }
             else

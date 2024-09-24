@@ -1,7 +1,7 @@
 
 using Lua.Runtime;
 
-namespace Lua.Standard.Base;
+namespace Lua.Standard.Basic;
 
 public sealed class SetMetatableFunction : LuaFunction
 {
@@ -12,7 +12,7 @@ public sealed class SetMetatableFunction : LuaFunction
     {
         var arg0 = context.ReadArgument<LuaTable>(0);
         var arg1 = context.ReadArgument(1);
-        
+
         if (arg1.Type is not (LuaValueType.Nil or LuaValueType.Table))
         {
             LuaRuntimeException.BadArgument(context.State.GetTracebacks(), 2, Name, [LuaValueType.Nil, LuaValueType.Table]);

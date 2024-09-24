@@ -39,11 +39,11 @@ public readonly record struct LuaFunctionExecutionContext
             var thread = State.CurrentThread;
             if (LuaValue.TryGetLuaValueType(typeof(T), out var type))
             {
-                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, thread.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTracebacks(), index + 1, thread.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
             }
             else
             {
-                LuaRuntimeException.BadArgument(State.GetTracebacks(), 1, thread.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTracebacks(), index + 1, thread.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
             }
         }
 
