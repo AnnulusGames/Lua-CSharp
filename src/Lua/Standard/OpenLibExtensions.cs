@@ -12,9 +12,23 @@ public static class OpenLibExtensions
         PrintFunction.Instance,
         RawGetFunction.Instance,
         RawSetFunction.Instance,
+        RawEqualFunction.Instance,
+        RawLenFunction.Instance,
         GetMetatableFunction.Instance,
         SetMetatableFunction.Instance,
-        ToStringFunction.Instance
+        ToNumberFunction.Instance,
+        ToStringFunction.Instance,
+        CollectGarbageFunction.Instance,
+        NextFunction.Instance,
+        IPairsFunction.Instance,
+        PairsFunction.Instance,
+        TypeFunction.Instance,
+        PCallFunction.Instance,
+        XPCallFunction.Instance,
+        DoFileFunction.Instance,
+        LoadFileFunction.Instance,
+        LoadFunction.Instance,
+        SelectFunction.Instance,
     ];
 
     static readonly LuaFunction[] mathFunctions = [
