@@ -1,6 +1,7 @@
 using Lua.Standard.Basic;
 using Lua.Standard.Coroutines;
 using Lua.Standard.Mathematics;
+using Lua.Standard.Modules;
 
 namespace Lua.Standard;
 
@@ -96,5 +97,14 @@ public static class OpenLibExtensions
         }
 
         state.Environment["math"] = table;
+    }
+
+    public static void OpenModuleLibrary(this LuaState state)
+    {
+        var package = new LuaTable(0, 1);
+        package["loaded"] = new LuaTable();
+        state.Environment["package"] = package;
+        
+        state.Environment[RequireFunction.Instance.Name] = RequireFunction.Instance;
     }
 }

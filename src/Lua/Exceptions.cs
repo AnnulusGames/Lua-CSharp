@@ -88,3 +88,5 @@ public class LuaAssertionException(Traceback traceback, string message) : LuaRun
         return $"{Message}\n{StackTrace}";
     }
 }
+
+public class LuaModuleNotFoundException(string moduleName) : LuaException($"module '{moduleName}' not found");

@@ -1,4 +1,5 @@
 using Lua.Internal;
+using Lua.Loaders;
 using Lua.Runtime;
 
 namespace Lua;
@@ -28,6 +29,8 @@ public sealed class LuaState
             return mainThread;
         }
     }
+
+    public ILuaModuleLoader ModuleLoader { get; set; } = FileModuleLoader.Instance;
 
     public static LuaState Create()
     {
