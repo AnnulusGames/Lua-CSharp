@@ -41,12 +41,12 @@ public class LuaParseException(string? chunkName, SourcePosition position, strin
         throw new LuaParseException(chunkName, position, "<break> not inside a loop");
     }
 
-    public override string Message => $"{ChunkName ?? "<anonymous.lua>"}:{(Position == null ? "" : $"{Position.Value}:")} {base.Message}";
+    public override string Message => $"{ChunkName}:{(Position == null ? "" : $"{Position.Value}:")} {base.Message}";
 }
 
 public class LuaRuntimeException(Traceback traceback, string message) : LuaException(message)
 {
-    public Traceback Traceback { get; } = traceback;
+    public Traceback LuaTraceback { get; } = traceback;
 
     public static void AttemptInvalidOperation(Traceback traceback, string op, LuaValue a, LuaValue b)
     {
@@ -73,7 +73,12 @@ public class LuaRuntimeException(Traceback traceback, string message) : LuaExcep
         throw new LuaRuntimeException(traceback, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got {actual})");
     }
 
-    public override string Message => $"{Traceback.RootChunkName}:{Traceback.LastPosition.Line}: {base.Message}{(Traceback.StackFrames.Length > 0 ? $"\n{Traceback}" : "")}";
+    public override string Message => $"{LuaTraceback.RootChunkName}:{LuaTraceback.LastPosition.Line}: {base.Message}";
+
+    public override string ToString()
+    {
+        return $"{Message}\n{(LuaTraceback.StackFrames.Length > 0 ? $"{LuaTraceback}\n" : "")}{StackTrace}";
+    }
 }
 
 public class LuaAssertionException(Traceback traceback, string message) : LuaRuntimeException(traceback, message)
