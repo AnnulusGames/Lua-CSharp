@@ -11,6 +11,6 @@ public sealed class ErrorFunction : LuaFunction
             ? "(error object is a nil value)"
             : context.Arguments[0].ToString();
 
-        throw new LuaRuntimeException(context.State.GetTracebacks(), obj!);
+        throw new LuaRuntimeException(context.State.GetTraceback(), obj!);
     }
 }

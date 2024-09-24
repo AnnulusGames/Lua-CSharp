@@ -279,7 +279,7 @@ public static partial class LuaVirtualMachine
                         {
                             stack.UnsafeGet(RA) = valueB % valueC;
                         }
-                        else if (vb.TryGetMetamethod(Metamethods.Mod, out var metamethod)  || vc.TryGetMetamethod(Metamethods.Mod, out metamethod))
+                        else if (vb.TryGetMetamethod(Metamethods.Mod, out var metamethod) || vc.TryGetMetamethod(Metamethods.Mod, out metamethod))
                         {
                             if (!metamethod.TryRead<LuaFunction>(out var func))
                             {
@@ -548,7 +548,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var compareResult = false;
-                        
+
                         if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             compareResult = valueB < valueC;
@@ -668,7 +668,7 @@ public static partial class LuaVirtualMachine
                         if (!va.TryRead<LuaFunction>(out var func))
                         {
                             if (va.TryGetMetamethod(Metamethods.Call, out var metamethod) && metamethod.TryRead<LuaFunction>(out func))
-                            {   
+                            {
                             }
                             else
                             {
@@ -790,7 +790,7 @@ public static partial class LuaVirtualMachine
                         var iterator = stack.UnsafeGet(RA).Read<LuaFunction>();
 
                         var nextBase = RA + 3 + instruction.C;
-                        
+
                         var resultBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
                         resultBuffer.AsSpan().Clear();
                         try
@@ -1030,7 +1030,7 @@ public static partial class LuaVirtualMachine
         return (newBase, argumentCount);
     }
 
-    static Tracebacks GetTracebacks(LuaState state, Chunk chunk, int pc)
+    static Traceback GetTracebacks(LuaState state, Chunk chunk, int pc)
     {
         var frame = state.CurrentThread.GetCurrentFrame();
         state.CurrentThread.PushCallStackFrame(frame with
@@ -1039,7 +1039,7 @@ public static partial class LuaVirtualMachine
             ChunkName = chunk.Name,
             RootChunkName = chunk.GetRoot().Name,
         });
-        var tracebacks = state.GetTracebacks();
+        var tracebacks = state.GetTraceback();
         state.CurrentThread.PopCallStackFrame();
 
         return tracebacks;

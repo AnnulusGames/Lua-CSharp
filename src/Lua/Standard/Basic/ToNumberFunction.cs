@@ -16,7 +16,7 @@ public sealed class ToNumberFunction : LuaFunction
 
         if (arg1 < 2 || arg1 > 36)
         {
-            throw new LuaRuntimeException(context.State.GetTracebacks(), "bad argument #2 to 'tonumber' (base out of range)");
+            throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'tonumber' (base out of range)");
         }
 
         if (arg0.Type is LuaValueType.Number)

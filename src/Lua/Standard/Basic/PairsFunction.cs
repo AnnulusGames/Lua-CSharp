@@ -16,7 +16,7 @@ public sealed class PairsFunction : LuaFunction
         {
             if (!metamethod.TryRead<LuaFunction>(out var function))
             {
-                LuaRuntimeException.AttemptInvalidOperation(context.State.GetTracebacks(), "call", metamethod);
+                LuaRuntimeException.AttemptInvalidOperation(context.State.GetTraceback(), "call", metamethod);
             }
 
             return function.InvokeAsync(context, buffer, cancellationToken);

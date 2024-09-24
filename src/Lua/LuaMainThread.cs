@@ -16,6 +16,6 @@ public sealed class LuaMainThread : LuaThread
 
     public override ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default)
     {
-        throw new LuaRuntimeException(context.State.GetTracebacks(), "attempt to yield from outside a coroutine");
+        throw new LuaRuntimeException(context.State.GetTraceback(), "attempt to yield from outside a coroutine");
     }
 }

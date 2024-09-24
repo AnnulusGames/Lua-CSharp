@@ -28,7 +28,7 @@ public abstract partial class LuaFunction
         }
         catch (Exception ex) when (ex is not (LuaException or OperationCanceledException))
         {
-            throw new LuaRuntimeException(thread.GetTracebacks(), ex.Message);
+            throw new LuaRuntimeException(state.GetTraceback(), ex.Message);
         }
         finally
         {

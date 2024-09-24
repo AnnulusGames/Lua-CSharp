@@ -2,7 +2,7 @@ using Lua.CodeAnalysis;
 
 namespace Lua.Runtime;
 
-public class Tracebacks
+public class Traceback
 {
     public required CallStackFrame[] StackFrames { get; init; }
 

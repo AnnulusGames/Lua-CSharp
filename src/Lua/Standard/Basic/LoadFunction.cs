@@ -37,7 +37,7 @@ public sealed class LoadFunction : LuaFunction
             }
             else
             {
-                LuaRuntimeException.BadArgument(context.State.GetTracebacks(), 1, Name);
+                LuaRuntimeException.BadArgument(context.State.GetTraceback(), 1, Name);
                 return default; // dummy
             }
         }

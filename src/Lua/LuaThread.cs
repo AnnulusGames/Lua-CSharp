@@ -24,12 +24,9 @@ public abstract class LuaThread
         return stack.AsSpan();
     }
 
-    internal Tracebacks GetTracebacks()
+    internal CallStackFrame[] GetStackFrames()
     {
-        return new()
-        {
-            StackFrames = callStack.AsSpan()[1..].ToArray()
-        };
+        return callStack.AsSpan()[1..].ToArray();
     }
 
     internal void PushCallStackFrame(CallStackFrame frame)
