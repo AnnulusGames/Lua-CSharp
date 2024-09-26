@@ -95,9 +95,6 @@ public ref struct Lexer
             case '}':
                 current = SyntaxToken.RCurly(position);
                 return true;
-            case '[':
-                current = SyntaxToken.LSquare(position);
-                return true;
             case ']':
                 current = SyntaxToken.RSquare(position);
                 return true;
@@ -294,33 +291,113 @@ public ref struct Lexer
             return true;
         }
 
-        // string
+        // short string literal
         if (c1 is '"' or '\'')
         {
             var quote = c1;
             var stringStartOffset = offset;
 
+            var isTerminated = false;
             while (span.Length > offset)
             {
                 var c = span[offset];
-                if (c == quote) break;
+                if (c == quote)
+                {
+                    isTerminated = true;
+                    break;
+                }
 
                 if (c is '\n' or '\r')
                 {
-                    throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
+                    break;
                 }
 
-                // if (c is '\\')
-                // {
-
-                // }
-
                 Advance(1);
+            }
+
+            if (!isTerminated)
+            {
+                throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
             }
 
             current = SyntaxToken.String(Source[stringStartOffset..offset], position);
             Advance(1);
             return true;
+        }
+
+        // long string literal
+        if (c1 is '[')
+        {
+            if (c2 is '[' or '=')
+            {
+                var c = c2;
+                var level = 0;
+                while (c is '=')
+                {
+                    level++;
+                    Advance(1);
+                    c = span[offset];
+                }
+
+                Advance(1);
+                var stringStartOffset = offset;
+                var stringEndOffset = 0;
+
+                var isTerminated = false;
+                while (span.Length > offset + level + 1)
+                {
+                    var current = span[offset];
+
+                    // skip first newline
+                    if (offset == stringStartOffset)
+                    {
+                        if (current == '\r')
+                        {
+                            stringStartOffset += 2;
+                            Advance(span[offset + 1] == '\n' ? 2 : 1);
+                            continue;
+                        }
+                        else if (current == '\n')
+                        {
+                            stringStartOffset++;
+                            Advance(1);
+                            continue;
+                        }
+                    }
+
+                    if (current is ']')
+                    {
+                        stringEndOffset = offset;
+
+                        for (int i = 1; i <= level; i++)
+                        {
+                            if (span[offset + i] is not '=') goto CONTINUE;
+                        }
+
+                        if (span[offset + level + 1] is not ']') goto CONTINUE;
+
+                        Advance(level + 2);
+                        isTerminated = true;
+                        break;
+                    }
+
+                CONTINUE:
+                    Advance(1);
+                }
+
+                if (!isTerminated)
+                {
+                    throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
+                }
+
+                current = SyntaxToken.String(Source[stringStartOffset..stringEndOffset], position);
+                return true;
+            }
+            else
+            {
+                current = SyntaxToken.LSquare(position);
+                return true;
+            }
         }
 
         // identifier
