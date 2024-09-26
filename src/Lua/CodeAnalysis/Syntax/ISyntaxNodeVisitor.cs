@@ -10,6 +10,7 @@ public interface ISyntaxNodeVisitor<TContext, TResult>
     TResult VisitStringLiteralNode(StringLiteralNode node, TContext context);
     TResult VisitUnaryExpressionNode(UnaryExpressionNode node, TContext context);
     TResult VisitBinaryExpressionNode(BinaryExpressionNode node, TContext context);
+    TResult VisitGroupedExpressionNode(GroupedExpressionNode node, TContext context);
     TResult VisitIdentifierNode(IdentifierNode node, TContext context);
     TResult VisitDoStatementNode(DoStatementNode node, TContext context);
     TResult VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, TContext context);
@@ -29,6 +30,7 @@ public interface ISyntaxNodeVisitor<TContext, TResult>
     TResult VisitNumericForStatementNode(NumericForStatementNode node, TContext context);
     TResult VisitGenericForStatementNode(GenericForStatementNode node, TContext context);
     TResult VisitTableConstructorExpressionNode(TableConstructorExpressionNode node, TContext context);
+    TResult VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, TContext context);
     TResult VisitTableIndexerAccessExpressionNode(TableIndexerAccessExpressionNode node, TContext context);
     TResult VisitTableMemberAccessExpressionNode(TableMemberAccessExpressionNode node, TContext context);
     TResult VisitCallTableMethodExpressionNode(CallTableMethodExpressionNode node, TContext context);
