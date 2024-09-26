@@ -350,7 +350,7 @@ public ref struct Parser
         enumerator.SkipEoL();
 
         // skip 'do' keyword
-        CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.Do, out _);
+        CheckCurrent(ref enumerator, SyntaxTokenType.Do);
 
         // parse statements
         var statements = ParseStatementList(ref enumerator, SyntaxTokenType.End);
@@ -361,7 +361,8 @@ public ref struct Parser
     RepeatStatementNode ParseRepeatStatement(ref SyntaxTokenEnumerator enumerator)
     {
         // skip 'repeat' keyword
-        CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.Repeat, out var repeatToken);
+        CheckCurrent(ref enumerator, SyntaxTokenType.Repeat);
+        var repeatToken = enumerator.Current;
 
         // parse statements
         var statements = ParseStatementList(ref enumerator, SyntaxTokenType.Until);
