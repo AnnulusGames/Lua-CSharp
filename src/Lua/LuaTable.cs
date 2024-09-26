@@ -220,6 +220,11 @@ public sealed class LuaTable
         dictionary.Clear();
     }
 
+    public Memory<LuaValue> GetArrayMemory()
+    {
+        return array.AsMemory();
+    }
+
     public Span<LuaValue> GetArraySpan()
     {
         return array.AsSpan();
