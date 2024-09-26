@@ -17,6 +17,11 @@ public sealed class RemoveFunction : LuaFunction
             throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'remove' (number has no integer representation)");
         }
 
+        if (arg1 <= 0 || arg1 > arg0.ArrayLength)
+        {
+            throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'remove' (position out of bounds)");
+        }
+
         buffer.Span[0] = arg0.RemoveAt((int)arg1);
         return new(1);
     }
