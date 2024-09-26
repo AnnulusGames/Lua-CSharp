@@ -369,7 +369,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     internal async ValueTask<int> CallToStringAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        if (this.TryGetMetamethod(Metamethods.ToString, out var metamethod))
+        if (this.TryGetMetamethod(context.State, Metamethods.ToString, out var metamethod))
         {
             if (!metamethod.TryRead<LuaFunction>(out var func))
             {

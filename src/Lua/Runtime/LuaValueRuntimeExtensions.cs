@@ -5,19 +5,11 @@ namespace Lua.Runtime;
 
 internal static class LuaRuntimeExtensions
 {
-    public static bool TryGetMetamethod(this LuaValue value, string methodName, out LuaValue result)
+    public static bool TryGetMetamethod(this LuaValue value, LuaState state, string methodName, out LuaValue result)
     {
-        if (value.TryRead<LuaTable>(out var table) &&
-            table.Metatable != null &&
-            table.Metatable.TryGetValue(methodName, out result))
-        {
-            return true;
-        }
-        else
-        {
-            result = default;
-            return false;
-        }
+        result = default;
+        return state.TryGetMetatable(value, out var metatable) &&
+            metatable.TryGetValue(methodName, out result);
     }
 
 #if NET6_0_OR_GREATER
