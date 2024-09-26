@@ -105,14 +105,15 @@ public ref struct Lexer
                 // comment
                 if (c2 == '-')
                 {
+                    var pos = position;
                     Advance(1);
 
                     // block comment
-                    if (TryRead(offset, out var c3) && c3 == '[' &&
-                        TryRead(offset, out var c4) && c4 == '[')
+                    if (span.Length > offset + 1 && span[offset] is '[' && span[offset + 1] is '[' or '=')
                     {
-                        Advance(2);
-                        ReadUntilEndOfBlockComment(ref span, ref offset);
+                        Advance(1);
+                        (_, _, var isTerminated) = ReadUntilLongBracketEnd(ref span);
+                        if (!isTerminated) LuaParseException.UnfinishedLongComment(ChunkName, pos);
                     }
                     else // line comment
                     {
@@ -330,67 +331,14 @@ public ref struct Lexer
         {
             if (c2 is '[' or '=')
             {
-                var c = c2;
-                var level = 0;
-                while (c is '=')
-                {
-                    level++;
-                    Advance(1);
-                    c = span[offset];
-                }
-
-                Advance(1);
-                var stringStartOffset = offset;
-                var stringEndOffset = 0;
-
-                var isTerminated = false;
-                while (span.Length > offset + level + 1)
-                {
-                    var current = span[offset];
-
-                    // skip first newline
-                    if (offset == stringStartOffset)
-                    {
-                        if (current == '\r')
-                        {
-                            stringStartOffset += 2;
-                            Advance(span[offset + 1] == '\n' ? 2 : 1);
-                            continue;
-                        }
-                        else if (current == '\n')
-                        {
-                            stringStartOffset++;
-                            Advance(1);
-                            continue;
-                        }
-                    }
-
-                    if (current is ']')
-                    {
-                        stringEndOffset = offset;
-
-                        for (int i = 1; i <= level; i++)
-                        {
-                            if (span[offset + i] is not '=') goto CONTINUE;
-                        }
-
-                        if (span[offset + level + 1] is not ']') goto CONTINUE;
-
-                        Advance(level + 2);
-                        isTerminated = true;
-                        break;
-                    }
-
-                CONTINUE:
-                    Advance(1);
-                }
+                (var start, var end, var isTerminated) = ReadUntilLongBracketEnd(ref span);
 
                 if (!isTerminated)
                 {
                     throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
                 }
 
-                current = SyntaxToken.String(Source[stringStartOffset..stringEndOffset], position);
+                current = SyntaxToken.String(Source[start..end], position);
                 return true;
             }
             else
@@ -474,24 +422,65 @@ public ref struct Lexer
         }
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    void ReadUntilEndOfBlockComment(ref ReadOnlySpan<char> span, ref int offset)
-    {
-        var start = position;
-
-        while (span.Length > offset + 1)
+    (int Start, int End, bool IsTerminated) ReadUntilLongBracketEnd(ref ReadOnlySpan<char> span)
+    {   
+        var c = span[offset];
+        var level = 0;
+        while (c is '=')
         {
-            if (span[offset] is ']' &&
-                span[offset + 1] is ']')
+            level++;
+            Advance(1);
+            c = span[offset];
+        }
+
+        Advance(1);
+
+        var startOffset = offset;
+        var endOffset = 0;
+        var isTerminated = false;
+
+        while (span.Length > offset + level + 1)
+        {
+            var current = span[offset];
+
+            // skip first newline
+            if (offset == startOffset)
             {
-                Advance(2);
-                return;
+                if (current == '\r')
+                {
+                    startOffset += 2;
+                    Advance(span[offset + 1] == '\n' ? 2 : 1);
+                    continue;
+                }
+                else if (current == '\n')
+                {
+                    startOffset++;
+                    Advance(1);
+                    continue;
+                }
             }
 
+            if (current is ']')
+            {
+                endOffset = offset;
+
+                for (int i = 1; i <= level; i++)
+                {
+                    if (span[offset + i] is not '=') goto CONTINUE;
+                }
+
+                if (span[offset + level + 1] is not ']') goto CONTINUE;
+
+                Advance(level + 2);
+                isTerminated = true;
+                break;
+            }
+
+        CONTINUE:
             Advance(1);
         }
 
-        LuaParseException.UnfinishedLongComment(ChunkName, start);
+        return (startOffset, endOffset, isTerminated);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
