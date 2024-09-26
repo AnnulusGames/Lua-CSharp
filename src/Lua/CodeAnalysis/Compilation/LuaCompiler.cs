@@ -545,7 +545,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     // function declaration
     public bool VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments);
+        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -562,7 +562,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         });
 
         // compile function
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -572,7 +572,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitFunctionDeclarationStatementNode(FunctionDeclarationStatementNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
 
         // add closure
         var index = context.Function.GetConstantIndex(node.Name.ToString());
@@ -586,12 +586,53 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         return true;
     }
 
-    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, bool hasVarArg)
+    public bool VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, ScopeCompilationContext context)
+    {
+        var funcIdentifier = node.MemberPath[^1];
+        var funcIndex = CompileFunctionProto(funcIdentifier.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, node.HasSelfParameter);
+
+        // add closure
+        var index = context.Function.GetConstantIndex(funcIdentifier.Name.ToString());
+
+        var r = context.StackPosition;
+
+        // assign global variable
+        var first = node.MemberPath[0];
+        var tableIndex = LoadIdentifier(first.Name, context, first.Position, true);
+        
+        for (int i = 1; i < node.MemberPath.Length - 1; i++)
+        {
+            var member = node.MemberPath[i];
+            var constant = context.Function.GetConstantIndex(member.Name.ToString());
+            context.PushInstruction(Instruction.GetTable(context.StackPosition, tableIndex, (ushort)(constant + 256)), member.Position, true);
+            tableIndex = context.StackTopPosition;
+        }
+
+        // push closure instruction
+        var closureIndex = context.StackPosition;
+        context.PushInstruction(Instruction.Closure(closureIndex, funcIndex), node.Position, true);
+
+        // set table
+        context.PushInstruction(Instruction.SetTable(tableIndex, (ushort)(index + 256), closureIndex), funcIdentifier.Position);
+
+        context.StackPosition = r;
+        return true;
+    }
+
+    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, bool hasVarArg, bool hasSelfParameter)
     {
         using var funcContext = context.CreateChildFunction();
         funcContext.ChunkName = functionName.ToString();
         funcContext.ParameterCount = parameters.Length;
         funcContext.HasVariableArguments = hasVarArg;
+
+        if (hasSelfParameter)
+        {
+            funcContext.Scope.AddLocalVariable("self".AsMemory(), new()
+            {
+                RegisterIndex = 0,
+            });
+        }
 
         // add arguments
         for (int i = 0; i < parameters.Length; i++)
@@ -599,7 +640,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             var parameter = parameters[i];
             funcContext.Scope.AddLocalVariable(parameter.Name, new()
             {
-                RegisterIndex = (byte)i
+                RegisterIndex = (byte)(i + (hasSelfParameter ? 1 : 0)),
             });
         }
 
@@ -934,6 +975,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             if (dontLoadLocalVariable)
             {
                 return variable.RegisterIndex;
+            }
+            else if (p == variable.RegisterIndex)
+            {
+                context.StackPosition++;
+                return p;
             }
             else
             {

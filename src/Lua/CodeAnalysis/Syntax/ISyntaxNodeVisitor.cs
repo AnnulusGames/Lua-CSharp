@@ -29,6 +29,7 @@ public interface ISyntaxNodeVisitor<TContext, TResult>
     TResult VisitNumericForStatementNode(NumericForStatementNode node, TContext context);
     TResult VisitGenericForStatementNode(GenericForStatementNode node, TContext context);
     TResult VisitTableConstructorExpressionNode(TableConstructorExpressionNode node, TContext context);
+    TResult VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, TContext context);
     TResult VisitTableIndexerAccessExpressionNode(TableIndexerAccessExpressionNode node, TContext context);
     TResult VisitTableMemberAccessExpressionNode(TableMemberAccessExpressionNode node, TContext context);
     TResult VisitCallTableMethodExpressionNode(CallTableMethodExpressionNode node, TContext context);

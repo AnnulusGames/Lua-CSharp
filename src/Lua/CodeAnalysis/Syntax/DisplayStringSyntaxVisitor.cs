@@ -1,5 +1,4 @@
 using System.Text;
-using Lua.CodeAnalysis.Syntax;
 using Lua.CodeAnalysis.Syntax.Nodes;
 
 namespace Lua.CodeAnalysis.Syntax;
@@ -170,6 +169,47 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     {
         context.Append("function ");
         context.Append(node.Name.ToString());
+        context.Append("(");
+        AddStatementList(node.ParameterNodes, context);
+        if (node.HasVariableArguments)
+        {
+            if (node.ParameterNodes.Length > 0) context.Append(", ");
+            context.Append("...");
+        }
+        context.AppendLine(")");
+
+        using (context.BeginIndentScope())
+        {
+            foreach (var childNode in node.Nodes)
+            {
+                childNode.Accept(this, context);
+                context.AppendLine();
+            }
+        }
+
+        context.AppendLine("end");
+
+        return true;
+    }
+
+    public bool VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, Context context)
+    {
+        context.Append("function ");
+        
+        for (int i = 0; i < node.MemberPath.Length; i++)
+        {
+            context.Append(node.MemberPath[i].Name.ToString());
+
+            if (i == node.MemberPath.Length - 2 && node.HasSelfParameter)
+            {
+                context.Append(":");
+            }
+            else if (i != node.MemberPath.Length - 1)
+            {
+                context.Append(".");
+            }
+        }
+
         context.Append("(");
         AddStatementList(node.ParameterNodes, context);
         if (node.HasVariableArguments)
