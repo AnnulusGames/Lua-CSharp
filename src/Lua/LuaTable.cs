@@ -48,7 +48,7 @@ public sealed class LuaTable
                     return array[index - 1];
                 }
             }
-            
+
             if (dictionary.TryGetValue(key, out var value)) return value;
             return LuaValue.Nil;
         }
@@ -133,6 +133,43 @@ public sealed class LuaTable
         return dictionary.ContainsKey(key);
     }
 
+    public LuaValue RemoveAt(int index)
+    {
+        if (index <= 0 || index > array.Length)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        var arrayIndex = index - 1;
+        var value = array[arrayIndex];
+
+        if (arrayIndex < array.Length - 1)
+        {
+            array.AsSpan(arrayIndex + 1).CopyTo(array.AsSpan(arrayIndex));
+        }
+        array[^1] = default;
+
+        return value;
+    }
+
+    public void Insert(int index, LuaValue value)
+    {
+        if (index <= 0 || index > array.Length + 1)
+        {
+            throw new IndexOutOfRangeException();
+        }
+
+        var arrayIndex = index - 1;
+        EnsureArrayCapacity(array.Length + 1);
+
+        if (arrayIndex != array.Length - 1)
+        {
+            array.AsSpan(arrayIndex, array.Length - arrayIndex - 1).CopyTo(array.AsSpan(arrayIndex + 1));
+        }
+        
+        array[arrayIndex] = value;
+    }
+
     public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
     {
         var index = -1;
@@ -183,11 +220,16 @@ public sealed class LuaTable
         dictionary.Clear();
     }
 
+    public Memory<LuaValue> GetArrayMemory()
+    {
+        return array.AsMemory();
+    }
+
     public Span<LuaValue> GetArraySpan()
     {
         return array.AsSpan();
     }
-    
+
     internal void EnsureArrayCapacity(int newCapacity)
     {
         if (array.Length >= newCapacity) return;
