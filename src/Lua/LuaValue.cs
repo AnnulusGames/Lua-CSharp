@@ -132,16 +132,10 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     break;
                 }
             case LuaValueType.UserData:
-                if (t == typeof(LuaUserData))
+                if (t == typeof(LuaUserData) || t.IsSubclassOf(typeof(LuaUserData)))
                 {
                     var v = (LuaUserData)referenceValue!;
                     result = Unsafe.As<LuaUserData, T>(ref v);
-                    return true;
-                }
-                else if (t == typeof(LuaUserData<T>))
-                {
-                    var v = (LuaUserData<T>)referenceValue!;
-                    result = Unsafe.As<LuaUserData<T>, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(object))
