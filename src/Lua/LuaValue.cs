@@ -132,12 +132,27 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     break;
                 }
             case LuaValueType.UserData:
-                if (referenceValue is T userData)
+                if (t == typeof(LuaUserData))
                 {
-                    result = userData;
+                    var v = (LuaUserData)referenceValue!;
+                    result = Unsafe.As<LuaUserData, T>(ref v);
                     return true;
                 }
-                break;
+                else if (t == typeof(LuaUserData<T>))
+                {
+                    var v = (LuaUserData<T>)referenceValue!;
+                    result = Unsafe.As<LuaUserData<T>, T>(ref v);
+                    return true;
+                }
+                else if (t == typeof(object))
+                {
+                    result = (T)referenceValue!;
+                    return true;
+                }
+                else
+                {
+                    break;
+                }
             case LuaValueType.Table:
                 if (t == typeof(LuaTable))
                 {
@@ -210,7 +225,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         referenceValue = value;
     }
 
-    public LuaValue(object? value)
+    public LuaValue(LuaUserData value)
     {
         type = LuaValueType.UserData;
         referenceValue = value;
@@ -246,6 +261,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(value);
     }
 
+    public static implicit operator LuaValue(LuaUserData value)
+    {
+        return new(value);
+    }
+
     public override int GetHashCode()
     {
         var valueHash = type switch
@@ -254,10 +274,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.Boolean => Read<bool>().GetHashCode(),
             LuaValueType.String => Read<string>().GetHashCode(),
             LuaValueType.Number => Read<double>().GetHashCode(),
-            LuaValueType.Function => Read<LuaFunction>().GetHashCode(),
-            LuaValueType.Thread => Read<LuaThread>().GetHashCode(),
-            LuaValueType.Table => Read<LuaTable>().GetHashCode(),
-            LuaValueType.UserData => referenceValue == null ? 0 : referenceValue.GetHashCode(),
+            LuaValueType.Function or LuaValueType.Thread or LuaValueType.Table or LuaValueType.UserData => referenceValue!.GetHashCode(),
             _ => 0,
         };
 

@@ -96,7 +96,7 @@ public static class OpenLibExtensions
 
     public static void OpenMathLibrary(this LuaState state)
     {
-        state.Environment[RandomFunction.RandomInstanceKey] = new(new Random());
+        state.Environment[RandomFunction.RandomInstanceKey] = new LuaUserData<Random>(new Random());
         state.Environment["pi"] = Math.PI;
         state.Environment["huge"] = double.PositiveInfinity;
 

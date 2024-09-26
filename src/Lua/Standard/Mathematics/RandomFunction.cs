@@ -10,7 +10,7 @@ public sealed class RandomFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var rand = context.State.Environment[RandomInstanceKey].Read<Random>();
+        var rand = context.State.Environment[RandomInstanceKey].Read<LuaUserData<Random>>().Value;
 
         if (context.ArgumentCount == 0)
         {
