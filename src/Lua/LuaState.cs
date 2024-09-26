@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Lua.Internal;
 using Lua.Loaders;
 using Lua.Runtime;
@@ -8,6 +9,7 @@ public sealed class LuaState
 {
     public const string DefaultChunkName = "chunk";
 
+    // states
     readonly LuaMainThread mainThread = new();
     FastListCore<UpValue> openUpValues;
     FastStackCore<LuaThread> threadStack;
@@ -31,6 +33,14 @@ public sealed class LuaState
     }
 
     public ILuaModuleLoader ModuleLoader { get; set; } = FileModuleLoader.Instance;
+
+    // metatables
+    LuaTable? nilMetatable;
+    LuaTable? numberMetatable;
+    LuaTable? stringMetatable;
+    LuaTable? booleanMetatable;
+    LuaTable? functionMetatable;
+    LuaTable? threadMetatable;
 
     public static LuaState Create()
     {
@@ -87,6 +97,55 @@ public sealed class LuaState
                 .SelectMany(x => x.GetStackFrames())
                 .ToArray()
         };
+    }
+
+    internal bool TryGetMetatable(LuaValue value, [NotNullWhen(true)] out LuaTable? result)
+    {
+        result = value.Type switch
+        {
+            LuaValueType.Nil => nilMetatable,
+            LuaValueType.Boolean => booleanMetatable,
+            LuaValueType.String => stringMetatable,
+            LuaValueType.Number => numberMetatable,
+            LuaValueType.Function => functionMetatable,
+            LuaValueType.Thread => threadMetatable,
+            LuaValueType.UserData => value.Read<LuaUserData>().Metatable,
+            LuaValueType.Table => value.Read<LuaTable>().Metatable,
+            _ => null
+        };
+
+        return result != null;
+    }
+
+    internal void SetMetatable(LuaValue value, LuaTable metatable)
+    {
+        switch (value.Type)
+        {
+            case LuaValueType.Nil:
+                nilMetatable = metatable;
+                break;
+            case LuaValueType.Boolean:
+                booleanMetatable = metatable;
+                break;
+            case LuaValueType.String:
+                stringMetatable = metatable;
+                break;
+            case LuaValueType.Number:
+                numberMetatable = metatable;
+                break;
+            case LuaValueType.Function:
+                functionMetatable = metatable;
+                break;
+            case LuaValueType.Thread:
+                threadMetatable = metatable;
+                break;
+            case LuaValueType.UserData:
+                value.Read<LuaUserData>().Metatable = metatable;
+                break;
+            case LuaValueType.Table:
+                value.Read<LuaTable>().Metatable = metatable;
+                break;
+        }
     }
 
     internal UpValue GetOrAddUpValue(LuaThread thread, int registerIndex)
