@@ -1,5 +1,6 @@
 using Lua.Standard.Basic;
 using Lua.Standard.Coroutines;
+using Lua.Standard.IO;
 using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
 using Lua.Standard.Table;
@@ -72,6 +73,11 @@ public static class OpenLibExtensions
         SortFunction.Instance,
     ];
 
+    static readonly LuaFunction[] ioFunctions = [
+        FileOpenFunction.Instance,
+        FileCloseFunction.Instance,
+    ];
+
     public static void OpenBasicLibrary(this LuaState state)
     {
         // basic
@@ -114,7 +120,7 @@ public static class OpenLibExtensions
         var package = new LuaTable(0, 1);
         package["loaded"] = new LuaTable();
         state.Environment["package"] = package;
-        
+
         state.Environment[RequireFunction.Instance.Name] = RequireFunction.Instance;
     }
 
@@ -127,5 +133,16 @@ public static class OpenLibExtensions
         }
 
         state.Environment["table"] = table;
+    }
+
+    public static void OpenIOLibrary(this LuaState state)
+    {
+        var io = new LuaTable(0, ioFunctions.Length);
+        foreach (var func in ioFunctions)
+        {
+            io[func.Name] = func;
+        }
+
+        state.Environment["io"] = io;
     }
 }

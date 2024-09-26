@@ -1,6 +1,48 @@
+using Lua.Runtime;
+
 namespace Lua.Standard.IO;
 
-public class FileHandle(FileStream stream) : LuaUserData
+public class FileHandle : LuaUserData
 {
-    public FileStream Stream { get; } = stream;
+    class IndexMetamethod : LuaFunction
+    {
+        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+        {
+            context.ReadArgument<FileHandle>(0);
+            var key = context.ReadArgument(1);
+
+            if (key.TryRead<string>(out var name))
+            {
+                buffer.Span[0] = name switch
+                {
+                    "write" => FileWriteFunction.Instance,
+                    "flush" => FileFlushFunction.Instance,
+                    "close" => FileCloseFunction.Instance,
+                    _ => LuaValue.Nil,
+                };
+            }
+            else
+            {
+                buffer.Span[0] = LuaValue.Nil;
+            }
+
+            return new(1);
+        }
+    }
+
+    public FileStream Stream { get; }
+
+    static readonly LuaTable fileHandleMetatable;
+
+    static FileHandle()
+    {
+        fileHandleMetatable = new LuaTable();
+        fileHandleMetatable[Metamethods.Index] = new IndexMetamethod();
+    }
+
+    public FileHandle(FileStream stream)
+    {
+        Stream = stream;
+        Metatable = fileHandleMetatable;
+    }
 }

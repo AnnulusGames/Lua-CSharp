@@ -1,9 +1,9 @@
 namespace Lua.Standard.IO;
 
-public sealed class OpenFunction : LuaFunction
+public sealed class FileOpenFunction : LuaFunction
 {
     public override string Name => "open";
-    public static readonly OpenFunction Instance = new();
+    public static readonly FileOpenFunction Instance = new();
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
