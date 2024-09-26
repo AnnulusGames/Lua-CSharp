@@ -6,8 +6,8 @@ public class Traceback
 {
     public required CallStackFrame[] StackFrames { get; init; }
 
-    internal string RootChunkName => StackFrames[^1].RootChunkName;
-    internal SourcePosition LastPosition => StackFrames[^1].CallPosition!.Value;
+    internal string RootChunkName => StackFrames.Length == 0 ? "" : StackFrames[^1].RootChunkName;
+    internal SourcePosition LastPosition => StackFrames.Length == 0 ? default : StackFrames[^1].CallPosition!.Value;
 
     public override string ToString()
     {
