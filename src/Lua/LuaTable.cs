@@ -48,7 +48,7 @@ public sealed class LuaTable
                     return array[index - 1];
                 }
             }
-            
+
             if (dictionary.TryGetValue(key, out var value)) return value;
             return LuaValue.Nil;
         }
@@ -133,6 +133,28 @@ public sealed class LuaTable
         return dictionary.ContainsKey(key);
     }
 
+    public LuaValue Remove(LuaValue key)
+    {
+        if (TryGetInteger(key, out var i) && i > 0 && i <= array.Length)
+        {
+            var index = i - 1;
+            var value = array[index];
+
+            if (index < array.Length - 1)
+            {
+                array.AsSpan(index + 1).CopyTo(array.AsSpan(index));
+            }
+            array[^1] = default;
+
+            return value;
+        }
+        else
+        {
+            dictionary.Remove(key, out var value);
+            return value;
+        }
+    }
+
     public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
     {
         var index = -1;
@@ -187,7 +209,7 @@ public sealed class LuaTable
     {
         return array.AsSpan();
     }
-    
+
     internal void EnsureArrayCapacity(int newCapacity)
     {
         if (array.Length >= newCapacity) return;

@@ -28,4 +28,17 @@ public class TableTests
 
         Assert.That(table[32], Is.EqualTo(new LuaValue(10)));
     }
+
+    [Test]
+    public void Test_Remove()
+    {
+        var table = new LuaTable();
+        table[1] = 1;
+        table[2] = 2;
+        table[3] = 3;
+
+        var value = table.Remove(2);
+        Assert.That(value, Is.EqualTo(new LuaValue(2)));
+        Assert.That(table[2], Is.EqualTo(new LuaValue(3)));
+    }
 }
