@@ -76,6 +76,8 @@ public static class OpenLibExtensions
     static readonly LuaFunction[] ioFunctions = [
         FileOpenFunction.Instance,
         FileCloseFunction.Instance,
+        InputFunction.Instance,
+        OutputFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
@@ -142,6 +144,10 @@ public static class OpenLibExtensions
         {
             io[func.Name] = func;
         }
+
+        io["stdio"] = new FileHandle(Console.OpenStandardInput());
+        io["stdout"] = new FileHandle(Console.OpenStandardOutput());
+        io["stderr"] = new FileHandle(Console.OpenStandardError());
 
         state.Environment["io"] = io;
     }

@@ -30,7 +30,7 @@ public class FileHandle : LuaUserData
         }
     }
 
-    public FileStream Stream { get; }
+    public Stream Stream { get; }
 
     static readonly LuaTable fileHandleMetatable;
 
@@ -40,7 +40,7 @@ public class FileHandle : LuaUserData
         fileHandleMetatable[Metamethods.Index] = new IndexMetamethod();
     }
 
-    public FileHandle(FileStream stream)
+    public FileHandle(Stream stream)
     {
         Stream = stream;
         Metatable = fileHandleMetatable;
