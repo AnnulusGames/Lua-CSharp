@@ -2,6 +2,7 @@ using Lua.Standard.Basic;
 using Lua.Standard.Coroutines;
 using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
+using Lua.Standard.Table;
 
 namespace Lua.Standard;
 
@@ -62,6 +63,15 @@ public static class OpenLibExtensions
         TanhFunction.Instance,
     ];
 
+    static readonly LuaFunction[] tableFunctions = [
+        PackFunction.Instance,
+        UnpackFunction.Instance,
+        RemoveFunction.Instance,
+        ConcatFunction.Instance,
+        InsertFunction.Instance,
+        SortFunction.Instance,
+    ];
+
     public static void OpenBasicLibrary(this LuaState state)
     {
         // basic
@@ -106,5 +116,16 @@ public static class OpenLibExtensions
         state.Environment["package"] = package;
         
         state.Environment[RequireFunction.Instance.Name] = RequireFunction.Instance;
+    }
+
+    public static void OpenTableLibrary(this LuaState state)
+    {
+        var table = new LuaTable(0, tableFunctions.Length);
+        foreach (var func in tableFunctions)
+        {
+            table[func.Name] = func;
+        }
+
+        state.Environment["table"] = table;
     }
 }
