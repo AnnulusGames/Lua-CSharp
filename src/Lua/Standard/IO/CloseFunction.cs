@@ -1,9 +1,9 @@
 namespace Lua.Standard.IO;
 
-public sealed class FileCloseFunction : LuaFunction
+public sealed class CloseFunction : LuaFunction
 {
     public override string Name => "close";
-    public static readonly FileCloseFunction Instance = new();
+    public static readonly CloseFunction Instance = new();
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {

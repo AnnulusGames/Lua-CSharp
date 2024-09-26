@@ -17,7 +17,7 @@ public class FileHandle : LuaUserData
                 {
                     "write" => FileWriteFunction.Instance,
                     "flush" => FileFlushFunction.Instance,
-                    "close" => FileCloseFunction.Instance,
+                    "close" => CloseFunction.Instance,
                     _ => LuaValue.Nil,
                 };
             }

@@ -74,8 +74,8 @@ public static class OpenLibExtensions
     ];
 
     static readonly LuaFunction[] ioFunctions = [
-        FileOpenFunction.Instance,
-        FileCloseFunction.Instance,
+        OpenFunction.Instance,
+        CloseFunction.Instance,
         InputFunction.Instance,
         OutputFunction.Instance,
     ];
