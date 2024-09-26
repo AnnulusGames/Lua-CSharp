@@ -133,26 +133,23 @@ public sealed class LuaTable
         return dictionary.ContainsKey(key);
     }
 
-    public LuaValue Remove(LuaValue key)
+    public LuaValue RemoveAt(int key)
     {
-        if (TryGetInteger(key, out var i) && i > 0 && i <= array.Length)
+        if (key <= 0 || key > array.Length)
         {
-            var index = i - 1;
-            var value = array[index];
-
-            if (index < array.Length - 1)
-            {
-                array.AsSpan(index + 1).CopyTo(array.AsSpan(index));
-            }
-            array[^1] = default;
-
-            return value;
+            return LuaValue.Nil;
         }
-        else
+
+        var index = key - 1;
+        var value = array[index];
+
+        if (index < array.Length - 1)
         {
-            dictionary.Remove(key, out var value);
-            return value;
+            array.AsSpan(index + 1).CopyTo(array.AsSpan(index));
         }
+        array[^1] = default;
+
+        return value;
     }
 
     public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)

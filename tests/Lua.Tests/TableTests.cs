@@ -30,14 +30,14 @@ public class TableTests
     }
 
     [Test]
-    public void Test_Remove()
+    public void Test_RemoveAt()
     {
         var table = new LuaTable();
         table[1] = 1;
         table[2] = 2;
         table[3] = 3;
 
-        var value = table.Remove(2);
+        var value = table.RemoveAt(2);
         Assert.That(value, Is.EqualTo(new LuaValue(2)));
         Assert.That(table[2], Is.EqualTo(new LuaValue(3)));
     }
