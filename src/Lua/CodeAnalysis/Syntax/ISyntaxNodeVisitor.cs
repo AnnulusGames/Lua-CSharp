@@ -10,6 +10,7 @@ public interface ISyntaxNodeVisitor<TContext, TResult>
     TResult VisitStringLiteralNode(StringLiteralNode node, TContext context);
     TResult VisitUnaryExpressionNode(UnaryExpressionNode node, TContext context);
     TResult VisitBinaryExpressionNode(BinaryExpressionNode node, TContext context);
+    TResult VisitGroupedExpressionNode(GroupedExpressionNode node, TContext context);
     TResult VisitIdentifierNode(IdentifierNode node, TContext context);
     TResult VisitDoStatementNode(DoStatementNode node, TContext context);
     TResult VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, TContext context);

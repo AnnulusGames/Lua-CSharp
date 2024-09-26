@@ -190,6 +190,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         return true;
     }
 
+    public bool VisitGroupedExpressionNode(GroupedExpressionNode node, ScopeCompilationContext context)
+    {
+        return node.Expression.Accept(this, context);
+    }
+
     // table
     public bool VisitTableConstructorExpressionNode(TableConstructorExpressionNode node, ScopeCompilationContext context)
     {

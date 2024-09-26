@@ -811,10 +811,10 @@ public ref struct Parser
         return result;
     }
 
-    ExpressionNode ParseGroupedExpression(ref SyntaxTokenEnumerator enumerator)
+    GroupedExpressionNode ParseGroupedExpression(ref SyntaxTokenEnumerator enumerator)
     {
         // skip '('
-        CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.LParen, out _);
+        CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.LParen, out var lParen);
         enumerator.SkipEoL();
 
         var expression = ParseExpression(ref enumerator, GetPrecedence(enumerator.Current.Type));
@@ -823,7 +823,7 @@ public ref struct Parser
         // check ')'
         CheckCurrent(ref enumerator, SyntaxTokenType.RParen);
 
-        return expression;
+        return new GroupedExpressionNode(expression, lParen.Position);
     }
 
     ExpressionNode ParseCallFunctionExpression(ref SyntaxTokenEnumerator enumerator, ExpressionNode? function)

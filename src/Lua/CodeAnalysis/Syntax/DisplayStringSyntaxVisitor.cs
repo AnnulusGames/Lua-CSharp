@@ -89,11 +89,9 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
 
     public bool VisitBinaryExpressionNode(BinaryExpressionNode node, Context context)
     {
-        context.Append("(");
         node.LeftNode.Accept(this, context);
         context.Append($" {node.OperatorType.ToDisplayString()} ");
         node.RightNode.Accept(this, context);
-        context.Append(")");
         return true;
     }
 
@@ -536,5 +534,13 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
             nodes[i].Accept(this, context);
             if (i != nodes.Length - 1) context.Append(", ");
         }
+    }
+
+    public bool VisitGroupedExpressionNode(GroupedExpressionNode node, Context context)
+    {
+        context.Append("(");
+        node.Expression.Accept(this, context);
+        context.Append(")");
+        return true;
     }
 }
