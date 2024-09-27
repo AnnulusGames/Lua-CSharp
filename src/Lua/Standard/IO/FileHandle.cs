@@ -16,6 +16,7 @@ public class FileHandle : LuaUserData
                 buffer.Span[0] = name switch
                 {
                     "write" => FileWriteFunction.Instance,
+                    "read" => FileReadFunction.Instance,
                     "flush" => FileFlushFunction.Instance,
                     "close" => CloseFunction.Instance,
                     _ => LuaValue.Nil,

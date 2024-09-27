@@ -78,6 +78,8 @@ public static class OpenLibExtensions
         CloseFunction.Instance,
         InputFunction.Instance,
         OutputFunction.Instance,
+        WriteFunction.Instance,
+        ReadFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
