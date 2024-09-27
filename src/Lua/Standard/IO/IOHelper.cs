@@ -59,7 +59,7 @@ internal static class IOHelper
 
         try
         {
-            var reader = new StreamReader(file.Stream);
+            var reader = file.Reader!;
 
             for (int i = 0; i < formats.Length; i++)
             {
