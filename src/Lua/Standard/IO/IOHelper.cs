@@ -50,7 +50,7 @@ internal static class IOHelper
 
     static readonly LuaValue[] defaultReadFormat = ["*l"];
 
-    public static int Read(FileHandle file, string name, LuaFunctionExecutionContext context, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public static int Read(FileHandle file, string name, LuaFunctionExecutionContext context, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer)
     {
         if (formats.Length == 0)
         {
@@ -59,7 +59,7 @@ internal static class IOHelper
 
         try
         {
-            using var reader = new StreamReader(file.Stream);
+            var reader = new StreamReader(file.Stream);
 
             for (int i = 0; i < formats.Length; i++)
             {
@@ -78,11 +78,12 @@ internal static class IOHelper
                             break;
                         case "*l":
                         case "*line":
-                            buffer.Span[i] = reader.ReadLine();
+                            buffer.Span[i] = reader.ReadLine() ?? LuaValue.Nil;
                             break;
                         case "L":
                         case "*L":
-                            buffer.Span[i] = reader.ReadLine() + Environment.NewLine;
+                            var text = reader.ReadLine();
+                            buffer.Span[i] = text == null ? LuaValue.Nil : text + Environment.NewLine;
                             break;
                     }
                 }
@@ -95,10 +96,6 @@ internal static class IOHelper
                     
                     // TODO:
 
-                }
-                else if (i == 0 && format.TryRead<FileHandle>(out var f) && f == file)
-                {
-                    continue;
                 }
                 else
                 {

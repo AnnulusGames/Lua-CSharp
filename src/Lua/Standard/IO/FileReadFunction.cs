@@ -12,7 +12,7 @@ public sealed class FileReadFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var file = context.ReadArgument<FileHandle>(0);
-        var resultCount = IOHelper.Read(file, Name, context, context.Arguments[1..], buffer, cancellationToken);
+        var resultCount = IOHelper.Read(file, Name, context, context.Arguments[1..], buffer);
         return new(resultCount);
     }
 }
