@@ -11,7 +11,7 @@ public sealed class FileFlushFunction : LuaFunction
 
         try
         {
-            file.Stream.Flush();
+            file.Flush();
             buffer.Span[0] = true;
             return new(1);
         }

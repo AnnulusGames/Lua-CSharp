@@ -31,8 +31,8 @@ public class FileHandle : LuaUserData
         }
     }
 
-    public Stream Stream { get; }
-    public StreamReader? Reader { get; }
+    Stream stream;
+    StreamReader? reader;
 
     static readonly LuaTable fileHandleMetatable;
 
@@ -44,8 +44,40 @@ public class FileHandle : LuaUserData
 
     public FileHandle(Stream stream)
     {
-        Stream = stream;
-        if (stream.CanRead) Reader = new StreamReader(stream);
+        this.stream = stream;
+        if (stream.CanRead) reader = new StreamReader(stream);
         Metatable = fileHandleMetatable;
+    }
+
+    public string? ReadLine()
+    {
+        return reader!.ReadLine();
+    }
+
+    public string ReadToEnd()
+    {
+        return reader!.ReadToEnd();
+    }
+
+    public void Write(ReadOnlySpan<byte> buffer)
+    {
+        stream.Write(buffer);
+    }
+
+    public void Flush()
+    {
+        stream.Flush();
+    }
+
+    public void Close()
+    {
+        if (reader != null)
+        {
+            reader.Dispose();
+        }
+        else
+        {
+            stream.Close();
+        }
     }
 }

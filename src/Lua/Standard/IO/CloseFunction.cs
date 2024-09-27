@@ -11,7 +11,7 @@ public sealed class CloseFunction : LuaFunction
 
         try
         {
-            file.Stream.Close();
+            file.Close();
             buffer.Span[0] = true;
             return new(1);
         }

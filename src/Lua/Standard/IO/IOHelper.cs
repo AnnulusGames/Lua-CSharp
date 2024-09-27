@@ -19,7 +19,7 @@ internal static class IOHelper
                 {
                     using var fileBuffer = new PooledArray<byte>(str.Length * 3);
                     var bytesWritten = Encoding.UTF8.GetBytes(str, fileBuffer.AsSpan());
-                    file.Stream.Write(fileBuffer.AsSpan()[..bytesWritten]);
+                    file.Write(fileBuffer.AsSpan()[..bytesWritten]);
                 }
                 else if (arg.TryRead<double>(out var d))
                 {
@@ -28,7 +28,7 @@ internal static class IOHelper
                     {
                         throw new ArgumentException("Destination is too short.");
                     }
-                    file.Stream.Write(fileBuffer.AsSpan()[..bytesWritten]);
+                    file.Write(fileBuffer.AsSpan()[..bytesWritten]);
                 }
                 else
                 {
@@ -59,8 +59,6 @@ internal static class IOHelper
 
         try
         {
-            var reader = file.Reader!;
-
             for (int i = 0; i < formats.Length; i++)
             {
                 var format = formats[i];
@@ -74,15 +72,15 @@ internal static class IOHelper
                             throw new NotImplementedException();
                         case "*a":
                         case "*all":
-                            buffer.Span[i] = reader.ReadToEnd();
+                            buffer.Span[i] = file.ReadToEnd();
                             break;
                         case "*l":
                         case "*line":
-                            buffer.Span[i] = reader.ReadLine() ?? LuaValue.Nil;
+                            buffer.Span[i] = file.ReadLine() ?? LuaValue.Nil;
                             break;
                         case "L":
                         case "*L":
-                            var text = reader.ReadLine();
+                            var text = file.ReadLine();
                             buffer.Span[i] = text == null ? LuaValue.Nil : text + Environment.NewLine;
                             break;
                     }
@@ -93,7 +91,7 @@ internal static class IOHelper
                     {
                         throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{i + 1} to 'read' (number has no integer representation)");
                     }
-                    
+
                     // TODO:
 
                 }
