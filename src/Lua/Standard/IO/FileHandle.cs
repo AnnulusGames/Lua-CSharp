@@ -33,6 +33,9 @@ public class FileHandle : LuaUserData
 
     Stream stream;
     StreamReader? reader;
+    bool isClosed;
+
+    public bool IsClosed => Volatile.Read(ref isClosed);
 
     static readonly LuaTable fileHandleMetatable;
 
@@ -76,6 +79,9 @@ public class FileHandle : LuaUserData
 
     public void Close()
     {
+        if (isClosed) throw new ObjectDisposedException(nameof(FileHandle));
+        Volatile.Write(ref isClosed, true);
+
         if (reader != null)
         {
             reader.Dispose();

@@ -25,7 +25,7 @@ public static class OpenLibExtensions
         NextFunction.Instance,
         IPairsFunction.Instance,
         PairsFunction.Instance,
-        TypeFunction.Instance,
+        Basic.TypeFunction.Instance,
         PCallFunction.Instance,
         XPCallFunction.Instance,
         DoFileFunction.Instance,
@@ -80,6 +80,7 @@ public static class OpenLibExtensions
         OutputFunction.Instance,
         WriteFunction.Instance,
         ReadFunction.Instance,
+        IO.TypeFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
