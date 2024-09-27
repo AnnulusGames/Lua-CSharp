@@ -92,8 +92,22 @@ internal static class IOHelper
                         throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{i + 1} to 'read' (number has no integer representation)");
                     }
 
-                    // TODO:
+                    var count = (int)d;
+                    using var byteBuffer = new PooledArray<byte>(count);
 
+                    for (int j = 0; j < count; j++)
+                    {
+                        var b = file.ReadByte();
+                        if (b == -1)
+                        {
+                            buffer.Span[0] = LuaValue.Nil;
+                            return 1;
+                        }
+
+                        byteBuffer[j] = (byte)b;
+                    }
+
+                    buffer.Span[i] = Encoding.UTF8.GetString(byteBuffer.AsSpan());
                 }
                 else
                 {

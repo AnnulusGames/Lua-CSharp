@@ -59,6 +59,11 @@ public class FileHandle : LuaUserData
         return reader!.ReadToEnd();
     }
 
+    public int ReadByte()
+    {
+        return stream.ReadByte();
+    }
+
     public void Write(ReadOnlySpan<byte> buffer)
     {
         stream.Write(buffer);
