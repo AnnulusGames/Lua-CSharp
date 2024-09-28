@@ -8,7 +8,7 @@ public sealed class WriteFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var file = context.State.Environment["io"].Read<LuaTable>()["stdio"].Read<FileHandle>();
-        var resultCount = IOHelper.Write(file, Name, context, buffer, cancellationToken);
+        var resultCount = IOHelper.Write(file, Name, context, buffer);
         return new(resultCount);
     }
 }

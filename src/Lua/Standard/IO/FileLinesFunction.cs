@@ -22,7 +22,7 @@ public sealed class FileLinesFunction : LuaFunction
 
         protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
-            var resultCount = IOHelper.Read(file, Name, 0, true, context, formats, buffer);
+            var resultCount = IOHelper.Read(context.State, file, Name, 0, formats, buffer, true);
             return new(resultCount);
         }
     }

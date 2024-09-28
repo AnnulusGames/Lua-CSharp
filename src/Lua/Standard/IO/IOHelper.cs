@@ -45,7 +45,7 @@ internal static class IOHelper
 
     // TODO: optimize (use IBuffertWrite<byte>, async)
 
-    public static int Write(FileHandle file, string name, LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public static int Write(FileHandle file, string name, LuaFunctionExecutionContext context, Memory<LuaValue> buffer)
     {
         try
         {
@@ -87,7 +87,7 @@ internal static class IOHelper
 
     static readonly LuaValue[] defaultReadFormat = ["*l"];
 
-    public static int Read(FileHandle file, string name, int startArgumentIndex, bool throwError, LuaFunctionExecutionContext context, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer)
+    public static int Read(LuaState state, FileHandle file, string name, int startArgumentIndex, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer, bool throwError)
     {
         if (formats.Length == 0)
         {
@@ -126,7 +126,7 @@ internal static class IOHelper
                 {
                     if (!MathEx.IsInteger(d))
                     {
-                        throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{i + startArgumentIndex} to 'read' (number has no integer representation)");
+                        throw new LuaRuntimeException(state.GetTraceback(), $"bad argument #{i + startArgumentIndex} to 'read' (number has no integer representation)");
                     }
 
                     var count = (int)d;
@@ -148,7 +148,7 @@ internal static class IOHelper
                 }
                 else
                 {
-                    LuaRuntimeException.BadArgument(context.State.GetTraceback(), i + 1, name);
+                    LuaRuntimeException.BadArgument(state.GetTraceback(), i + 1, name);
                 }
             }
 

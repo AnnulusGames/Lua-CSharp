@@ -34,7 +34,7 @@ public sealed class LinesFunction : LuaFunction
 
         protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
-            var resultCount = IOHelper.Read(file, Name, 0, true, context, formats, buffer);
+            var resultCount = IOHelper.Read(context.State, file, Name, 0, formats, buffer, true);
             if (resultCount > 0 && buffer.Span[0].Type is LuaValueType.Nil)
             {
                 file.Close();
