@@ -80,6 +80,7 @@ public static class OpenLibExtensions
         OutputFunction.Instance,
         WriteFunction.Instance,
         ReadFunction.Instance,
+        LinesFunction.Instance,
         IO.TypeFunction.Instance,
     ];
 

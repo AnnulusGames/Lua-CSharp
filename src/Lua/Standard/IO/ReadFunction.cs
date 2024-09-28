@@ -8,7 +8,7 @@ public sealed class ReadFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var file = context.State.Environment["io"].Read<LuaTable>()["stdio"].Read<FileHandle>();
-        var resultCount = IOHelper.Read(file, Name, context, context.Arguments, buffer);
+        var resultCount = IOHelper.Read(file, Name, 0, false, context, context.Arguments, buffer);
         return new(resultCount);
     }
 }

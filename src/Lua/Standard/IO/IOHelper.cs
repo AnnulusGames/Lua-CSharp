@@ -6,6 +6,43 @@ namespace Lua.Standard.IO;
 
 internal static class IOHelper
 {
+    public static int Open(LuaState state, string fileName, string mode, Memory<LuaValue> buffer, bool throwError)
+    {
+        var fileMode = mode switch
+        {
+            "r" or "rb" or "r+" or "r+b" => FileMode.Open,
+            "w" or "wb" or "w+" or "w+b" => FileMode.Create,
+            "a" or "ab" or "a+" or "a+b" => FileMode.Append,
+            _ => throw new LuaRuntimeException(state.GetTraceback(), "bad argument #2 to 'open' (invalid mode)"),
+        };
+
+        var fileAccess = mode switch
+        {
+            "r" or "rb" => FileAccess.Read,
+            "w" or "wb" or "a" or "ab" => FileAccess.Write,
+            _ => FileAccess.ReadWrite,
+        };
+
+        try
+        {
+            var stream = File.Open(fileName, fileMode, fileAccess);
+            buffer.Span[0] = new FileHandle(stream);
+            return 1;
+        }
+        catch (IOException ex)
+        {
+            if (throwError)
+            {
+                throw;
+            }
+
+            buffer.Span[0] = LuaValue.Nil;
+            buffer.Span[1] = ex.Message;
+            buffer.Span[2] = ex.HResult;
+            return 3;
+        }
+    }
+
     // TODO: optimize (use IBuffertWrite<byte>, async)
 
     public static int Write(FileHandle file, string name, LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
@@ -50,7 +87,7 @@ internal static class IOHelper
 
     static readonly LuaValue[] defaultReadFormat = ["*l"];
 
-    public static int Read(FileHandle file, string name, LuaFunctionExecutionContext context, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer)
+    public static int Read(FileHandle file, string name, int startArgumentIndex, bool throwError, LuaFunctionExecutionContext context, ReadOnlySpan<LuaValue> formats, Memory<LuaValue> buffer)
     {
         if (formats.Length == 0)
         {
@@ -89,7 +126,7 @@ internal static class IOHelper
                 {
                     if (!MathEx.IsInteger(d))
                     {
-                        throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{i + 1} to 'read' (number has no integer representation)");
+                        throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{i + startArgumentIndex} to 'read' (number has no integer representation)");
                     }
 
                     var count = (int)d;
@@ -119,6 +156,11 @@ internal static class IOHelper
         }
         catch (IOException ex)
         {
+            if (throwError)
+            {
+                throw;
+            }
+
             buffer.Span[0] = LuaValue.Nil;
             buffer.Span[1] = ex.Message;
             buffer.Span[2] = ex.HResult;
