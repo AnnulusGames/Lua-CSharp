@@ -2,6 +2,8 @@ using Lua.Runtime;
 
 namespace Lua.Standard.IO;
 
+// TODO: optimize (remove StreamReader/Writer)
+
 public class FileHandle : LuaUserData
 {
     class IndexMetamethod : LuaFunction
@@ -19,6 +21,7 @@ public class FileHandle : LuaUserData
                     "read" => FileReadFunction.Instance,
                     "lines" => FileLinesFunction.Instance,
                     "flush" => FileFlushFunction.Instance,
+                    "setvbuf" => FileSetVBufFunction.Instance,
                     "close" => CloseFunction.Instance,
                     _ => LuaValue.Nil,
                 };
@@ -33,6 +36,7 @@ public class FileHandle : LuaUserData
     }
 
     Stream stream;
+    StreamWriter? writer;
     StreamReader? reader;
     bool isClosed;
 
@@ -50,6 +54,7 @@ public class FileHandle : LuaUserData
     {
         this.stream = stream;
         if (stream.CanRead) reader = new StreamReader(stream);
+        if (stream.CanWrite) writer = new StreamWriter(stream);
         Metatable = fileHandleMetatable;
     }
 
@@ -68,14 +73,24 @@ public class FileHandle : LuaUserData
         return stream.ReadByte();
     }
 
-    public void Write(ReadOnlySpan<byte> buffer)
+    public void Write(ReadOnlySpan<char> buffer)
     {
-        stream.Write(buffer);
+        writer!.Write(buffer);
     }
 
     public void Flush()
     {
-        stream.Flush();
+        writer!.Flush();
+    }
+
+    public void SetVBuf(string mode, int size)
+    {
+        // Ignore size parameter
+        
+        if (writer != null)
+        {
+            writer.AutoFlush = mode is "no" or "line";
+        }
     }
 
     public void Close()

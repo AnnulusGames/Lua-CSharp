@@ -54,18 +54,14 @@ internal static class IOHelper
                 var arg = context.Arguments[i];
                 if (arg.TryRead<string>(out var str))
                 {
-                    using var fileBuffer = new PooledArray<byte>(str.Length * 3);
-                    var bytesWritten = Encoding.UTF8.GetBytes(str, fileBuffer.AsSpan());
-                    file.Write(fileBuffer.AsSpan()[..bytesWritten]);
+                    file.Write(str);
                 }
                 else if (arg.TryRead<double>(out var d))
                 {
-                    using var fileBuffer = new PooledArray<byte>(64);
-                    if (!Utf8Formatter.TryFormat(d, fileBuffer.AsSpan(), out var bytesWritten))
-                    {
-                        throw new ArgumentException("Destination is too short.");
-                    }
-                    file.Write(fileBuffer.AsSpan()[..bytesWritten]);
+                    using var fileBuffer = new PooledArray<char>(64);
+                    var span = fileBuffer.AsSpan();
+                    d.TryFormat(span, out var charsWritten);
+                    file.Write(span[..charsWritten]);
                 }
                 else
                 {
