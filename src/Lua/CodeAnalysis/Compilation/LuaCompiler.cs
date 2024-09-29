@@ -637,6 +637,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 RegisterIndex = 0,
             });
+
+            funcContext.Scope.StackPosition++;
         }
 
         // add arguments
@@ -647,9 +649,9 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 RegisterIndex = (byte)(i + (hasSelfParameter ? 1 : 0)),
             });
-        }
 
-        funcContext.Scope.StackPosition = (byte)parameters.Length;
+            funcContext.Scope.StackPosition++;
+        }
 
         foreach (var statement in statements)
         {
@@ -1078,9 +1080,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         for (int i = 0; i < expressions.Length; i++)
         {
             var expression = expressions[i];
-            var remaining = expressions.Length - i + 1;
             var isLast = i == expressions.Length - 1;
-            var resultCount = isLast ? (minimumCount == -1 ? -1 : remaining) : 1;
+            var resultCount = isLast ? (minimumCount == -1 ? -1 : minimumCount - i) : 1;
 
             if (expression is CallFunctionExpressionNode call)
             {
