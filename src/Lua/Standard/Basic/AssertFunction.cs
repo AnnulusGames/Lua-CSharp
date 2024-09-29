@@ -20,6 +20,7 @@ public sealed class AssertFunction : LuaFunction
             throw new LuaAssertionException(context.State.GetTraceback(), message);
         }
 
-        return new(0);
+        context.Arguments.CopyTo(buffer.Span);
+        return new(context.ArgumentCount);
     }
 }
