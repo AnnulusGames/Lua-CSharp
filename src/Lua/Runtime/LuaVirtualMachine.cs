@@ -857,7 +857,9 @@ public static partial class LuaVirtualMachine
                         stack.EnsureCapacity(RA + count);
                         for (int i = 0; i < count; i++)
                         {
-                            stack.UnsafeGet(RA + i) = stack.UnsafeGet(frame.Base - (frame.VariableArgumentCount - i));
+                            stack.UnsafeGet(RA + i) = frame.VariableArgumentCount > i
+                                ? stack.UnsafeGet(frame.Base - (frame.VariableArgumentCount - i))
+                                : LuaValue.Nil;
                         }
                         stack.NotifyTop(RA + count);
                     }
