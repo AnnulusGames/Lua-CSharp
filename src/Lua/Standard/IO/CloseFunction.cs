@@ -7,7 +7,9 @@ public sealed class CloseFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var file = context.ReadArgument<FileHandle>(0);
+        var file = context.ArgumentCount >= 1
+            ? context.ReadArgument<FileHandle>(0)
+            : context.State.Environment["io"].Read<LuaTable>()["stdout"].Read<FileHandle>();
 
         try
         {
