@@ -105,10 +105,12 @@ public static partial class LuaVirtualMachine
                 case OpCode.Self:
                     {
                         stack.EnsureCapacity(RA + 2);
-                        var table = stack.UnsafeGet(RB).Read<LuaTable>();
+                        var table = stack.UnsafeGet(RB);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
+                        var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
+                        
                         stack.UnsafeGet(RA + 1) = table;
-                        stack.UnsafeGet(RA) = table[vc];
+                        stack.UnsafeGet(RA) = value;
                         stack.NotifyTop(RA + 2);
                     }
                     break;

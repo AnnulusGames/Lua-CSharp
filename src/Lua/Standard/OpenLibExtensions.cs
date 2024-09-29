@@ -1,5 +1,6 @@
 using Lua.Standard.Basic;
 using Lua.Standard.Coroutines;
+using Lua.Standard.IO;
 using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
 using Lua.Standard.Table;
@@ -24,7 +25,7 @@ public static class OpenLibExtensions
         NextFunction.Instance,
         IPairsFunction.Instance,
         PairsFunction.Instance,
-        TypeFunction.Instance,
+        Basic.TypeFunction.Instance,
         PCallFunction.Instance,
         XPCallFunction.Instance,
         DoFileFunction.Instance,
@@ -72,6 +73,17 @@ public static class OpenLibExtensions
         SortFunction.Instance,
     ];
 
+    static readonly LuaFunction[] ioFunctions = [
+        OpenFunction.Instance,
+        CloseFunction.Instance,
+        InputFunction.Instance,
+        OutputFunction.Instance,
+        WriteFunction.Instance,
+        ReadFunction.Instance,
+        LinesFunction.Instance,
+        IO.TypeFunction.Instance,
+    ];
+
     public static void OpenBasicLibrary(this LuaState state)
     {
         // basic
@@ -114,7 +126,7 @@ public static class OpenLibExtensions
         var package = new LuaTable(0, 1);
         package["loaded"] = new LuaTable();
         state.Environment["package"] = package;
-        
+
         state.Environment[RequireFunction.Instance.Name] = RequireFunction.Instance;
     }
 
@@ -127,5 +139,20 @@ public static class OpenLibExtensions
         }
 
         state.Environment["table"] = table;
+    }
+
+    public static void OpenIOLibrary(this LuaState state)
+    {
+        var io = new LuaTable(0, ioFunctions.Length);
+        foreach (var func in ioFunctions)
+        {
+            io[func.Name] = func;
+        }
+
+        io["stdio"] = new FileHandle(Console.OpenStandardInput());
+        io["stdout"] = new FileHandle(Console.OpenStandardOutput());
+        io["stderr"] = new FileHandle(Console.OpenStandardError());
+
+        state.Environment["io"] = io;
     }
 }
