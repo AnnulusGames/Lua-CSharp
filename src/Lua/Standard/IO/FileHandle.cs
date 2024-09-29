@@ -78,6 +78,29 @@ public class FileHandle : LuaUserData
         writer!.Write(buffer);
     }
 
+    public long Seek(string whence, long offset)
+    {
+        if (whence != null)
+        {
+            switch (whence)
+            {
+                case "set":
+                    stream.Seek(offset, SeekOrigin.Begin);
+                    break;
+                case "cur":
+                    stream.Seek(offset, SeekOrigin.Current);
+                    break;
+                case "end":
+                    stream.Seek(offset, SeekOrigin.End);
+                    break;
+                default:
+                    throw new ArgumentException($"Invalid option '{whence}'");
+            }
+        }
+
+        return stream.Position;
+    }
+
     public void Flush()
     {
         writer!.Flush();
@@ -86,7 +109,7 @@ public class FileHandle : LuaUserData
     public void SetVBuf(string mode, int size)
     {
         // Ignore size parameter
-        
+
         if (writer != null)
         {
             writer.AutoFlush = mode is "no" or "line";
