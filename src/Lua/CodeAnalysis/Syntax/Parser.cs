@@ -586,7 +586,7 @@ public ref struct Parser
             result = ParseTableAccessExpression(ref enumerator, result);
             goto RECURSIVE;
         }
-        else if (nextType is SyntaxTokenType.LParen)
+        else if (nextType is SyntaxTokenType.LParen or SyntaxTokenType.String or SyntaxTokenType.LCurly)
         {
             MoveNextWithValidation(ref enumerator);
             result = ParseCallFunctionExpression(ref enumerator, result);
@@ -859,6 +859,10 @@ public ref struct Parser
         if (enumerator.Current.Type is SyntaxTokenType.String)
         {
             return [new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position)];
+        }
+        else if (enumerator.Current.Type is SyntaxTokenType.LCurly)
+        {
+            return [ParseTableConstructorExpression(ref enumerator)];
         }
 
         // check and skip '('
