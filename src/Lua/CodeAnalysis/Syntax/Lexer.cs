@@ -228,7 +228,18 @@ public ref struct Lexer
             if (c1 is '0' && c2 is 'x' or 'X') // hex 0x
             {
                 Advance(1);
+                if (span[offset] is '.') Advance(1);
+
                 ReadDigit(ref span, ref offset, out var readCount);
+
+                if (span.Length > offset)
+                {
+                    if (span[offset] is '.')
+                    {
+                        Advance(1);
+                        ReadDigit(ref span, ref offset, out _);
+                    }
+                }
 
                 if (readCount == 0)
                 {
@@ -247,6 +258,14 @@ public ref struct Lexer
                     {
                         Advance(1);
                         ReadNumber(ref span, ref offset, out _);
+
+                        if (span.Length > offset && span[offset] is 'e' or 'E')
+                        {
+                            Advance(1);
+                            if (span[offset] is '-' or '+') Advance(1);
+
+                            ReadNumber(ref span, ref offset, out _);
+                        }
                     }
                     else if (c is 'e' or 'E')
                     {
