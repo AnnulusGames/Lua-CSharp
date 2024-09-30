@@ -223,7 +223,7 @@ public ref struct Lexer
         }
 
         // numeric literal
-        if (IsNumeric(c1))
+        if (c1 is '.' || IsNumeric(c1))
         {
             if (c1 is '0' && c2 is 'x' or 'X') // hex 0x
             {
