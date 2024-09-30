@@ -9,7 +9,7 @@ public sealed class RandomSeedFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<double>(0);
+        var arg0 = context.GetArgument<double>(0);
         context.State.Environment[RandomFunction.RandomInstanceKey] = new LuaUserData<Random>(new Random((int)BitConverter.DoubleToInt64Bits(arg0)));
         return new(0);
     }

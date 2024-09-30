@@ -7,14 +7,14 @@ public sealed class AssertFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
+        var arg0 = context.GetArgument(0);
 
         if (!arg0.ToBoolean())
         {
             var message = "assertion failed!";
-            if (context.ArgumentCount >= 2)
+            if (context.HasArgument(1))
             {
-                message = context.ReadArgument<string>(1);
+                message = context.GetArgument<string>(1);
             }
 
             throw new LuaAssertionException(context.State.GetTraceback(), message);

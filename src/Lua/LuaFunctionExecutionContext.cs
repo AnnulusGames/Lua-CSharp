@@ -22,14 +22,20 @@ public readonly record struct LuaFunctionExecutionContext
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public LuaValue ReadArgument(int index)
+    public bool HasArgument(int index)
+    {
+        return ArgumentCount > index && Arguments[index].Type is not LuaValueType.Nil;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public LuaValue GetArgument(int index)
     {
         ThrowIfArgumentNotExists(index);
         return Arguments[index];
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public T ReadArgument<T>(int index)
+    public T GetArgument<T>(int index)
     {
         ThrowIfArgumentNotExists(index);
 

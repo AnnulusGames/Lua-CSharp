@@ -7,9 +7,9 @@ public sealed class OpenFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var fileName = context.ReadArgument<string>(0);
-        var mode = context.ArgumentCount >= 2
-            ? context.ReadArgument<string>(1)
+        var fileName = context.GetArgument<string>(0);
+        var mode = context.HasArgument(1)
+            ? context.GetArgument<string>(1)
             : "r";
 
         var resultCount = IOHelper.Open(context.State, fileName, mode, buffer, false);

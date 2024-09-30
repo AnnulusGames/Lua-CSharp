@@ -10,8 +10,8 @@ public class FileHandle : LuaUserData
     {
         protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
-            context.ReadArgument<FileHandle>(0);
-            var key = context.ReadArgument(1);
+            context.GetArgument<FileHandle>(0);
+            var key = context.GetArgument(1);
 
             if (key.TryRead<string>(out var name))
             {

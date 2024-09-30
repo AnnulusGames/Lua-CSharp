@@ -9,9 +9,9 @@ public sealed class ToNumberFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
-        var arg1 = context.ArgumentCount >= 2
-            ? (int)context.ReadArgument<double>(1)
+        var arg0 = context.GetArgument(0);
+        var arg1 = context.HasArgument(1)
+            ? (int)context.GetArgument<double>(1)
             : 10;
 
         if (arg1 < 2 || arg1 > 36)

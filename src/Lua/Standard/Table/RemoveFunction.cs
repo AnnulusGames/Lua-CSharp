@@ -7,9 +7,9 @@ public sealed class RemoveFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaTable>(0);
-        var arg1 = context.ArgumentCount >= 2
-            ? context.ReadArgument<double>(1)
+        var arg0 = context.GetArgument<LuaTable>(0);
+        var arg1 = context.HasArgument(1)
+            ? context.GetArgument<double>(1)
             : arg0.ArrayLength;
 
         if (!MathEx.IsInteger(arg1))

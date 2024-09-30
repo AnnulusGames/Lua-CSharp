@@ -9,15 +9,15 @@ public sealed class ConcatFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaTable>(0);
-        var arg1 = context.ArgumentCount >= 2
-            ? context.ReadArgument<string>(1)
+        var arg0 = context.GetArgument<LuaTable>(0);
+        var arg1 = context.HasArgument(1)
+            ? context.GetArgument<string>(1)
             : "";
-        var arg2 = context.ArgumentCount >= 3
-            ? (int)context.ReadArgument<double>(2)
+        var arg2 = context.HasArgument(2)
+            ? (int)context.GetArgument<double>(2)
             : 1;
-        var arg3 = context.ArgumentCount >= 4
-            ? (int)context.ReadArgument<double>(3)
+        var arg3 = context.HasArgument(3)
+            ? (int)context.GetArgument<double>(3)
             : arg0.ArrayLength;
 
         var builder = new ValueStringBuilder(512);

@@ -7,7 +7,7 @@ public sealed class FileFlushFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var file = context.ReadArgument<FileHandle>(0);
+        var file = context.GetArgument<FileHandle>(0);
 
         try
         {

@@ -9,7 +9,7 @@ public sealed class LogFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<double>(0);
+        var arg0 = context.GetArgument<double>(0);
 
         if (context.ArgumentCount == 1)
         {
@@ -17,10 +17,10 @@ public sealed class LogFunction : LuaFunction
         }
         else
         {
-            var arg1 = context.ReadArgument<double>(1);
+            var arg1 = context.GetArgument<double>(1);
             buffer.Span[0] = Math.Log(arg0, arg1);
         }
-        
+
         return new(1);
     }
 }

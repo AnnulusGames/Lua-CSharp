@@ -7,14 +7,14 @@ public sealed class FileSeekFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var file = context.ReadArgument<FileHandle>(0);
-        var whence = context.ArgumentCount >= 2
-            ? context.ReadArgument<string>(1)
+        var file = context.GetArgument<FileHandle>(0);
+        var whence = context.HasArgument(1)
+            ? context.GetArgument<string>(1)
             : "cur";
-        var offset = context.ArgumentCount >= 3
-            ? context.ReadArgument<double>(2)
+        var offset = context.HasArgument(2)
+            ? context.GetArgument<double>(2)
             : 0;
-        
+
         if (whence is not ("set" or "cur" or "end"))
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #2 to 'seek' (invalid option '{whence}')");
@@ -24,7 +24,7 @@ public sealed class FileSeekFunction : LuaFunction
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #3 to 'seek' (number has no integer representation)");
         }
-        
+
         try
         {
             buffer.Span[0] = file.Seek(whence, (long)offset);

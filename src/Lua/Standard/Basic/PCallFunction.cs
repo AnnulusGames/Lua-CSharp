@@ -9,7 +9,7 @@ public sealed class PCallFunction : LuaFunction
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaFunction>(0);
+        var arg0 = context.GetArgument<LuaFunction>(0);
 
         try
         {

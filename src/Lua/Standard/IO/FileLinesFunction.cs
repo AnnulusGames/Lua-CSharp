@@ -7,11 +7,11 @@ public sealed class FileLinesFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<FileHandle>(0);
-        var arg1 = context.ArgumentCount >= 2
+        var arg0 = context.GetArgument<FileHandle>(0);
+        var arg1 = context.HasArgument(1)
             ? context.Arguments[1]
             : "*l";
-        
+
         buffer.Span[0] = new Iterator(arg0, arg1);
         return new(1);
     }

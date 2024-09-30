@@ -7,7 +7,7 @@ public sealed class ToStringFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
+        var arg0 = context.GetArgument(0);
         return arg0.CallToStringAsync(context, buffer, cancellationToken);
     }
 }

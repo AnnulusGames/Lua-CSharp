@@ -8,7 +8,7 @@ public sealed class RawLenFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
+        var arg0 = context.GetArgument(0);
 
         if (arg0.TryRead<LuaTable>(out var table))
         {

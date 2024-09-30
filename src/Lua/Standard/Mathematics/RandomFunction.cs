@@ -18,13 +18,13 @@ public sealed class RandomFunction : LuaFunction
         }
         else if (context.ArgumentCount == 1)
         {
-            var arg0 = context.ReadArgument<double>(0);
+            var arg0 = context.GetArgument<double>(0);
             buffer.Span[0] = rand.NextDouble() * (arg0 - 1) + 1;
         }
         else
         {
-            var arg0 = context.ReadArgument<double>(0);
-            var arg1 = context.ReadArgument<double>(1);
+            var arg0 = context.GetArgument<double>(0);
+            var arg1 = context.GetArgument<double>(1);
             buffer.Span[0] = rand.NextDouble() * (arg1 - arg0) + arg0;
         }
 
