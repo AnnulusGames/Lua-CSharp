@@ -56,7 +56,7 @@ public sealed class LuaTable
         {
             if (TryGetInteger(key, out var index))
             {
-                if (0 < index && index <= array.Length * 2)
+                if (0 < index && index <= Math.Max(array.Length * 2, 8))
                 {
                     EnsureArrayCapacity(index);
                     array[index - 1] = value;
@@ -127,7 +127,7 @@ public sealed class LuaTable
 
         if (TryGetInteger(key, out var index))
         {
-            return index > 0 && index <= array.Length && array[index].Type != LuaValueType.Nil;
+            return index > 0 && index <= array.Length && array[index - 1].Type != LuaValueType.Nil;
         }
 
         return dictionary.ContainsKey(key);
