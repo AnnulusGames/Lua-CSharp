@@ -830,7 +830,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         // set JMP sBx
         context.Function.Instructions[conditionIndex].SBx = context.Function.Instructions.Length - 1 - conditionIndex;
 
-        CompileConditionNode(node.ConditionNode, context, true);
+        CompileConditionNode(node.ConditionNode, context, false);
         var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
         context.PushInstruction(Instruction.Jmp(a, conditionIndex - context.Function.Instructions.Length), node.Position);
 
@@ -1054,7 +1054,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 case BinaryOperator.LessThanOrEqual:
                     {
                         (var b, var c) = GetBAndC(binaryExpression, context);
-                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)1 : (byte)0, b, c), node.Position);
+                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.GreaterThan:
