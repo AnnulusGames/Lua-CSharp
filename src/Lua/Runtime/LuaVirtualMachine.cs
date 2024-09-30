@@ -991,7 +991,7 @@ public static partial class LuaVirtualMachine
             newBase = currentBase;
         }
 
-        var variableArgumentCount = function is Closure luaClosure && luaClosure.Proto.HasVariableArgments
+        var variableArgumentCount = function is Closure luaClosure
             ? argumentCount - luaClosure.Proto.ParameterCount
             : 0;
 

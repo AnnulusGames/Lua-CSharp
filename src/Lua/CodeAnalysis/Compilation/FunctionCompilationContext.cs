@@ -271,7 +271,6 @@ public class FunctionCompilationContext : IDisposable
             UpValues = upvalues.AsSpan().ToArray(),
             Functions = functions.AsSpan().ToArray(),
             ParameterCount = ParameterCount,
-            HasVariableArgments = HasVariableArguments,
         };
 
         foreach (var function in functions.AsSpan())

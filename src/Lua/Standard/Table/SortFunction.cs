@@ -15,7 +15,6 @@ public sealed class SortFunction : LuaFunction
         Name = "comp",
         Functions = [],
         Constants = [],
-        HasVariableArgments = false,
         Instructions = [
             Instruction.Le(1, 0, 1),
             Instruction.LoadBool(2, 1, 1),
