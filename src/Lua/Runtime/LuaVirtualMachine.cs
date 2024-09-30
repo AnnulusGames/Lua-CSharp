@@ -388,18 +388,7 @@ public static partial class LuaVirtualMachine
                 case OpCode.Not:
                     {
                         stack.EnsureCapacity(RA + 1);
-
-                        var rb = stack.UnsafeGet(RB);
-
-                        if (rb.TryRead<bool>(out var valueB))
-                        {
-                            stack.UnsafeGet(RA) = !valueB;
-                        }
-                        else
-                        {
-                            stack.UnsafeGet(RA) = false;
-                        }
-
+                        stack.UnsafeGet(RA) = !stack.UnsafeGet(RB).ToBoolean();
                         stack.NotifyTop(RA + 1);
                     }
                     break;
