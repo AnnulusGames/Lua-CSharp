@@ -402,9 +402,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             ? (ushort)0
             : (ushort)(node.Nodes.Length + 1);
 
+        var a = context.StackPosition;
+
         CompileExpressionList(node, node.Nodes, b - 1, context);
 
-        context.PushInstruction(Instruction.Return((byte)(context.StackPosition - node.Nodes.Length), b), node.Position);
+        context.PushInstruction(Instruction.Return(a, b), node.Position);
 
         return true;
     }

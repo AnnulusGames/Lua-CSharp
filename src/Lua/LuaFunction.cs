@@ -17,7 +17,7 @@ public abstract partial class LuaFunction
             CallPosition = context.SourcePosition,
             ChunkName = context.ChunkName ?? LuaState.DefaultChunkName,
             RootChunkName = context.RootChunkName ?? LuaState.DefaultChunkName,
-            VariableArgumentCount = this is Closure closure ? context.ArgumentCount - closure.Proto.ParameterCount : 0,
+            VariableArgumentCount = this is Closure closure ? Math.Max(context.ArgumentCount - closure.Proto.ParameterCount, 0) : 0,
             Function = this,
         };
 
