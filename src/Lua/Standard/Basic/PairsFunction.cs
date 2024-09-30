@@ -22,21 +22,9 @@ public sealed class PairsFunction : LuaFunction
             return function.InvokeAsync(context, buffer, cancellationToken);
         }
 
-        buffer.Span[0] = new Iterator(arg0);
-        return new(1);
-    }
-
-    class Iterator(LuaTable table) : LuaFunction
-    {
-        LuaValue key;
-
-        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            var kv = table.GetNext(key);
-            buffer.Span[0] = kv.Key;
-            buffer.Span[1] = kv.Value;
-            key = kv.Key;
-            return new(2);
-        }
+        buffer.Span[0] = NextFunction.Instance;
+        buffer.Span[1] = arg0;
+        buffer.Span[2] = LuaValue.Nil;
+        return new(3);
     }
 }

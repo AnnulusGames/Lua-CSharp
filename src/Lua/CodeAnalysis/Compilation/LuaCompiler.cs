@@ -895,7 +895,22 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     {
         // get iterator
         var startPosition = context.StackPosition;
-        node.ExpressionNode.Accept(this, context);
+        if (node.ExpressionNode is CallFunctionExpressionNode call)
+        {
+            CompileCallFunctionExpression(call, context, false, 3);
+        }
+        else if (node.ExpressionNode is CallTableMethodExpressionNode method)
+        {
+            CompileTableMethod(method, context, false, 3);
+        }
+        else if (node.ExpressionNode is VariableArgumentsExpressionNode varArg)
+        {
+            CompileVariableArgumentsExpression(varArg, context, 3);
+        }
+        else
+        {
+            node.ExpressionNode.Accept(this, context);
+        }
 
         // jump to TFORCALL
         var startJumpIndex = context.Function.Instructions.Length;

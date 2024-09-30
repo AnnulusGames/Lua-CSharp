@@ -781,6 +781,9 @@ public static partial class LuaVirtualMachine
                         var iterator = stack.UnsafeGet(RA).Read<LuaFunction>();
 
                         var nextBase = RA + 3 + instruction.C;
+                        stack.UnsafeGet(nextBase) = stack.UnsafeGet(RA + 1);
+                        stack.UnsafeGet(nextBase + 1) = stack.UnsafeGet(RA + 2);
+                        stack.NotifyTop(nextBase + 2);
 
                         var resultBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
                         resultBuffer.AsSpan().Clear();

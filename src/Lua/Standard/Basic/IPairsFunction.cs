@@ -22,16 +22,21 @@ public sealed class IPairsFunction : LuaFunction
             return function.InvokeAsync(context, buffer, cancellationToken);
         }
 
-        buffer.Span[0] = new Iterator(arg0);
-        return new(1);
+        buffer.Span[0] = Iterator.Instance;
+        buffer.Span[1] = arg0;
+        buffer.Span[2] = 0;
+        return new(3);
     }
 
-    class Iterator(LuaTable table) : LuaFunction
+    class Iterator : LuaFunction
     {
-        int i;
+        public static readonly Iterator Instance = new();
 
         protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
+            var table = context.GetArgument<LuaTable>(0);
+            var i = context.GetArgument<double>(1);
+
             i++;
             if (table.TryGetValue(i, out var value))
             {
