@@ -552,7 +552,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     // function declaration
     public bool VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -569,7 +569,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         });
 
         // compile function
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -579,7 +579,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitFunctionDeclarationStatementNode(FunctionDeclarationStatementNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // add closure
         var index = context.Function.GetConstantIndex(node.Name.ToString());
@@ -596,7 +596,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     public bool VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, ScopeCompilationContext context)
     {
         var funcIdentifier = node.MemberPath[^1];
-        var funcIndex = CompileFunctionProto(funcIdentifier.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, node.HasSelfParameter);
+        var funcIndex = CompileFunctionProto(funcIdentifier.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length + 1, node.HasVariableArguments, node.HasSelfParameter);
 
         // add closure
         var index = context.Function.GetConstantIndex(funcIdentifier.Name.ToString());
@@ -626,11 +626,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         return true;
     }
 
-    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, bool hasVarArg, bool hasSelfParameter)
+    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, int parameterCount, bool hasVarArg, bool hasSelfParameter)
     {
         using var funcContext = context.CreateChildFunction();
         funcContext.ChunkName = functionName.ToString();
-        funcContext.ParameterCount = parameters.Length;
+        funcContext.ParameterCount = parameterCount;
         funcContext.HasVariableArguments = hasVarArg;
 
         if (hasSelfParameter)
