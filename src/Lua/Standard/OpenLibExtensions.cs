@@ -109,16 +109,17 @@ public static class OpenLibExtensions
     public static void OpenMathLibrary(this LuaState state)
     {
         state.Environment[RandomFunction.RandomInstanceKey] = new LuaUserData<Random>(new Random());
-        state.Environment["pi"] = Math.PI;
-        state.Environment["huge"] = double.PositiveInfinity;
 
-        var table = new LuaTable(0, mathFunctions.Length);
+        var math = new LuaTable(0, mathFunctions.Length);
         foreach (var func in mathFunctions)
         {
-            table[func.Name] = func;
+            math[func.Name] = func;
         }
 
-        state.Environment["math"] = table;
+        math["pi"] = Math.PI;
+        math["huge"] = double.PositiveInfinity;
+
+        state.Environment["math"] = math;
     }
 
     public static void OpenModuleLibrary(this LuaState state)
