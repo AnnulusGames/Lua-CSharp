@@ -1,4 +1,5 @@
 using System.Globalization;
+using Lua.Runtime;
 
 namespace Lua.Standard.Basic;
 
@@ -25,9 +26,9 @@ public sealed class ToNumberFunction : LuaFunction
         }
         else if (arg0.TryRead<string>(out var str))
         {
-            if ((arg1 == 10 || arg1 == 16) && str.Length >= 3 && str[0] == '0' && str[1] == 'x')
+            if (arg1 == 10 || arg1 == 16)
             {
-                if (int.TryParse(str.AsSpan(2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var result))
+                if (arg0.TryGetNumber(out var result))
                 {
                     buffer.Span[0] = result;
                 }
@@ -38,7 +39,7 @@ public sealed class ToNumberFunction : LuaFunction
             }
             else if (arg0 == 10)
             {
-                if (double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out double result))
+                if (double.TryParse(str, out double result))
                 {
                     buffer.Span[0] = result;
                 }
