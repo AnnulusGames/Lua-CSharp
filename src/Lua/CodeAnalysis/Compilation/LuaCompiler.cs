@@ -830,7 +830,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         // set JMP sBx
         context.Function.Instructions[conditionIndex].SBx = context.Function.Instructions.Length - 1 - conditionIndex;
 
-        CompileConditionNode(node.ConditionNode, context, false);
+        CompileConditionNode(node.ConditionNode, context, true);
         var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
         context.PushInstruction(Instruction.Jmp(a, conditionIndex - context.Function.Instructions.Length), node.Position);
 
