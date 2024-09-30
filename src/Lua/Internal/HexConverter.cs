@@ -20,7 +20,7 @@ public static class HexConverter
         }
 
         var dotIndex = text.IndexOf('.');
-        var expIndex = text.IndexOf('p');
+        var expIndex = text.IndexOfAny('p', 'P');
 
         if (dotIndex == -1 && expIndex == -1)
         {

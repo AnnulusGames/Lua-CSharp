@@ -232,13 +232,18 @@ public ref struct Lexer
 
                 ReadDigit(ref span, ref offset, out var readCount);
 
-                if (span.Length > offset)
+                if (span.Length > offset && span[offset] is '.')
                 {
-                    if (span[offset] is '.')
-                    {
-                        Advance(1);
-                        ReadDigit(ref span, ref offset, out _);
-                    }
+                    Advance(1);
+                    ReadDigit(ref span, ref offset, out _);
+                }
+
+                if (span.Length > offset && span[offset] is 'p' or 'P')
+                {
+                    Advance(1);
+                    if (span[offset] is '-' or '+') Advance(1);
+
+                    ReadDigit(ref span, ref offset, out _);
                 }
 
                 if (readCount == 0)
@@ -250,30 +255,18 @@ public ref struct Lexer
             {
                 ReadNumber(ref span, ref offset, out _);
 
-                if (span.Length > offset)
+                if (span.Length > offset && span[offset] is '.')
                 {
-                    var c = span[offset];
+                    Advance(1);
+                    ReadNumber(ref span, ref offset, out _);
+                }
 
-                    if (c is '.')
-                    {
-                        Advance(1);
-                        ReadNumber(ref span, ref offset, out _);
+                if (span.Length > offset && span[offset] is 'e' or 'E')
+                {
+                    Advance(1);
+                    if (span[offset] is '-' or '+') Advance(1);
 
-                        if (span.Length > offset && span[offset] is 'e' or 'E')
-                        {
-                            Advance(1);
-                            if (span[offset] is '-' or '+') Advance(1);
-
-                            ReadNumber(ref span, ref offset, out _);
-                        }
-                    }
-                    else if (c is 'e' or 'E')
-                    {
-                        Advance(1);
-                        if (span[offset] is '-' or '+') Advance(1);
-
-                        ReadNumber(ref span, ref offset, out _);
-                    }
+                    ReadNumber(ref span, ref offset, out _);
                 }
             }
 
