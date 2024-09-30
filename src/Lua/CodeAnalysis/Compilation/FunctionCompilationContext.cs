@@ -128,16 +128,9 @@ public class FunctionCompilationContext : IDisposable
 
     public void AddOrSetFunctionProto(ReadOnlyMemory<char> name, Chunk chunk, out int index)
     {
-        if (functionMap.TryGetValue(name, out index))
-        {
-            functions.AsSpan()[index] = chunk;
-        }
-        else
-        {
-            index = functions.Length;
-            functionMap.Add(name, functions.Length);
-            functions.Add(chunk);
-        }
+        index = functions.Length;
+        functionMap[name] = functions.Length;
+        functions.Add(chunk);
     }
 
     public void AddFunctionProto(Chunk chunk, out int index)
