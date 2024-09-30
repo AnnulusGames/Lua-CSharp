@@ -52,7 +52,14 @@ public class LuaStack(int initialSize = 256)
     public void PopUntil(int newSize)
     {
         if (newSize >= top) return;
-        array.AsSpan(newSize, top).Clear();
+        if (newSize == 0)
+        {
+            array.AsSpan().Clear();
+        }
+        else
+        {
+            array.AsSpan(newSize - 1).Clear();
+        }
         top = newSize;
     }
 
