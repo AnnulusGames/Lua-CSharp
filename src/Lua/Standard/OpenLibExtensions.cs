@@ -91,6 +91,7 @@ public static class OpenLibExtensions
         ExitFunction.Instance,
         GetEnvFunction.Instance,
         OperatingSystem.RemoveFunction.Instance,
+        RenameFunction.Instance,
         SetLocaleFunction.Instance,
         TimeFunction.Instance,
     ];
