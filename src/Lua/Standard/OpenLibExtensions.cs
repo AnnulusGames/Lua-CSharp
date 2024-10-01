@@ -87,6 +87,7 @@ public static class OpenLibExtensions
 
     static readonly LuaFunction[] osFunctions = [
         ClockFunction.Instance,
+        TimeFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
