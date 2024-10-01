@@ -68,7 +68,7 @@ public static class OpenLibExtensions
     static readonly LuaFunction[] tableFunctions = [
         PackFunction.Instance,
         UnpackFunction.Instance,
-        RemoveFunction.Instance,
+        Table.RemoveFunction.Instance,
         ConcatFunction.Instance,
         InsertFunction.Instance,
         SortFunction.Instance,
@@ -90,6 +90,7 @@ public static class OpenLibExtensions
         DiffTimeFunction.Instance,
         ExitFunction.Instance,
         GetEnvFunction.Instance,
+        OperatingSystem.RemoveFunction.Instance,
         SetLocaleFunction.Instance,
         TimeFunction.Instance,
     ];
