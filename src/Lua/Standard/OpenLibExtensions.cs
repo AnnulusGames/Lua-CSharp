@@ -94,6 +94,7 @@ public static class OpenLibExtensions
         RenameFunction.Instance,
         SetLocaleFunction.Instance,
         TimeFunction.Instance,
+        TmpNameFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
