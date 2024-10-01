@@ -9,8 +9,8 @@ public sealed class XPCallFunction : LuaFunction
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaFunction>(0);
-        var arg1 = context.ReadArgument<LuaFunction>(1);
+        var arg0 = context.GetArgument<LuaFunction>(0);
+        var arg1 = context.GetArgument<LuaFunction>(1);
 
         using var methodBuffer = new PooledArray<LuaValue>(1024);
         methodBuffer.AsSpan().Clear();

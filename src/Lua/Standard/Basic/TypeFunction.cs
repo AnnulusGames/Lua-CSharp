@@ -7,8 +7,8 @@ public sealed class TypeFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
-        
+        var arg0 = context.GetArgument(0);
+
         buffer.Span[0] = arg0.Type switch
         {
             LuaValueType.Nil => "nil",

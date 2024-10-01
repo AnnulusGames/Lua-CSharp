@@ -11,9 +11,9 @@ public sealed class LoadFileFunction : LuaFunction
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         // Lua-CSharp does not support binary chunks, the mode argument is ignored.
-        var arg0 = context.ReadArgument<string>(0);
-        var arg2 = context.ArgumentCount >= 3
-            ? context.ReadArgument<LuaTable>(2)
+        var arg0 = context.GetArgument<string>(0);
+        var arg2 = context.HasArgument(2)
+            ? context.GetArgument<LuaTable>(2)
             : null;
 
         // do not use LuaState.DoFileAsync as it uses the new LuaFunctionExecutionContext

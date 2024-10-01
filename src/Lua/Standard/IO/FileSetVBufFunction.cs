@@ -7,10 +7,10 @@ public sealed class FileSetVBufFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var file = context.ReadArgument<FileHandle>(0);
-        var mode = context.ReadArgument<string>(1);
-        var size = context.ArgumentCount >= 3
-            ? context.ReadArgument<double>(2)
+        var file = context.GetArgument<FileHandle>(0);
+        var mode = context.GetArgument<string>(1);
+        var size = context.HasArgument(2)
+            ? context.GetArgument<double>(2)
             : -1;
 
         if (!MathEx.IsInteger(size))

@@ -9,10 +9,10 @@ public sealed class MinFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var x = context.ReadArgument<double>(0);
+        var x = context.GetArgument<double>(0);
         for (int i = 1; i < context.ArgumentCount; i++)
         {
-            x = Math.Min(x, context.ReadArgument<double>(i));
+            x = Math.Min(x, context.GetArgument<double>(i));
         }
 
         buffer.Span[0] = x;

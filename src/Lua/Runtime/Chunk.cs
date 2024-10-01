@@ -13,7 +13,6 @@ public sealed class Chunk
     public required UpValueInfo[] UpValues { get; init; }
     public required Chunk[] Functions { get; init; }
     public required int ParameterCount { get; init; }
-    public required bool HasVariableArgments { get; init; }
 
     internal Chunk GetRoot()
     {

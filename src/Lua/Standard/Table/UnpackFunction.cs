@@ -7,12 +7,12 @@ public sealed class UnpackFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaTable>(0);
-        var arg1 = context.ArgumentCount >= 2
-            ? (int)context.ReadArgument<double>(1)
+        var arg0 = context.GetArgument<LuaTable>(0);
+        var arg1 = context.HasArgument(1)
+            ? (int)context.GetArgument<double>(1)
             : 1;
-        var arg2 = context.ArgumentCount >= 3
-            ? (int)context.ReadArgument<double>(2)
+        var arg2 = context.HasArgument(2)
+            ? (int)context.GetArgument<double>(2)
             : arg0.ArrayLength;
 
         var index = 0;

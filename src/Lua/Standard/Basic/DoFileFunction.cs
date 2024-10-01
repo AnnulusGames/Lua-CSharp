@@ -10,7 +10,7 @@ public sealed class DoFileFunction : LuaFunction
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<string>(0);
+        var arg0 = context.GetArgument<string>(0);
 
         // do not use LuaState.DoFileAsync as it uses the new LuaFunctionExecutionContext
         var text = await File.ReadAllTextAsync(arg0, cancellationToken);

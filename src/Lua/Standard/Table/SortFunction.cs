@@ -15,7 +15,6 @@ public sealed class SortFunction : LuaFunction
         Name = "comp",
         Functions = [],
         Constants = [],
-        HasVariableArgments = false,
         Instructions = [
             Instruction.Le(1, 0, 1),
             Instruction.LoadBool(2, 1, 1),
@@ -31,9 +30,9 @@ public sealed class SortFunction : LuaFunction
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<LuaTable>(0);
-        var arg1 = context.ArgumentCount >= 2
-            ? context.ReadArgument<LuaFunction>(1)
+        var arg0 = context.GetArgument<LuaTable>(0);
+        var arg1 = context.HasArgument(1)
+            ? context.GetArgument<LuaFunction>(1)
             : new Closure(context.State, defaultComparer);
 
         await QuickSortAsync(context, arg0.GetArrayMemory(), 0, arg0.ArrayLength - 1, arg1, cancellationToken);

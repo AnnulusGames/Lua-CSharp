@@ -402,9 +402,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             ? (ushort)0
             : (ushort)(node.Nodes.Length + 1);
 
+        var a = context.StackPosition;
+
         CompileExpressionList(node, node.Nodes, b - 1, context);
 
-        context.PushInstruction(Instruction.Return((byte)(context.StackPosition - node.Nodes.Length), b), node.Position);
+        context.PushInstruction(Instruction.Return(a, b), node.Position);
 
         return true;
     }
@@ -550,7 +552,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     // function declaration
     public bool VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(ReadOnlyMemory<char>.Empty, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -567,7 +569,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         });
 
         // compile function
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
@@ -577,7 +579,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitFunctionDeclarationStatementNode(FunctionDeclarationStatementNode node, ScopeCompilationContext context)
     {
-        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, false);
+        var funcIndex = CompileFunctionProto(node.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length, node.HasVariableArguments, false);
 
         // add closure
         var index = context.Function.GetConstantIndex(node.Name.ToString());
@@ -594,7 +596,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     public bool VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, ScopeCompilationContext context)
     {
         var funcIdentifier = node.MemberPath[^1];
-        var funcIndex = CompileFunctionProto(funcIdentifier.Name, context, node.ParameterNodes, node.Nodes, node.HasVariableArguments, node.HasSelfParameter);
+        var funcIndex = CompileFunctionProto(funcIdentifier.Name, context, node.ParameterNodes, node.Nodes, node.ParameterNodes.Length + 1, node.HasVariableArguments, node.HasSelfParameter);
 
         // add closure
         var index = context.Function.GetConstantIndex(funcIdentifier.Name.ToString());
@@ -624,11 +626,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         return true;
     }
 
-    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, bool hasVarArg, bool hasSelfParameter)
+    int CompileFunctionProto(ReadOnlyMemory<char> functionName, ScopeCompilationContext context, IdentifierNode[] parameters, SyntaxNode[] statements, int parameterCount, bool hasVarArg, bool hasSelfParameter)
     {
         using var funcContext = context.CreateChildFunction();
         funcContext.ChunkName = functionName.ToString();
-        funcContext.ParameterCount = parameters.Length;
+        funcContext.ParameterCount = parameterCount;
         funcContext.HasVariableArguments = hasVarArg;
 
         if (hasSelfParameter)
@@ -637,6 +639,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 RegisterIndex = 0,
             });
+
+            funcContext.Scope.StackPosition++;
         }
 
         // add arguments
@@ -647,9 +651,9 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 RegisterIndex = (byte)(i + (hasSelfParameter ? 1 : 0)),
             });
-        }
 
-        funcContext.Scope.StackPosition = (byte)parameters.Length;
+            funcContext.Scope.StackPosition++;
+        }
 
         foreach (var statement in statements)
         {
@@ -891,7 +895,22 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     {
         // get iterator
         var startPosition = context.StackPosition;
-        node.ExpressionNode.Accept(this, context);
+        if (node.ExpressionNode is CallFunctionExpressionNode call)
+        {
+            CompileCallFunctionExpression(call, context, false, 3);
+        }
+        else if (node.ExpressionNode is CallTableMethodExpressionNode method)
+        {
+            CompileTableMethod(method, context, false, 3);
+        }
+        else if (node.ExpressionNode is VariableArgumentsExpressionNode varArg)
+        {
+            CompileVariableArgumentsExpression(varArg, context, 3);
+        }
+        else
+        {
+            node.ExpressionNode.Accept(this, context);
+        }
 
         // jump to TFORCALL
         var startJumpIndex = context.Function.Instructions.Length;
@@ -1050,7 +1069,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 case BinaryOperator.LessThanOrEqual:
                     {
                         (var b, var c) = GetBAndC(binaryExpression, context);
-                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)1 : (byte)0, b, c), node.Position);
+                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.GreaterThan:
@@ -1078,9 +1097,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         for (int i = 0; i < expressions.Length; i++)
         {
             var expression = expressions[i];
-            var remaining = expressions.Length - i + 1;
             var isLast = i == expressions.Length - 1;
-            var resultCount = isLast ? (minimumCount == -1 ? -1 : remaining) : 1;
+            var resultCount = isLast ? (minimumCount == -1 ? -1 : minimumCount - i) : 1;
 
             if (expression is CallFunctionExpressionNode call)
             {

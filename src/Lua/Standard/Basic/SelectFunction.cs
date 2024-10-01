@@ -7,7 +7,7 @@ public sealed class SelectFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument(0);
+        var arg0 = context.GetArgument(0);
 
         if (arg0.TryRead<double>(out var d))
         {
@@ -18,7 +18,15 @@ public sealed class SelectFunction : LuaFunction
 
             var index = (int)d;
 
-            var span = context.Arguments[index..];
+            if (Math.Abs(index) > context.ArgumentCount)
+            {
+                throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #1 to 'select' (index out of range)");
+            }
+
+            var span = index >= 0
+                ? context.Arguments[index..]
+                : context.Arguments[(context.ArgumentCount + index)..];
+
             span.CopyTo(buffer.Span);
 
             return new(span.Length);

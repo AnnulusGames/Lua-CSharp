@@ -7,14 +7,14 @@ public sealed class InsertFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var table = context.ReadArgument<LuaTable>(0);
+        var table = context.GetArgument<LuaTable>(0);
 
-        var value = context.ArgumentCount >= 3
-            ? context.ReadArgument(2)
-            : context.ReadArgument(1);
+        var value = context.HasArgument(2)
+            ? context.GetArgument(2)
+            : context.GetArgument(1);
 
-        var pos = context.ArgumentCount >= 3
-            ? context.ReadArgument<double>(1)
+        var pos = context.HasArgument(2)
+            ? context.GetArgument<double>(1)
             : table.ArrayLength + 1;
 
         if (!MathEx.IsInteger(pos))

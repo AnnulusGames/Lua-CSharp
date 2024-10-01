@@ -74,7 +74,7 @@ print("+")
 
 function oneless (a, ...) return ... end
 
-function f (n, a, ...)
+function f(n, a, ...)
   local b
   assert(arg == nil)
   if n == 0 then

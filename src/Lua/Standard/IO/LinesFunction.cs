@@ -17,7 +17,7 @@ public sealed class LinesFunction : LuaFunction
         }
         else
         {
-            var fileName = context.ReadArgument<string>(0);
+            var fileName = context.GetArgument<string>(0);
 
             using var methodBuffer = new PooledArray<LuaValue>(32);
             IOHelper.Open(context.State, fileName, "r", methodBuffer.AsMemory(), true);

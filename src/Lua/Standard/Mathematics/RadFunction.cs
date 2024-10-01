@@ -9,7 +9,7 @@ public sealed class RadFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<double>(0);
+        var arg0 = context.GetArgument<double>(0);
         buffer.Span[0] = arg0 * (Math.PI / 180.0);
         return new(1);
     }

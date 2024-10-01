@@ -2,6 +2,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using Lua.Internal;
 using Lua.CodeAnalysis.Syntax.Nodes;
+using System.Globalization;
 
 namespace Lua.CodeAnalysis.Syntax;
 
@@ -559,7 +560,7 @@ public ref struct Parser
                 SyntaxTokenType.LSquare or SyntaxTokenType.Dot or SyntaxTokenType.Colon => ParseTableAccessExpression(ref enumerator, null),
                 _ => new IdentifierNode(enumerator.Current.Text, enumerator.Current.Position),
             },
-            SyntaxTokenType.Number => new NumericLiteralNode(double.Parse(enumerator.Current.Text.Span), enumerator.Current.Position),
+            SyntaxTokenType.Number => new NumericLiteralNode(ConvertTextToNumber(enumerator.Current.Text.Span), enumerator.Current.Position),
             SyntaxTokenType.String => new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position),
             SyntaxTokenType.True => new BooleanLiteralNode(true, enumerator.Current.Position),
             SyntaxTokenType.False => new BooleanLiteralNode(false, enumerator.Current.Position),
@@ -586,7 +587,7 @@ public ref struct Parser
             result = ParseTableAccessExpression(ref enumerator, result);
             goto RECURSIVE;
         }
-        else if (nextType is SyntaxTokenType.LParen)
+        else if (nextType is SyntaxTokenType.LParen or SyntaxTokenType.String or SyntaxTokenType.LCurly)
         {
             MoveNextWithValidation(ref enumerator);
             result = ParseCallFunctionExpression(ref enumerator, result);
@@ -626,7 +627,7 @@ public ref struct Parser
             enumerator.MoveNext();
             enumerator.SkipEoL();
 
-            return new NumericLiteralNode(-double.Parse(enumerator.Current.Text.Span), token.Position);
+            return new NumericLiteralNode(-ConvertTextToNumber(enumerator.Current.Text.Span), token.Position);
         }
         else
         {
@@ -860,6 +861,10 @@ public ref struct Parser
         {
             return [new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position)];
         }
+        else if (enumerator.Current.Type is SyntaxTokenType.LCurly)
+        {
+            return [ParseTableConstructorExpression(ref enumerator)];
+        }
 
         // check and skip '('
         CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.LParen, out _);
@@ -987,5 +992,17 @@ public ref struct Parser
             SyntaxTokenType.Or => OperatorPrecedence.Or,
             _ => OperatorPrecedence.NonOperator,
         };
+    }
+
+    static double ConvertTextToNumber(ReadOnlySpan<char> text)
+    {
+        if (text.Length > 2 && text[0] is '0' && text[1] is 'x' or 'X')
+        {
+            return HexConverter.ToDouble(text);
+        }
+        else
+        {
+            return double.Parse(text);
+        }
     }
 }

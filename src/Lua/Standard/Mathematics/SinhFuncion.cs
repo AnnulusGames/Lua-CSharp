@@ -8,7 +8,7 @@ public sealed class SinhFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.ReadArgument<double>(0);
+        var arg0 = context.GetArgument<double>(0);
         buffer.Span[0] = Math.Sinh(arg0);
         return new(1);
     }
