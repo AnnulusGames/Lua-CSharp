@@ -3,6 +3,7 @@ using Lua.Standard.Coroutines;
 using Lua.Standard.IO;
 using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
+using Lua.Standard.OperatingSystem;
 using Lua.Standard.Table;
 
 namespace Lua.Standard;
@@ -84,6 +85,10 @@ public static class OpenLibExtensions
         IO.TypeFunction.Instance,
     ];
 
+    static readonly LuaFunction[] osFunctions = [
+        ClockFunction.Instance,
+    ];
+
     public static void OpenBasicLibrary(this LuaState state)
     {
         // basic
@@ -155,5 +160,16 @@ public static class OpenLibExtensions
         io["stderr"] = new FileHandle(Console.OpenStandardError());
 
         state.Environment["io"] = io;
+    }
+
+    public static void OpenOperatingSystemLibrary(this LuaState state)
+    {
+        var os = new LuaTable(0, osFunctions.Length);
+        foreach (var func in osFunctions)
+        {
+            os[func.Name] = func;
+        }
+
+        state.Environment["os"] = os;
     }
 }
