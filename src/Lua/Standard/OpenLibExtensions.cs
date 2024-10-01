@@ -87,6 +87,7 @@ public static class OpenLibExtensions
 
     static readonly LuaFunction[] osFunctions = [
         ClockFunction.Instance,
+        SetLocaleFunction.Instance,
         TimeFunction.Instance,
     ];
 
