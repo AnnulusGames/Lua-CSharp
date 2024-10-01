@@ -88,6 +88,7 @@ public static class OpenLibExtensions
     static readonly LuaFunction[] osFunctions = [
         ClockFunction.Instance,
         DiffTimeFunction.Instance,
+        ExecuteFunction.Instance,
         ExitFunction.Instance,
         GetEnvFunction.Instance,
         OperatingSystem.RemoveFunction.Instance,
