@@ -1,4 +1,5 @@
 using Lua.Standard.Basic;
+using Lua.Standard.Bitwise;
 using Lua.Standard.Coroutines;
 using Lua.Standard.IO;
 using Lua.Standard.Mathematics;
@@ -99,6 +100,10 @@ public static class OpenLibExtensions
         TmpNameFunction.Instance,
     ];
 
+    static readonly LuaFunction[] bit32Functions = [
+        ArshiftFunction.Instance,
+    ];
+
     public static void OpenBasicLibrary(this LuaState state)
     {
         // basic
@@ -181,5 +186,16 @@ public static class OpenLibExtensions
         }
 
         state.Environment["os"] = os;
+    }
+
+    public static void OpenBitwiseLibrary(this LuaState state)
+    {
+        var bit32 = new LuaTable(0, osFunctions.Length);
+        foreach (var func in bit32Functions)
+        {
+            bit32[func.Name] = func;
+        }
+
+        state.Environment["bit32"] = bit32;
     }
 }
