@@ -102,6 +102,9 @@ public static class OpenLibExtensions
 
     static readonly LuaFunction[] bit32Functions = [
         ArshiftFunction.Instance,
+        BandFunction.Instance,
+        BorFunction.Instance,
+        BxorFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
