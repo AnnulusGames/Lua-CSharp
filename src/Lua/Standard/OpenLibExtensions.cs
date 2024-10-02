@@ -104,6 +104,7 @@ public static class OpenLibExtensions
         ArshiftFunction.Instance,
         BandFunction.Instance,
         BorFunction.Instance,
+        BtestFunction.Instance,
         BxorFunction.Instance,
     ];
 
