@@ -13,7 +13,7 @@ public sealed class RRotateFunction : LuaFunction
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 1, x);
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, disp);
 
-        var v = Bit32Helper.ToInt32(x);
+        var v = Bit32Helper.ToUInt32(x);
         var a = ((int)disp) % 32;
 
         if (a < 0)
