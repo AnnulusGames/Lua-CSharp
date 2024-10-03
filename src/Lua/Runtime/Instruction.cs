@@ -90,7 +90,7 @@ public struct Instruction : IEquatable<Instruction>
             OpCode.Mul => $"MUL       {A} {B} {C}",
             OpCode.Div => $"DIV       {A} {B} {C}",
             OpCode.Mod => $"MOD       {A} {B} {C}",
-            OpCode.Pow => $"POQ       {A} {B} {C}",
+            OpCode.Pow => $"POW       {A} {B} {C}",
             OpCode.Unm => $"UNM       {A} {B}",
             OpCode.Not => $"NOT       {A} {B}",
             OpCode.Len => $"LEN       {A} {B}",
