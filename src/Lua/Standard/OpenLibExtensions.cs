@@ -78,6 +78,8 @@ public static class OpenLibExtensions
 
     static readonly LuaFunction[] stringFunctions = [
         LenFunction.Instance,
+        LowerFunction.Instance,
+        UpperFunction.Instance,
     ];
 
     static readonly LuaFunction[] ioFunctions = [
