@@ -6,6 +6,7 @@ using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
 using Lua.Standard.OperatingSystem;
 using Lua.Standard.Table;
+using Lua.Standard.Text;
 
 namespace Lua.Standard;
 
@@ -73,6 +74,10 @@ public static class OpenLibExtensions
         ConcatFunction.Instance,
         InsertFunction.Instance,
         SortFunction.Instance,
+    ];
+
+    static readonly LuaFunction[] stringFunctions = [
+        LenFunction.Instance,
     ];
 
     static readonly LuaFunction[] ioFunctions = [
@@ -171,6 +176,17 @@ public static class OpenLibExtensions
         }
 
         state.Environment["table"] = table;
+    }
+
+    public static void OpenStringLibrary(this LuaState state)
+    {
+        var @string = new LuaTable(0, stringFunctions.Length);
+        foreach (var func in stringFunctions)
+        {
+            @string[func.Name] = func;
+        }
+
+        state.Environment["string"] = @string;
     }
 
     public static void OpenIOLibrary(this LuaState state)
