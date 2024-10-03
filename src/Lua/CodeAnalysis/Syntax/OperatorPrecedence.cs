@@ -43,7 +43,7 @@ public enum OperatorPrecedence
     Unary,
 
     /// <summary>
-    /// Exponentiation ()
+    /// Exponentiation (^)
     /// </summary>
     Exponentiation,
 }
