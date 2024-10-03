@@ -10,10 +10,8 @@ public sealed class ArshiftFunction : LuaFunction
         var x = context.GetArgument<double>(0);
         var disp = context.GetArgument<double>(1);
 
-        if (!MathEx.IsInteger(disp))
-        {
-            throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'arshift' (number has no integer representation)");
-        }
+        LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 1, x);
+        LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, disp);
 
         var v = Bit32Helper.ToInt32(x);
         var a = (int)disp;

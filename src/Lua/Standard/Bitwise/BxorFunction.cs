@@ -13,11 +13,17 @@ public sealed class BxorFunction : LuaFunction
             return new(1);
         }
 
-        var value = Bit32Helper.ToUInt32(context.GetArgument<double>(0));
+        var arg0 = context.GetArgument<double>(0);
+        LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 1, arg0);
+
+        var value = Bit32Helper.ToUInt32(arg0);
 
         for (int i = 1; i < context.ArgumentCount; i++)
         {
-            var v = Bit32Helper.ToUInt32(context.GetArgument<double>(i));
+            var arg = context.GetArgument<double>(i);
+            LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 1 + i, arg);
+
+            var v = Bit32Helper.ToUInt32(arg);
             value ^= v;
         }
 
