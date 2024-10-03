@@ -73,6 +73,14 @@ public class LuaRuntimeException(Traceback traceback, string message) : LuaExcep
         throw new LuaRuntimeException(traceback, $"bad argument #{argumentId} to '{functionName}' ({expected} expected, got {actual})");
     }
 
+    public static void ThrowBadArgumentIfNumberIsNotInteger(LuaState state, LuaFunction function, int argumentId, double value)
+    {
+        if (!MathEx.IsInteger(value))
+        {
+            throw new LuaRuntimeException(state.GetTraceback(), $"bad argument #{argumentId} to '{function.Name}' (number has no integer representation)");
+        }
+    }
+
     public override string Message => $"{LuaTraceback.RootChunkName}:{LuaTraceback.LastPosition.Line}: {base.Message}";
 
     public override string ToString()
