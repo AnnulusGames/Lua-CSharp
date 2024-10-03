@@ -9,7 +9,7 @@ public sealed class BxorFunction : LuaFunction
     {
         if (context.ArgumentCount == 0)
         {
-            buffer.Span[0] = uint.MaxValue;
+            buffer.Span[0] = 0;
             return new(1);
         }
 
