@@ -14,17 +14,19 @@ internal static class Bit32Helper
         0x1FFFFFFF, 0x3FFFFFFF, 0x7FFFFFFF, 0xFFFFFFFF,
     ];
 
+    static readonly double Bit32 = 4294967296;
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ToUInt32(double d)
     {
-        var x = (int)Math.IEEERemainder(d, Math.Pow(2.0, 32.0));
+        var x = (int)Math.IEEERemainder(d, Bit32);
         return (uint)x;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToInt32(double d)
     {
-        d = Math.IEEERemainder(d, Math.Pow(2.0, 32.0));
+        d = Math.IEEERemainder(d, Bit32);
         return (int)d;
     }
 
