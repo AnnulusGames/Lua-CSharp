@@ -13,10 +13,14 @@ public sealed class RShiftFunction : LuaFunction
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 1, x);
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, disp);
 
-        var v = Bit32Helper.ToInt32(x);
+        var v = Bit32Helper.ToUInt32(x);
         var a = (int)disp;
 
-        if (a < 0)
+        if (Math.Abs(a) >= 32)
+        {
+            v = 0;
+        }
+        else if (a < 0)
         {
             v <<= -a;
         }
