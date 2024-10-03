@@ -26,7 +26,7 @@ public sealed class ReplaceFunction : LuaFunction
 
         Bit32Helper.ValidateFieldAndWidth(context.State, this, 2, field, width);
 
-        var mask = Bit32Helper.GetNBitMask(width) << field;
+        var mask = (uint)((1 << width) - 1);
         n &= ~mask;
         v &= mask;
         n |= v;
