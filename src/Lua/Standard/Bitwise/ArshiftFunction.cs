@@ -25,7 +25,7 @@ public sealed class ArshiftFunction : LuaFunction
             v >>= a;
         }
 
-        buffer.Span[0] = v;
+        buffer.Span[0] = (uint)v;
         return new(1);
     }
 }
