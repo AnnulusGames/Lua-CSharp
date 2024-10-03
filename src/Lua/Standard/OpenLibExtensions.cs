@@ -108,8 +108,10 @@ public static class OpenLibExtensions
         BxorFunction.Instance,
         ExtractFunction.Instance,
         LRotateFunction.Instance,
+        LShiftFunction.Instance,
         ReplaceFunction.Instance,
         RRotateFunction.Instance,
+        RShiftFunction.Instance,
     ];
 
     public static void OpenBasicLibrary(this LuaState state)
