@@ -19,17 +19,24 @@ public sealed class ReplaceFunction : LuaFunction
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 3, arg2);
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 4, arg3);
 
-        var n = (uint)arg0;
-        var v = (uint)arg1;
+        var n = Bit32Helper.ToUInt32(arg0);
+        var v = Bit32Helper.ToUInt32(arg1);
         var field = (int)arg2;
         var width = (int)arg3;
 
         Bit32Helper.ValidateFieldAndWidth(context.State, this, 2, field, width);
+        uint mask;
+        if (width == 32)
+        {
+            mask = 0xFFFFFFFF;
+        }
+        else
+        {
+            mask = (uint)((1 << width) - 1);
+        }
 
-        var mask = (uint)((1 << width) - 1);
-        n &= ~mask;
-        v &= mask;
-        n |= v;
+        v = v & mask;
+        n = (n & ~(mask << field)) | (v << field);
         buffer.Span[0] = n;
         return new(1);
     }
