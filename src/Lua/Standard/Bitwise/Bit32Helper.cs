@@ -19,15 +19,13 @@ internal static class Bit32Helper
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static uint ToUInt32(double d)
     {
-        var x = (int)Math.IEEERemainder(d, Bit32);
-        return (uint)x;
+        return (uint)ToInt32(d);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int ToInt32(double d)
     {
-        d = Math.IEEERemainder(d, Bit32);
-        return (int)d;
+        return (int)(long)Math.IEEERemainder(d, Bit32);
     }
 
     public static uint GetNBitMask(int bits)
