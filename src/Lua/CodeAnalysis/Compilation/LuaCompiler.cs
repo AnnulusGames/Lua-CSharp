@@ -69,9 +69,18 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitStringLiteralNode(StringLiteralNode node, ScopeCompilationContext context)
     {
-        var str = node.IsShortLiteral
-            ? StringHelper.FromStringLiteral(node.Text.Span)
-            : node.Text.ToString();
+        string? str;
+        if (node.IsShortLiteral)
+        {
+            if (!StringHelper.TryFromStringLiteral(node.Text.Span, out str))
+            {
+                throw new LuaParseException(context.Function.ChunkName, node.Position, $"invalid escape sequence near '{node.Text}'");
+            }
+        }
+        else
+        {
+            str = node.Text.ToString();
+        }
 
         var index = context.Function.GetConstantIndex(str);
         context.PushInstruction(Instruction.LoadK(context.StackPosition, index), node.Position, true);

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -17,7 +18,7 @@ internal static class StringHelper
         return i > j ? "" : s.AsSpan()[(i - 1)..j];
     }
 
-    public static string FromStringLiteral(ReadOnlySpan<char> literal)
+    public static bool TryFromStringLiteral(ReadOnlySpan<char> literal, [NotNullWhen(true)] out string? result)
     {
         var builder = new ValueStringBuilder(literal.Length);
         for (int i = 0; i < literal.Length; i++)
@@ -66,6 +67,29 @@ internal static class StringHelper
                     case ']':
                         builder.Append(']');
                         break;
+                    default:
+                        if (char.IsDigit(c))
+                        {
+                            var start = i;
+                            for (int j = 0; j < 3; j++)
+                            {
+                                if (i >= literal.Length) break;
+                                i++;
+                                c = literal[i];
+                                if (!char.IsDigit(c)) break;
+                            }
+
+                            Console.WriteLine((char)int.Parse(literal[start..i]));
+
+                            builder.Append((char)int.Parse(literal[start..i]));
+                            i--;
+                        }
+                        else
+                        {
+                            result = null;
+                            return false;
+                        }
+                        break;
                 }
             }
             else
@@ -74,6 +98,7 @@ internal static class StringHelper
             }
         }
 
-        return builder.ToString();
+        result = builder.ToString();
+        return true;
     }
 }
