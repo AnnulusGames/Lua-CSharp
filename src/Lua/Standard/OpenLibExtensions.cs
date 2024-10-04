@@ -79,6 +79,7 @@ public static class OpenLibExtensions
     static readonly LuaFunction[] stringFunctions = [
         ByteFunction.Instance,
         CharFunction.Instance,
+        DumpFunction.Instance,
         LenFunction.Instance,
         LowerFunction.Instance,
         RepFunction.Instance,
