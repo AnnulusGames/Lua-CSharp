@@ -11,7 +11,7 @@ internal static class StringHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string SubString(string s, int i, int j)
+    public static ReadOnlySpan<char> Slice(string s, int i, int j)
     {
         if (i < 0) i = s.Length + i + 1;
         if (j < 0) i = s.Length + i + 1;
@@ -19,6 +19,6 @@ internal static class StringHelper
         if (i < 1) i = 1;
         if (j > s.Length) j = s.Length;
 
-        return i > j ? "" : s.Substring(i - 1, j - 1);
+        return i > j ? "" : s.AsSpan().Slice(i - 1, j - 1);
     }
 }
