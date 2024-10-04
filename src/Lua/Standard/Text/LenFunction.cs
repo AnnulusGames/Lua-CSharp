@@ -1,4 +1,6 @@
 
+using System.Text;
+
 namespace Lua.Standard.Text;
 
 public sealed class LenFunction : LuaFunction
@@ -9,7 +11,7 @@ public sealed class LenFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var s = context.GetArgument<string>(0);
-        buffer.Span[0] = s.Length;
+        buffer.Span[0] = Encoding.UTF8.GetByteCount(s);
         return new(1);
     }
 }
