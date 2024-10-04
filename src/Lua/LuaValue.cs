@@ -47,7 +47,39 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<double, T>(ref v);
                     return true;
                 }
-                else if (t == typeof(string))
+                else if (t == typeof(object))
+                {
+                    result = (T)(object)value;
+                    return true;
+                }
+                else
+                {
+                    break;
+                }
+            case LuaValueType.Boolean:
+                if (t == typeof(bool))
+                {
+                    var v = value == 1;
+                    result = Unsafe.As<bool, T>(ref v);
+                    return true;
+                }
+                else if (t == typeof(object))
+                {
+                    result = (T)(object)value;
+                    return true;
+                }
+                else
+                {
+                    break;
+                }
+            case LuaValueType.String:
+                if (t == typeof(string))
+                {
+                    var v = (string)referenceValue!;
+                    result = Unsafe.As<string, T>(ref v);
+                    return true;
+                }
+                else if (t == typeof(double))
                 {
                     var str = (string)referenceValue!;
                     var span = str.AsSpan().Trim();
@@ -80,38 +112,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                         result = tryResult ? Unsafe.As<double, T>(ref d) : default!;
                         return tryResult;
                     }
-                }
-                else if (t == typeof(object))
-                {
-                    result = (T)(object)value;
-                    return true;
-                }
-                else
-                {
-                    break;
-                }
-            case LuaValueType.Boolean:
-                if (t == typeof(bool))
-                {
-                    var v = value == 1;
-                    result = Unsafe.As<bool, T>(ref v);
-                    return true;
-                }
-                else if (t == typeof(object))
-                {
-                    result = (T)(object)value;
-                    return true;
-                }
-                else
-                {
-                    break;
-                }
-            case LuaValueType.String:
-                if (t == typeof(string))
-                {
-                    var v = (string)referenceValue!;
-                    result = Unsafe.As<string, T>(ref v);
-                    return true;
                 }
                 else if (t == typeof(object))
                 {
