@@ -81,6 +81,7 @@ public static class OpenLibExtensions
         LowerFunction.Instance,
         RepFunction.Instance,
         ReverseFunction.Instance,
+        SubFunction.Instance,
         UpperFunction.Instance,
     ];
 
