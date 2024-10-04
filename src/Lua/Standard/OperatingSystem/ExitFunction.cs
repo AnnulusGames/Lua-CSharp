@@ -20,7 +20,7 @@ public sealed class ExitFunction : LuaFunction
             {
                 Environment.Exit(b ? 0 : 1);
             }
-            else if (code.TryGetNumber(out var d))
+            else if (code.TryRead<double>(out var d))
             {
                 if (!MathEx.IsInteger(d))
                 {

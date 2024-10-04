@@ -108,7 +108,7 @@ public static partial class LuaVirtualMachine
                         var table = stack.UnsafeGet(RB);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
-                        
+
                         stack.UnsafeGet(RA + 1) = table;
                         stack.UnsafeGet(RA) = value;
                         stack.NotifyTop(RA + 2);
@@ -121,7 +121,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = valueB + valueC;
                         }
@@ -160,7 +160,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = valueB - valueC;
                         }
@@ -199,7 +199,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = valueB * valueC;
                         }
@@ -238,7 +238,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = valueB / valueC;
                         }
@@ -277,7 +277,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = valueB % valueC;
                         }
@@ -316,7 +316,7 @@ public static partial class LuaVirtualMachine
                         var vb = RK(stack, chunk, instruction.B, frame.Base);
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                        if (vb.TryGetNumber(out var valueB) && vc.TryGetNumber(out var valueC))
+                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             stack.UnsafeGet(RA) = Math.Pow(valueB, valueC);
                         }
@@ -354,7 +354,7 @@ public static partial class LuaVirtualMachine
 
                         var vb = stack.UnsafeGet(RB);
 
-                        if (vb.TryGetNumber(out var valueB))
+                        if (vb.TryRead<double>(out var valueB))
                         {
                             stack.UnsafeGet(RA) = -valueB;
                         }

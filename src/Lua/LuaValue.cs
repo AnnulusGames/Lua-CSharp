@@ -1,5 +1,6 @@
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Lua.Internal;
 using Lua.Runtime;
 
 namespace Lua;
@@ -34,19 +35,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         switch (type)
         {
             case LuaValueType.Number:
-                if (t == typeof(int))
-                {
-                    var v = (int)value;
-                    result = Unsafe.As<int, T>(ref v);
-                    return true;
-                }
-                else if (t == typeof(long))
-                {
-                    var v = (long)value;
-                    result = Unsafe.As<long, T>(ref v);
-                    return true;
-                }
-                else if (t == typeof(float))
+                if (t == typeof(float))
                 {
                     var v = (float)value;
                     result = Unsafe.As<float, T>(ref v);
@@ -57,6 +46,40 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     var v = value;
                     result = Unsafe.As<double, T>(ref v);
                     return true;
+                }
+                else if (t == typeof(string))
+                {
+                    var str = (string)referenceValue!;
+                    var span = str.AsSpan().Trim();
+
+                    var sign = 1;
+                    if (span.Length > 0 && span[0] == '-')
+                    {
+                        sign = -1;
+                        span = span[1..];
+                    }
+
+                    if (span.Length > 2 && span[0] is '0' && span[1] is 'x' or 'X')
+                    {
+                        // TODO: optimize
+                        try
+                        {
+                            var d = HexConverter.ToDouble(span) * sign;
+                            result = Unsafe.As<double, T>(ref d);
+                            return true;
+                        }
+                        catch (FormatException)
+                        {
+                            result = default!;
+                            return false;
+                        }
+                    }
+                    else
+                    {
+                        var tryResult = double.TryParse(str, out var d);
+                        result = tryResult ? Unsafe.As<double, T>(ref d) : default!;
+                        return tryResult;
+                    }
                 }
                 else if (t == typeof(object))
                 {
