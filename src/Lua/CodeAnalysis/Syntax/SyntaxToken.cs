@@ -91,14 +91,14 @@ public readonly struct SyntaxToken(SyntaxTokenType type, ReadOnlyMemory<char> te
         return new(SyntaxTokenType.Identifier, text, position);
     }
 
-    public static SyntaxToken String(string text, SourcePosition position)
-    {
-        return new(SyntaxTokenType.String, text.AsMemory(), position);
-    }
-
     public static SyntaxToken String(ReadOnlyMemory<char> text, SourcePosition position)
     {
         return new(SyntaxTokenType.String, text, position);
+    }
+
+    public static SyntaxToken RawString(ReadOnlyMemory<char> text, SourcePosition position)
+    {
+        return new(SyntaxTokenType.RawString, text, position);
     }
 
     public static SyntaxToken Label(ReadOnlyMemory<char> text, SourcePosition position)
@@ -126,6 +126,7 @@ public readonly struct SyntaxToken(SyntaxTokenType type, ReadOnlyMemory<char> te
             SyntaxTokenType.Comma => ",",
             SyntaxTokenType.Number => Text.ToString(),
             SyntaxTokenType.String => $"\"{Text}\"",
+            SyntaxTokenType.RawString => $"[[{Text}]]",
             SyntaxTokenType.Nil => Keywords.Nil,
             SyntaxTokenType.True => Keywords.True,
             SyntaxTokenType.False => Keywords.False,
@@ -265,6 +266,11 @@ public enum SyntaxTokenType
     /// String literal (e.g. "foo", "bar", ...)
     /// </summary>
     String,
+
+    /// <summary>
+    /// Raw string literal (e.g. [[Hello, World!]])
+    /// </summary>
+    RawString,
 
     /// <summary>
     /// Nil literal (nil)

@@ -1,4 +1,6 @@
 
+using Lua.Internal;
+
 namespace Lua.Standard.Text;
 
 public sealed class ByteFunction : LuaFunction

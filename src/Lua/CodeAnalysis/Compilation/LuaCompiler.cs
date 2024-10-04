@@ -69,7 +69,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
     public bool VisitStringLiteralNode(StringLiteralNode node, ScopeCompilationContext context)
     {
-        var index = context.Function.GetConstantIndex(node.Text);
+        var str = node.IsShortLiteral
+            ? StringHelper.FromStringLiteral(node.Text.Span)
+            : node.Text.ToString();
+
+        var index = context.Function.GetConstantIndex(str);
         context.PushInstruction(Instruction.LoadK(context.StackPosition, index), node.Position, true);
         return true;
     }

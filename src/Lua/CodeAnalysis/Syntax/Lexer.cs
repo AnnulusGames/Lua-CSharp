@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Lua.Internal;
 
 namespace Lua.CodeAnalysis.Syntax;
 
@@ -311,20 +312,26 @@ public ref struct Lexer
             var stringStartOffset = offset;
 
             var isTerminated = false;
+            var prevC = char.MinValue;
             while (span.Length > offset)
             {
                 var c = span[offset];
-                if (c == quote)
+
+                if (prevC is not '\\')
                 {
-                    isTerminated = true;
-                    break;
+                    if (c == quote)
+                    {
+                        isTerminated = true;
+                        break;
+                    }
+
+                    if (c is '\n' or '\r')
+                    {
+                        break;
+                    }
                 }
 
-                if (c is '\n' or '\r')
-                {
-                    break;
-                }
-
+                prevC = c;
                 Advance(1);
             }
 
@@ -350,7 +357,7 @@ public ref struct Lexer
                     throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
                 }
 
-                current = SyntaxToken.String(Source[start..end], position);
+                current = SyntaxToken.RawString(Source[start..end], position);
                 return true;
             }
             else
@@ -450,6 +457,7 @@ public ref struct Lexer
         var startOffset = offset;
         var endOffset = 0;
         var isTerminated = false;
+        var prevC = char.MinValue;
 
         while (span.Length > offset + level + 1)
         {
@@ -472,7 +480,7 @@ public ref struct Lexer
                 }
             }
 
-            if (current is ']')
+            if (current is ']' && prevC is not '\\')
             {
                 endOffset = offset;
 
@@ -489,6 +497,7 @@ public ref struct Lexer
             }
 
         CONTINUE:
+            prevC = current;
             Advance(1);
         }
 
