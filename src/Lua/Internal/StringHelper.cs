@@ -73,8 +73,8 @@ internal static class StringHelper
                             var start = i;
                             for (int j = 0; j < 3; j++)
                             {
-                                if (i >= literal.Length) break;
                                 i++;
+                                if (i >= literal.Length) break;
                                 c = literal[i];
                                 if (!char.IsDigit(c)) break;
                             }
