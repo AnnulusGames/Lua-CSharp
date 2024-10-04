@@ -540,7 +540,11 @@ public static partial class LuaVirtualMachine
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var compareResult = false;
 
-                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
+                        if (vb.TryRead<string>(out var strB) && vc.TryRead<string>(out var strC))
+                        {
+                            compareResult = StringComparer.InvariantCulture.Compare(strB, strC) < 0;
+                        }
+                        else if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             compareResult = valueB < valueC;
                         }
@@ -589,7 +593,11 @@ public static partial class LuaVirtualMachine
                         var vc = RK(stack, chunk, instruction.C, frame.Base);
                         var compareResult = false;
 
-                        if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
+                        if (vb.TryRead<string>(out var strB) && vc.TryRead<string>(out var strC))
+                        {
+                            compareResult = StringComparer.InvariantCulture.Compare(strB, strC) <= 0;
+                        }
+                        else if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                         {
                             compareResult = valueB <= valueC;
                         }
