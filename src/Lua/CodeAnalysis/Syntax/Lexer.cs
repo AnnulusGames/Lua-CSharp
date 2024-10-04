@@ -310,28 +310,30 @@ public ref struct Lexer
         {
             var quote = c1;
             var stringStartOffset = offset;
-
             var isTerminated = false;
-            var prevC = char.MinValue;
+
             while (span.Length > offset)
             {
                 var c = span[offset];
 
-                if (prevC is not '\\')
+                if (c is '\n' or '\r')
                 {
-                    if (c == quote)
-                    {
-                        isTerminated = true;
-                        break;
-                    }
-
-                    if (c is '\n' or '\r')
-                    {
-                        break;
-                    }
+                    break;
+                }
+               
+                if (c is '\\')
+                {
+                    Advance(1);
+                    if (span.Length <= offset) break;
+                    c = span[offset];
                 }
 
-                prevC = c;
+                if (c == quote)
+                {
+                    isTerminated = true;
+                    break;
+                }
+
                 Advance(1);
             }
 
