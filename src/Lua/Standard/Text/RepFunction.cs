@@ -12,6 +12,9 @@ public sealed class RepFunction : LuaFunction
     {
         var s = context.GetArgument<string>(0);
         var n_arg = context.GetArgument<double>(1);
+        var sep = context.HasArgument(2)
+            ? context.GetArgument<string>(2)
+            : null;
 
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, n_arg);
 
@@ -21,6 +24,10 @@ public sealed class RepFunction : LuaFunction
         for (int i = 0; i < n; i++)
         {
             builder.Append(s);
+            if (i != n - 1 && sep != null)
+            {
+                builder.Append(sep);
+            }
         }
 
         buffer.Span[0] = builder.ToString();
