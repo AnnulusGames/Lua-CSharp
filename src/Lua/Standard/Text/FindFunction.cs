@@ -29,7 +29,7 @@ public sealed class FindFunction : LuaFunction
         }
 
         var source = s.AsSpan()[(int)(init - 1)..];
-        
+
         if (plain)
         {
             var start = source.IndexOf(pattern);
@@ -47,7 +47,7 @@ public sealed class FindFunction : LuaFunction
         else
         {
             var regex = StringHelper.ToRegex(pattern);
-            var match = regex.Match(s);
+            var match = regex.Match(source.ToString());
 
             if (match.Success)
             {
