@@ -11,7 +11,7 @@ public sealed class ReverseFunction : LuaFunction
     {
         var s = context.GetArgument<string>(0);
         using var strBuffer = new PooledArray<char>(s.Length);
-        var span = strBuffer.AsSpan();
+        var span = strBuffer.AsSpan()[..s.Length];
         s.AsSpan().CopyTo(span);
         span.Reverse();
         buffer.Span[0] = span.ToString();
