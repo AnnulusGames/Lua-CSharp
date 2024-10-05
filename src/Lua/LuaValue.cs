@@ -335,14 +335,14 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     {
         return type switch
         {
-            LuaValueType.Nil => "Nil",
-            LuaValueType.Boolean => Read<bool>().ToString(),
-            LuaValueType.String => Read<string>().ToString(),
+            LuaValueType.Nil => "nil",
+            LuaValueType.Boolean => Read<bool>() ? "true" : "false",
+            LuaValueType.String => Read<string>(),
             LuaValueType.Number => Read<double>().ToString(),
-            LuaValueType.Function => Read<LuaFunction>().ToString(),
-            LuaValueType.Thread => Read<LuaThread>().ToString(),
-            LuaValueType.Table => Read<LuaTable>().ToString(),
-            LuaValueType.UserData => referenceValue?.ToString(),
+            LuaValueType.Function => $"function: {referenceValue!.GetHashCode()}",
+            LuaValueType.Thread => $"thread: {referenceValue!.GetHashCode()}",
+            LuaValueType.Table => $"table: {referenceValue!.GetHashCode()}",
+            LuaValueType.UserData => $"userdata: {referenceValue!.GetHashCode()}",
             _ => "",
         };
     }
