@@ -17,7 +17,7 @@ public sealed class FindFunction : LuaFunction
             ? context.GetArgument<double>(2)
             : 1;
         var plain = context.HasArgument(3)
-            ? context.GetArgument<bool>(3)
+            ? context.GetArgument(3).ToBoolean()
             : false;
 
         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 3, init);
@@ -26,6 +26,21 @@ public sealed class FindFunction : LuaFunction
         if (init < 0)
         {
             init = s.Length + init + 1;
+        }
+
+        // out of range
+        if (init != 1 && (init < 1 || init > s.Length))
+        {
+            buffer.Span[0] = LuaValue.Nil;
+            return new(1);
+        }
+
+        // empty pattern
+        if (pattern.Length == 0)
+        {
+            buffer.Span[0] = 1;
+            buffer.Span[1] = 1;
+            return new(2);
         }
 
         var source = s.AsSpan()[(int)(init - 1)..];
@@ -52,8 +67,8 @@ public sealed class FindFunction : LuaFunction
             if (match.Success)
             {
                 // 1-based
-                buffer.Span[0] = match.Index + 1;
-                buffer.Span[1] = match.Index + match.Length;
+                buffer.Span[0] = init + match.Index;
+                buffer.Span[1] = init + match.Index + match.Length - 1;
                 return new(2);
             }
             else
