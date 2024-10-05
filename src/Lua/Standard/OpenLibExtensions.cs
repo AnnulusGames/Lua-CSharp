@@ -1,3 +1,4 @@
+using Lua.Runtime;
 using Lua.Standard.Basic;
 using Lua.Standard.Bitwise;
 using Lua.Standard.Coroutines;
@@ -12,6 +13,18 @@ namespace Lua.Standard;
 
 public static class OpenLibExtensions
 {
+    sealed class StringIndexMetamethod(LuaTable table) : LuaFunction
+    {
+        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+        {
+            context.GetArgument<string>(0);
+            var key = context.GetArgument(1);
+
+            buffer.Span[0] = table[key];
+            return new(1);
+        }
+    }
+
     static readonly LuaFunction[] baseFunctions = [
         AssertFunction.Instance,
         ErrorFunction.Instance,
@@ -197,6 +210,16 @@ public static class OpenLibExtensions
         }
 
         state.Environment["string"] = @string;
+
+        // set __index
+        var key = new LuaValue("");
+        if (!state.TryGetMetatable(key, out var metatable))
+        {
+            metatable = new();
+            state.SetMetatable(key, metatable);
+        }
+
+        metatable[Metamethods.Index] = new StringIndexMetamethod(@string);
     }
 
     public static void OpenIOLibrary(this LuaState state)
