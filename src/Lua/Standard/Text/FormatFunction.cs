@@ -154,8 +154,7 @@ public sealed class FormatFunction : LuaFunction
                                 formattedValue = parameter.Read<bool>() ? "true" : "false";
                                 break;
                             case LuaValueType.String:
-                                // TODO: support escape sequence
-                                formattedValue = parameter.Read<string>();
+                                formattedValue = $"\"{StringHelper.Escape(parameter.Read<string>())}\"";
                                 break;
                             case LuaValueType.Number:
                                 // TODO: floating point numbers must be in hexadecimal notation

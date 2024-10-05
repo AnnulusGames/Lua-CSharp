@@ -33,6 +33,17 @@ internal static class StringHelper
 
                 switch (c)
                 {
+                    case '\n':
+                        builder.Append('\n');
+                        break;
+                    case '\r':
+                        builder.Append('\r');
+                        // check CRLF
+                        if (i + 1 < literal.Length && literal[i + 1] is '\n')
+                        {
+                            i++;
+                        }
+                        break;
                     case 'a':
                         builder.Append('\a');
                         break;
@@ -131,6 +142,55 @@ internal static class StringHelper
         return true;
     }
 
+    public static string Escape(ReadOnlySpan<char> str)
+    {
+        var builder = new ValueStringBuilder(str.Length);
+
+        for (int i = 0; i < str.Length; i++)
+        {
+            var c = str[i];
+
+            switch (c)
+            {
+                case '\a':
+                    builder.Append("\\\a");
+                    break;
+                case '\b':
+                    builder.Append("\\\b");
+                    break;
+                case '\f':
+                    builder.Append("\\\f");
+                    break;
+                case '\n':
+                    builder.Append("\\\n");
+                    break;
+                case '\r':
+                    builder.Append("\\\r");
+                    break;
+                case '\t':
+                    builder.Append("\\\t");
+                    break;
+                case '\v':
+                    builder.Append("\\\v");
+                    break;
+                case '\\':
+                    builder.Append("\\\\");
+                    break;
+                case '\"':
+                    builder.Append("\\\"");
+                    break;
+                case '\'':
+                    builder.Append("\\\'");
+                    break;
+                default:
+                    builder.Append(c);
+                    break;
+            }
+        }
+
+        return builder.ToString();
+    }
+
     public static Regex ToRegex(ReadOnlySpan<char> pattern)
     {
         var builder = new ValueStringBuilder();
@@ -164,49 +224,42 @@ internal static class StringHelper
                         case 'S': // all NON space characters
                             builder.Append("\\S");
                             break;
-
                         case 'd': // all digits
                             builder.Append("\\d");
                             break;
                         case 'D': // all NON digits
                             builder.Append("\\D");
                             break;
-
                         case 'w': // all alphanumeric characters
                             builder.Append("\\w");
                             break;
                         case 'W': // all NON alphanumeric characters
                             builder.Append("\\W");
                             break;
-
                         case 'c': // all control characters
                             builder.Append("\\p{C}");
                             break;
                         case 'C': // all NON control characters
                             builder.Append("[\\P{C}]");
                             break;
-
                         case 'g': // all printable characters except space
                             builder.Append("[^\\p{C}\\s]");
                             break;
                         case 'G': // all NON printable characters including space
                             builder.Append("[\\p{C}\\s]");
                             break;
-
                         case 'p': // all punctuation characters
                             builder.Append("\\p{P}");
                             break;
                         case 'P': // all NON punctuation characters
                             builder.Append("\\P{P}");
                             break;
-
                         case 'l': // all lowercase letters
                             builder.Append("\\p{Ll}");
                             break;
                         case 'L': // all NON lowercase letters
                             builder.Append("\\P{Ll}");
                             break;
-
                         case 'u': // all uppercase letters
                             builder.Append("\\p{Lu}");
                             break;
