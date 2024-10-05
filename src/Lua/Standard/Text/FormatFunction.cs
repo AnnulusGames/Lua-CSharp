@@ -138,7 +138,7 @@ public sealed class FormatFunction : LuaFunction
                             formattedValue = strBuffer[0].Read<string>();
                         }
 
-                        if (specifier is 's' && precision > 0)
+                        if (specifier is 's' && precision > 0 && precision <= formattedValue.Length)
                         {
                             formattedValue = formattedValue[..precision];
                         }
