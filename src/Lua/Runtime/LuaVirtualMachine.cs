@@ -696,12 +696,19 @@ public static partial class LuaVirtualMachine
                                 resultCount = instruction.C - 1;
                             }
 
-                            stack.EnsureCapacity(RA + resultCount);
-                            for (int i = 0; i < resultCount; i++)
+                            if (resultCount == 0)
                             {
-                                stack.UnsafeGet(RA + i) = resultBuffer[i];
+                                stack.Pop();
                             }
-                            stack.NotifyTop(RA + resultCount);
+                            else
+                            {
+                                stack.EnsureCapacity(RA + resultCount);
+                                for (int i = 0; i < resultCount; i++)
+                                {
+                                    stack.UnsafeGet(RA + i) = resultBuffer[i];
+                                }
+                                stack.NotifyTop(RA + resultCount);
+                            }
                         }
                         finally
                         {
