@@ -5,7 +5,7 @@ namespace Lua.Standard.Text;
 public sealed class ReverseFunction : LuaFunction
 {
     public override string Name => "reverse";
-    public static readonly LenFunction Instance = new();
+    public static readonly ReverseFunction Instance = new();
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
