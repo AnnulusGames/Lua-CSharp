@@ -131,7 +131,6 @@ public sealed class FormatFunction : LuaFunction
                         }
 
                         break;
-                    case 'c':
                     case 's':
                         using (var strBuffer = new PooledArray<LuaValue>(1))
                         {
@@ -171,6 +170,8 @@ public sealed class FormatFunction : LuaFunction
                         break;
                     case 'i':
                     case 'd':
+                    case 'u':
+                    case 'c':
                     case 'x':
                     case 'X':
                         if (!parameter.TryRead<double>(out var x))
@@ -190,6 +191,9 @@ public sealed class FormatFunction : LuaFunction
                                 formattedValue = precision < 0 
                                     ? integer.ToString() 
                                     : integer.ToString($"D{precision}");
+                                break;
+                            case 'c':
+                                formattedValue = ((char)integer).ToString();
                                 break;
                             case 'x':
                                 formattedValue = alternateForm
