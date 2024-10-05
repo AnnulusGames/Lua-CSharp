@@ -80,6 +80,7 @@ public static class OpenLibExtensions
         ByteFunction.Instance,
         CharFunction.Instance,
         DumpFunction.Instance,
+        FindFunction.Instance,
         FormatFunction.Instance,
         LenFunction.Instance,
         LowerFunction.Instance,
