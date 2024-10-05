@@ -1,4 +1,5 @@
 
+using System.Text;
 using Lua.Internal;
 
 namespace Lua.Standard.Text;
@@ -16,15 +17,15 @@ public sealed class CharFunction : LuaFunction
             return new(1);
         }
 
-        var strBuffer = new PooledArray<char>(context.ArgumentCount);
+        var builder = new ValueStringBuilder(context.ArgumentCount);
         for (int i = 0; i < context.ArgumentCount; i++)
         {
             var arg = context.GetArgument<double>(i);
             LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, i + 1, arg);
-            strBuffer[i] = (char)arg;
+            builder.Append((char)arg);
         }
 
-        buffer.Span[0] = strBuffer.AsSpan().ToString();
+        buffer.Span[0] = builder.ToString();
         return new(1);
     }
 }
