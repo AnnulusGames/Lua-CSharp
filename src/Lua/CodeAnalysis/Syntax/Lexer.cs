@@ -325,10 +325,8 @@ public ref struct Lexer
                 {
                     Advance(1);
                     if (span.Length <= offset) break;
-                    c = span[offset];
                 }
-
-                if (c == quote)
+                else if (c == quote)
                 {
                     isTerminated = true;
                     break;
