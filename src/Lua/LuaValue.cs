@@ -384,7 +384,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return false;
     }
 
-    internal async ValueTask<int> CallToStringAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    internal ValueTask<int> CallToStringAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         if (this.TryGetMetamethod(context.State, Metamethods.ToString, out var metamethod))
         {
@@ -394,15 +394,17 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             }
 
             context.State.Push(this);
-            return await func.InvokeAsync(context with
+
+            return func.InvokeAsync(context with
             {
                 ArgumentCount = 1,
+                StackPosition = context.State.CurrentThread.Stack.Count,
             }, buffer, cancellationToken);
         }
         else
         {
             buffer.Span[0] = ToString()!;
-            return 1;
+            return new(1);
         }
     }
 }
