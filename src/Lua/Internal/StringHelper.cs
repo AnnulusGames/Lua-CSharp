@@ -99,7 +99,7 @@ internal static class StringHelper
                         }
                         break;
                     default:
-                        if (IsNumeric(c))
+                        if (IsNumber(c))
                         {
                             var start = i;
                             for (int j = 0; j < 3; j++)
@@ -107,7 +107,7 @@ internal static class StringHelper
                                 i++;
                                 if (i >= literal.Length) break;
                                 c = literal[i];
-                                if (!IsNumeric(c)) break;
+                                if (!IsNumber(c)) break;
                             }
 
                             builder.Append((char)int.Parse(literal[start..i]));
@@ -296,15 +296,15 @@ internal static class StringHelper
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsNumeric(char c)
+    public static bool IsNumber(char c)
     {
         return '0' <= c && c <= '9';
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsDigit(char c)
+    public static bool IsDigit(char c)
     {
-        return IsNumeric(c) ||
+        return IsNumber(c) ||
             ('a' <= c && c <= 'f') ||
             ('A' <= c && c <= 'F');
     }

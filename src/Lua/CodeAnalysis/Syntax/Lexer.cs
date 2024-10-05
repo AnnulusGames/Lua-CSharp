@@ -7,7 +7,7 @@ public ref struct Lexer
 {
     public required ReadOnlyMemory<char> Source { get; init; }
     public string? ChunkName { get; init; }
-    
+
     SyntaxToken current;
     SourcePosition position = new(1, 0);
     int offset;
@@ -205,7 +205,7 @@ public ref struct Lexer
                     return true;
                 }
 
-                if (!IsNumeric(c2))
+                if (!StringHelper.IsNumber(c2))
                 {
                     current = SyntaxToken.Dot(position);
                     return true;
@@ -224,7 +224,7 @@ public ref struct Lexer
         }
 
         // numeric literal
-        if (c1 is '.' || IsNumeric(c1))
+        if (c1 is '.' || StringHelper.IsNumber(c1))
         {
             if (c1 is '0' && c2 is 'x' or 'X') // hex 0x
             {
@@ -320,7 +320,7 @@ public ref struct Lexer
                 {
                     break;
                 }
-               
+
                 if (c is '\\')
                 {
                     Advance(1);
@@ -444,7 +444,7 @@ public ref struct Lexer
     }
 
     (int Start, int End, bool IsTerminated) ReadUntilLongBracketEnd(ref ReadOnlySpan<char> span)
-    {   
+    {
         var c = span[offset];
         var level = 0;
         while (c is '=')
@@ -510,7 +510,7 @@ public ref struct Lexer
     void ReadDigit(ref ReadOnlySpan<char> span, ref int offset, out int readCount)
     {
         readCount = 0;
-        while (span.Length > offset && IsDigit(span[offset]))
+        while (span.Length > offset && StringHelper.IsDigit(span[offset]))
         {
             Advance(1);
             readCount++;
@@ -521,25 +521,11 @@ public ref struct Lexer
     void ReadNumber(ref ReadOnlySpan<char> span, ref int offset, out int readCount)
     {
         readCount = 0;
-        while (span.Length > offset && IsNumeric(span[offset]))
+        while (span.Length > offset && StringHelper.IsNumber(span[offset]))
         {
             Advance(1);
             readCount++;
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsDigit(char c)
-    {
-        return IsNumeric(c) ||
-            ('a' <= c && c <= 'f') ||
-            ('A' <= c && c <= 'F');
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsNumeric(char c)
-    {
-        return '0' <= c && c <= '9';
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -548,6 +534,6 @@ public ref struct Lexer
         return c == '_' ||
             ('A' <= c && c <= 'Z') ||
             ('a' <= c && c <= 'z') ||
-            IsNumeric(c);
+            StringHelper.IsNumber(c);
     }
 }
