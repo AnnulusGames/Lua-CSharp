@@ -1,3 +1,4 @@
+using Lua.Runtime;
 using Lua.Standard.Basic;
 using Lua.Standard.Bitwise;
 using Lua.Standard.Coroutines;
@@ -6,11 +7,24 @@ using Lua.Standard.Mathematics;
 using Lua.Standard.Modules;
 using Lua.Standard.OperatingSystem;
 using Lua.Standard.Table;
+using Lua.Standard.Text;
 
 namespace Lua.Standard;
 
 public static class OpenLibExtensions
 {
+    sealed class StringIndexMetamethod(LuaTable table) : LuaFunction
+    {
+        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+        {
+            context.GetArgument<string>(0);
+            var key = context.GetArgument(1);
+
+            buffer.Span[0] = table[key];
+            return new(1);
+        }
+    }
+
     static readonly LuaFunction[] baseFunctions = [
         AssertFunction.Instance,
         ErrorFunction.Instance,
@@ -73,6 +87,22 @@ public static class OpenLibExtensions
         ConcatFunction.Instance,
         InsertFunction.Instance,
         SortFunction.Instance,
+    ];
+
+    static readonly LuaFunction[] stringFunctions = [
+        ByteFunction.Instance,
+        CharFunction.Instance,
+        DumpFunction.Instance,
+        FindFunction.Instance,
+        FormatFunction.Instance,
+        GMatchFunction.Instance,
+        GSubFunction.Instance,
+        LenFunction.Instance,
+        LowerFunction.Instance,
+        RepFunction.Instance,
+        ReverseFunction.Instance,
+        SubFunction.Instance,
+        UpperFunction.Instance,
     ];
 
     static readonly LuaFunction[] ioFunctions = [
@@ -171,6 +201,27 @@ public static class OpenLibExtensions
         }
 
         state.Environment["table"] = table;
+    }
+
+    public static void OpenStringLibrary(this LuaState state)
+    {
+        var @string = new LuaTable(0, stringFunctions.Length);
+        foreach (var func in stringFunctions)
+        {
+            @string[func.Name] = func;
+        }
+
+        state.Environment["string"] = @string;
+
+        // set __index
+        var key = new LuaValue("");
+        if (!state.TryGetMetatable(key, out var metatable))
+        {
+            metatable = new();
+            state.SetMetatable(key, metatable);
+        }
+
+        metatable[Metamethods.Index] = new StringIndexMetamethod(@string);
     }
 
     public static void OpenIOLibrary(this LuaState state)

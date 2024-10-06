@@ -28,7 +28,7 @@ public sealed class ToNumberFunction : LuaFunction
         {
             if (arg1 == 10 || arg1 == 16)
             {
-                if (arg0.TryGetNumber(out var result))
+                if (arg0.TryRead<double>(out var result))
                 {
                     buffer.Span[0] = result;
                 }

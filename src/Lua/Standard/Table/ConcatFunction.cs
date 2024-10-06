@@ -14,15 +14,15 @@ public sealed class ConcatFunction : LuaFunction
             ? context.GetArgument<string>(1)
             : "";
         var arg2 = context.HasArgument(2)
-            ? (int)context.GetArgument<double>(2)
+            ? (long)context.GetArgument<double>(2)
             : 1;
         var arg3 = context.HasArgument(3)
-            ? (int)context.GetArgument<double>(3)
+            ? (long)context.GetArgument<double>(3)
             : arg0.ArrayLength;
 
         var builder = new ValueStringBuilder(512);
 
-        for (int i = arg2; i <= arg3; i++)
+        for (long i = arg2; i <= arg3; i++)
         {
             var value = arg0[i];
 

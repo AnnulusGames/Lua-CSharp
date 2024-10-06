@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using Lua.Internal;
 
 namespace Lua.CodeAnalysis.Syntax;
 
@@ -6,7 +7,7 @@ public ref struct Lexer
 {
     public required ReadOnlyMemory<char> Source { get; init; }
     public string? ChunkName { get; init; }
-    
+
     SyntaxToken current;
     SourcePosition position = new(1, 0);
     int offset;
@@ -204,7 +205,7 @@ public ref struct Lexer
                     return true;
                 }
 
-                if (!IsNumeric(c2))
+                if (!StringHelper.IsNumber(c2))
                 {
                     current = SyntaxToken.Dot(position);
                     return true;
@@ -223,7 +224,7 @@ public ref struct Lexer
         }
 
         // numeric literal
-        if (c1 is '.' || IsNumeric(c1))
+        if (c1 is '.' || StringHelper.IsNumber(c1))
         {
             if (c1 is '0' && c2 is 'x' or 'X') // hex 0x
             {
@@ -309,19 +310,25 @@ public ref struct Lexer
         {
             var quote = c1;
             var stringStartOffset = offset;
-
             var isTerminated = false;
+
             while (span.Length > offset)
             {
                 var c = span[offset];
-                if (c == quote)
-                {
-                    isTerminated = true;
-                    break;
-                }
 
                 if (c is '\n' or '\r')
                 {
+                    break;
+                }
+
+                if (c is '\\')
+                {
+                    Advance(1);
+                    if (span.Length <= offset) break;
+                }
+                else if (c == quote)
+                {
+                    isTerminated = true;
                     break;
                 }
 
@@ -350,7 +357,7 @@ public ref struct Lexer
                     throw new LuaParseException(ChunkName, this.position, "error: Unterminated string");
                 }
 
-                current = SyntaxToken.String(Source[start..end], position);
+                current = SyntaxToken.RawString(Source[start..end], position);
                 return true;
             }
             else
@@ -435,7 +442,7 @@ public ref struct Lexer
     }
 
     (int Start, int End, bool IsTerminated) ReadUntilLongBracketEnd(ref ReadOnlySpan<char> span)
-    {   
+    {
         var c = span[offset];
         var level = 0;
         while (c is '=')
@@ -450,6 +457,7 @@ public ref struct Lexer
         var startOffset = offset;
         var endOffset = 0;
         var isTerminated = false;
+        var prevC = char.MinValue;
 
         while (span.Length > offset + level + 1)
         {
@@ -472,7 +480,7 @@ public ref struct Lexer
                 }
             }
 
-            if (current is ']')
+            if (current is ']' && prevC is not '\\')
             {
                 endOffset = offset;
 
@@ -489,6 +497,7 @@ public ref struct Lexer
             }
 
         CONTINUE:
+            prevC = current;
             Advance(1);
         }
 
@@ -499,7 +508,7 @@ public ref struct Lexer
     void ReadDigit(ref ReadOnlySpan<char> span, ref int offset, out int readCount)
     {
         readCount = 0;
-        while (span.Length > offset && IsDigit(span[offset]))
+        while (span.Length > offset && StringHelper.IsDigit(span[offset]))
         {
             Advance(1);
             readCount++;
@@ -510,25 +519,11 @@ public ref struct Lexer
     void ReadNumber(ref ReadOnlySpan<char> span, ref int offset, out int readCount)
     {
         readCount = 0;
-        while (span.Length > offset && IsNumeric(span[offset]))
+        while (span.Length > offset && StringHelper.IsNumber(span[offset]))
         {
             Advance(1);
             readCount++;
         }
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsDigit(char c)
-    {
-        return IsNumeric(c) ||
-            ('a' <= c && c <= 'f') ||
-            ('A' <= c && c <= 'F');
-    }
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static bool IsNumeric(char c)
-    {
-        return '0' <= c && c <= '9';
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -537,6 +532,6 @@ public ref struct Lexer
         return c == '_' ||
             ('A' <= c && c <= 'Z') ||
             ('a' <= c && c <= 'z') ||
-            IsNumeric(c);
+            StringHelper.IsNumber(c);
     }
 }

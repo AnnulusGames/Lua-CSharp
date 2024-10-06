@@ -42,7 +42,7 @@ internal static class DateTimeHelper
                 }
             }
 
-            if (value.TryGetNumber(out var d) && MathEx.IsInteger(d))
+            if (value.TryRead<double>(out var d) && MathEx.IsInteger(d))
             {
                 return (int)d;
             }

@@ -193,7 +193,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     public bool VisitTableMethodDeclarationStatementNode(TableMethodDeclarationStatementNode node, Context context)
     {
         context.Append("function ");
-        
+
         for (int i = 0; i < node.MemberPath.Length; i++)
         {
             context.Append(node.MemberPath[i].Name.ToString());
@@ -411,9 +411,18 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
 
     public bool VisitStringLiteralNode(StringLiteralNode node, Context context)
     {
-        context.Append("\"");
-        context.Append(node.Text);
-        context.Append("\"");
+        if (node.IsShortLiteral)
+        {
+            context.Append("\"");
+            context.Append(node.Text.ToString());
+            context.Append("\"");
+        }
+        else
+        {
+            context.Append("[[");
+            context.Append(node.Text.ToString());
+            context.Append("]]");
+        }
         return true;
     }
 

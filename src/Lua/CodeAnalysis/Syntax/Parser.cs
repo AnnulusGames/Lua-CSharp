@@ -556,12 +556,13 @@ public ref struct Parser
         {
             SyntaxTokenType.Identifier => enumerator.GetNext(true).Type switch
             {
-                SyntaxTokenType.LParen or SyntaxTokenType.String => ParseCallFunctionExpression(ref enumerator, null),
+                SyntaxTokenType.LParen or SyntaxTokenType.String or SyntaxTokenType.RawString => ParseCallFunctionExpression(ref enumerator, null),
                 SyntaxTokenType.LSquare or SyntaxTokenType.Dot or SyntaxTokenType.Colon => ParseTableAccessExpression(ref enumerator, null),
                 _ => new IdentifierNode(enumerator.Current.Text, enumerator.Current.Position),
             },
             SyntaxTokenType.Number => new NumericLiteralNode(ConvertTextToNumber(enumerator.Current.Text.Span), enumerator.Current.Position),
-            SyntaxTokenType.String => new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position),
+            SyntaxTokenType.String => new StringLiteralNode(enumerator.Current.Text, true, enumerator.Current.Position),
+            SyntaxTokenType.RawString => new StringLiteralNode(enumerator.Current.Text, false, enumerator.Current.Position),
             SyntaxTokenType.True => new BooleanLiteralNode(true, enumerator.Current.Position),
             SyntaxTokenType.False => new BooleanLiteralNode(false, enumerator.Current.Position),
             SyntaxTokenType.Nil => new NilLiteralNode(enumerator.Current.Position),
@@ -587,7 +588,7 @@ public ref struct Parser
             result = ParseTableAccessExpression(ref enumerator, result);
             goto RECURSIVE;
         }
-        else if (nextType is SyntaxTokenType.LParen or SyntaxTokenType.String or SyntaxTokenType.LCurly)
+        else if (nextType is SyntaxTokenType.LParen or SyntaxTokenType.String or SyntaxTokenType.RawString or SyntaxTokenType.LCurly)
         {
             MoveNextWithValidation(ref enumerator);
             result = ParseCallFunctionExpression(ref enumerator, result);
@@ -859,7 +860,11 @@ public ref struct Parser
     {
         if (enumerator.Current.Type is SyntaxTokenType.String)
         {
-            return [new StringLiteralNode(enumerator.Current.Text.ToString(), enumerator.Current.Position)];
+            return [new StringLiteralNode(enumerator.Current.Text, true, enumerator.Current.Position)];
+        }
+        else if (enumerator.Current.Type is SyntaxTokenType.RawString)
+        {
+            return [new StringLiteralNode(enumerator.Current.Text, false, enumerator.Current.Position)];
         }
         else if (enumerator.Current.Type is SyntaxTokenType.LCurly)
         {

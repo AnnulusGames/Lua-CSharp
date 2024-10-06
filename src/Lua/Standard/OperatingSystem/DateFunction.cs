@@ -186,7 +186,7 @@ public sealed class DateFunction : LuaFunction
             }
             else
             {
-                throw new LuaRuntimeException(state.GetTraceback(), $"bad argument #1 to 'date' (invalid conversion specifier '{format}')");
+                throw new LuaRuntimeException(state.GetTraceback(), $"bad argument #1 to 'date' (invalid conversion specifier '{format.ToString()}')");
             }
         }
 
