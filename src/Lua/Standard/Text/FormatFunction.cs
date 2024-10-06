@@ -195,10 +195,15 @@ public sealed class FormatFunction : LuaFunction
                         {
                             case 'i':
                             case 'd':
-                            case 'u':
-                                formattedValue = precision < 0 
-                                    ? integer.ToString() 
+                                formattedValue = precision < 0
+                                    ? integer.ToString()
                                     : integer.ToString($"D{precision}");
+                                break;
+                            case 'u':
+                                var uInteger = (ulong)x;
+                                formattedValue = precision < 0 
+                                    ? uInteger.ToString() 
+                                    : uInteger.ToString($"D{precision}");
                                 break;
                             case 'c':
                                 formattedValue = ((char)integer).ToString();
@@ -218,7 +223,7 @@ public sealed class FormatFunction : LuaFunction
                                 break;
                         }
 
-                        if (plusSign && integer >= 0)
+                        if (plusSign && (specifier is 'u' || integer >= 0))
                         {
                             formattedValue = $"+{formattedValue}";
                         }
