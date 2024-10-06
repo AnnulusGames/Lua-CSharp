@@ -3,9 +3,9 @@ namespace Lua.Standard.Coroutines;
 
 public sealed class CoroutineWrapFunction : LuaFunction
 {
-    public const string FunctionName = "wrap";
+    public static readonly CoroutineWrapFunction Instance = new();
+    public override string Name => "wrap";
 
-    public override string Name => FunctionName;
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
