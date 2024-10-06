@@ -24,9 +24,9 @@ public abstract class LuaThread
         return stack.AsSpan();
     }
 
-    internal CallStackFrame[] GetStackFrames()
+    internal ReadOnlySpan<CallStackFrame> GetCallStackFrames()
     {
-        return callStack.AsSpan()[1..].ToArray();
+        return callStack.AsSpan();
     }
 
     internal void PushCallStackFrame(CallStackFrame frame)

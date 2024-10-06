@@ -7,11 +7,11 @@ public sealed class UpValue
 {
     LuaValue value;
 
-    public LuaThread Thread { get; }
+    public LuaThread? Thread { get; }
     public bool IsClosed { get; private set; }
     public int RegisterIndex { get; private set; }
 
-    UpValue(LuaThread thread)
+    UpValue(LuaThread? thread)
     {
         Thread = thread;
     }
@@ -24,9 +24,9 @@ public sealed class UpValue
         };
     }
 
-    public static UpValue Closed(LuaThread thread, LuaValue value)
+    public static UpValue Closed(LuaValue value)
     {
-        return new(thread)
+        return new(null)
         {
             IsClosed = true,
             value = value
@@ -42,7 +42,7 @@ public sealed class UpValue
         }
         else
         {
-            return Thread.Stack.UnsafeGet(RegisterIndex);
+            return Thread!.Stack.UnsafeGet(RegisterIndex);
         }
     }
 
@@ -55,7 +55,7 @@ public sealed class UpValue
         }
         else
         {
-            Thread.Stack.UnsafeGet(RegisterIndex) = value;
+            Thread!.Stack.UnsafeGet(RegisterIndex) = value;
         }
     }
 
@@ -64,7 +64,7 @@ public sealed class UpValue
     {
         if (!IsClosed)
         {
-            value = Thread.Stack.UnsafeGet(RegisterIndex);
+            value = Thread!.Stack.UnsafeGet(RegisterIndex);
         }
 
         IsClosed = true;

@@ -50,7 +50,7 @@ public sealed class LuaState
     LuaState()
     {
         environment = new();
-        envUpValue = UpValue.Closed(mainThread, environment);
+        envUpValue = UpValue.Closed(environment);
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -94,7 +94,7 @@ public sealed class LuaState
         {
             StackFrames = threadStack.AsSpan().ToArray()
                 .Append(MainThread)
-                .SelectMany(x => x.GetStackFrames())
+                .SelectMany(x => x.GetCallStackFrames()[1..].ToArray())
                 .ToArray()
         };
     }
