@@ -189,41 +189,70 @@ public sealed class FormatFunction : LuaFunction
 
                         LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, parameterIndex + 1, x);
 
-                        var integer = (long)x;
-
                         switch (specifier)
                         {
                             case 'i':
                             case 'd':
-                                formattedValue = precision < 0
-                                    ? integer.ToString()
-                                    : integer.ToString($"D{precision}");
-                                break;
                             case 'u':
-                                var uInteger = (ulong)x;
-                                formattedValue = precision < 0 
-                                    ? uInteger.ToString() 
-                                    : uInteger.ToString($"D{precision}");
+                                if (x > 0)
+                                {
+                                    var integer = (ulong)x;
+                                    formattedValue = precision < 0
+                                        ? integer.ToString()
+                                        : integer.ToString($"D{precision}");
+                                }
+                                else
+                                {
+                                    var integer = (long)x;
+                                    formattedValue = precision < 0
+                                        ? integer.ToString()
+                                        : integer.ToString($"D{precision}");
+                                }
                                 break;
                             case 'c':
-                                formattedValue = ((char)integer).ToString();
+                                formattedValue = ((char)(int)x).ToString();
                                 break;
                             case 'x':
-                                formattedValue = alternateForm
-                                    ? $"0x{integer:x}"
-                                    : $"{integer:x}";
+                                if (x > 0)
+                                {
+                                    var integer = (ulong)x;
+                                    formattedValue = alternateForm
+                                        ? $"0x{integer:x}"
+                                        : $"{integer:x}";
+                                }
+                                else
+                                {
+                                    var integer = (long)x;
+                                    formattedValue = alternateForm
+                                        ? $"0x{integer:x}"
+                                        : $"{integer:x}";
+                                }
                                 break;
                             case 'X':
-                                formattedValue = alternateForm
-                                    ? $"0X{integer:X}"
-                                    : $"{integer:X}";
+                                if (x > 0)
+                                {
+                                    var integer = (ulong)x;
+                                    formattedValue = alternateForm
+                                        ? $"0X{integer:X}"
+                                        : $"{integer:X}";
+                                }
+                                else
+                                {
+                                    var integer = (long)x;
+                                    formattedValue = alternateForm
+                                        ? $"0X{integer:X}"
+                                        : $"{integer:X}";
+                                }
                                 break;
                             case 'o':
-                                formattedValue = Convert.ToString(integer, 8);
+                                {
+                                    var integer = (long)x;
+                                    formattedValue = Convert.ToString(integer, 8);
+                                }
                                 break;
                         }
 
-                        if (plusSign && (specifier is 'u' || integer >= 0))
+                        if (plusSign && x >= 0)
                         {
                             formattedValue = $"+{formattedValue}";
                         }
