@@ -95,6 +95,7 @@ public static class OpenLibExtensions
         DumpFunction.Instance,
         FindFunction.Instance,
         FormatFunction.Instance,
+        GMatchFunction.Instance,
         LenFunction.Instance,
         LowerFunction.Instance,
         RepFunction.Instance,
