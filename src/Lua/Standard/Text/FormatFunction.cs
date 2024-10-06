@@ -33,6 +33,7 @@ public sealed class FormatFunction : LuaFunction
                 }
                 
                 var leftJustify = false;
+                var plusSign = false;
                 var zeroPadding = false;
                 var alternateForm = false;
                 var blank = false;
@@ -47,6 +48,9 @@ public sealed class FormatFunction : LuaFunction
                     {
                         case '-':
                             leftJustify = true;
+                            break;
+                        case '+':
+                            plusSign = true;
                             break;
                         case '0':
                             zeroPadding = true;
@@ -64,7 +68,7 @@ public sealed class FormatFunction : LuaFunction
                     i++;
                 }
 
-                PROCESS_WIDTH:
+            PROCESS_WIDTH:
 
                 // Process width
                 if (char.IsDigit(format[i]))
@@ -130,6 +134,10 @@ public sealed class FormatFunction : LuaFunction
                                 break;
                         }
 
+                        if (plusSign && f >= 0)
+                        {
+                            formattedValue = $"+{formattedValue}";
+                        }
                         break;
                     case 's':
                         using (var strBuffer = new PooledArray<LuaValue>(1))
@@ -208,6 +216,11 @@ public sealed class FormatFunction : LuaFunction
                             case 'o':
                                 formattedValue = Convert.ToString(integer, 8);
                                 break;
+                        }
+
+                        if (plusSign && integer >= 0)
+                        {
+                            formattedValue = $"+{formattedValue}";
                         }
                         break;
                     default:
