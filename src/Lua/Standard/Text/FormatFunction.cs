@@ -47,18 +47,23 @@ public sealed class FormatFunction : LuaFunction
                     switch (c)
                     {
                         case '-':
+                            if (leftJustify) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (repeated flags)");
                             leftJustify = true;
                             break;
                         case '+':
+                            if (plusSign) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (repeated flags)");
                             plusSign = true;
                             break;
                         case '0':
+                            if (zeroPadding) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (repeated flags)");
                             zeroPadding = true;
                             break;
                         case '#':
+                            if (alternateForm) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (repeated flags)");
                             alternateForm = true;
                             break;
                         case ' ':
+                            if (blank) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (repeated flags)");
                             blank = true;
                             break;
                         default:
@@ -71,13 +76,12 @@ public sealed class FormatFunction : LuaFunction
             PROCESS_WIDTH:
 
                 // Process width
+                var start = i;
                 if (char.IsDigit(format[i]))
                 {
-                    var start = i;
-
-                    do i++;
-                    while (format.Length > i && char.IsDigit(format[i]));
-
+                    i++;
+                    if (char.IsDigit(format[i])) i++;
+                    if (char.IsDigit(format[i])) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (width or precision too long)");
                     width = int.Parse(format.AsSpan()[start..i]);
                 }
 
@@ -85,16 +89,20 @@ public sealed class FormatFunction : LuaFunction
                 if (format[i] == '.')
                 {
                     i++;
-                    var start = i;
-
-                    do i++;
-                    while (format.Length > i && char.IsDigit(format[i]));
-
+                    start = i;
+                    if (char.IsDigit(format[i])) i++;
+                    if (char.IsDigit(format[i])) i++;
+                    if (char.IsDigit(format[i])) throw new LuaRuntimeException(context.State.GetTraceback(), "invalid format (width or precision too long)");
                     precision = int.Parse(format.AsSpan()[start..i]);
                 }
 
                 // Process conversion specifier
                 var specifier = format[i];
+
+                if (context.ArgumentCount <= parameterIndex)
+                {
+                    throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #{parameterIndex + 1} to 'format' (no value)");
+                }
                 var parameter = context.GetArgument(parameterIndex++);
 
                 // TODO: reduce allocation
@@ -193,17 +201,16 @@ public sealed class FormatFunction : LuaFunction
                         {
                             case 'i':
                             case 'd':
-                            case 'u':
-                                if (x > 0)
                                 {
-                                    var integer = (ulong)x;
+                                    var integer = checked((long)x);
                                     formattedValue = precision < 0
                                         ? integer.ToString()
                                         : integer.ToString($"D{precision}");
                                 }
-                                else
+                                break;
+                            case 'u':
                                 {
-                                    var integer = (long)x;
+                                    var integer = checked((ulong)x);
                                     formattedValue = precision < 0
                                         ? integer.ToString()
                                         : integer.ToString($"D{precision}");
@@ -213,32 +220,16 @@ public sealed class FormatFunction : LuaFunction
                                 formattedValue = ((char)(int)x).ToString();
                                 break;
                             case 'x':
-                                if (x > 0)
                                 {
-                                    var integer = (ulong)x;
-                                    formattedValue = alternateForm
-                                        ? $"0x{integer:x}"
-                                        : $"{integer:x}";
-                                }
-                                else
-                                {
-                                    var integer = (long)x;
+                                    var integer = checked((ulong)x);
                                     formattedValue = alternateForm
                                         ? $"0x{integer:x}"
                                         : $"{integer:x}";
                                 }
                                 break;
                             case 'X':
-                                if (x > 0)
                                 {
-                                    var integer = (ulong)x;
-                                    formattedValue = alternateForm
-                                        ? $"0X{integer:X}"
-                                        : $"{integer:X}";
-                                }
-                                else
-                                {
-                                    var integer = (long)x;
+                                    var integer = checked((ulong)x);
                                     formattedValue = alternateForm
                                         ? $"0X{integer:X}"
                                         : $"{integer:X}";
@@ -246,7 +237,7 @@ public sealed class FormatFunction : LuaFunction
                                 break;
                             case 'o':
                                 {
-                                    var integer = (long)x;
+                                    var integer = checked((long)x);
                                     formattedValue = Convert.ToString(integer, 8);
                                 }
                                 break;
