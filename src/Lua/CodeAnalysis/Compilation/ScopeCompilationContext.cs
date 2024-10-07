@@ -77,11 +77,11 @@ public class ScopeCompilationContext : IDisposable
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void TryPushCloseUpValue(SourcePosition position)
+    public void TryPushCloseUpValue(byte top, SourcePosition position)
     {
-        if (HasCapturedLocalVariables)
+        if (HasCapturedLocalVariables && top != 0)
         {
-            Function.PushInstruction(Instruction.Jmp(StackTopPosition, 0), position);
+            Function.PushInstruction(Instruction.Jmp(top, 0), position);
         }
     }
 

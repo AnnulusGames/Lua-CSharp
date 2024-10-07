@@ -490,7 +490,7 @@ public static partial class LuaVirtualMachine
                     pc += instruction.SBx;
                     if (instruction.A != 0)
                     {
-                        state.CloseUpValues(thread, instruction.A);
+                        state.CloseUpValues(thread, instruction.A - 1);
                     }
                     break;
                 case OpCode.Eq:

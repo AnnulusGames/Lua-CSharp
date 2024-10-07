@@ -700,7 +700,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             childNode.Accept(this, scopeContext);
         }
 
-        scopeContext.TryPushCloseUpValue(node.Position);
+        scopeContext.TryPushCloseUpValue(scopeContext.StackTopPosition, node.Position);
 
         return true;
     }
@@ -737,12 +737,12 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             if (hasElse)
             {
                 endJumpIndexList.Add(scopeContext.Function.Instructions.Length);
-                var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
+                var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackPosition : (byte)0;
                 scopeContext.PushInstruction(Instruction.Jmp(a, 0), node.Position, true);
             }
             else
             {
-                scopeContext.TryPushCloseUpValue(node.Position);
+                scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
             }
 
             scopeContext.Function.Instructions[ifPosition].SBx = scopeContext.Function.Instructions.Length - 1 - ifPosition;
@@ -767,12 +767,12 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             if (hasElse)
             {
                 endJumpIndexList.Add(scopeContext.Function.Instructions.Length);
-                var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
+                var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackPosition : (byte)0;
                 scopeContext.PushInstruction(Instruction.Jmp(a, 0), node.Position);
             }
             else
             {
-                scopeContext.TryPushCloseUpValue(node.Position);
+                scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
             }
 
             scopeContext.Function.Instructions[elseifPosition].SBx = scopeContext.Function.Instructions.Length - 1 - elseifPosition;
@@ -786,7 +786,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 childNode.Accept(this, scopeContext);
             }
 
-            scopeContext.TryPushCloseUpValue(node.Position);
+            scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
         }
 
         // set JMP sBx
@@ -812,14 +812,14 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         }
 
         CompileConditionNode(node.ConditionNode, scopeContext, true);
-        var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
+        var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackPosition : (byte)0;
         scopeContext.PushInstruction(Instruction.Jmp(a, startIndex - scopeContext.Function.Instructions.Length - 1), node.Position);
-        scopeContext.TryPushCloseUpValue(node.Position);
+        scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
 
         context.Function.LoopLevel--;
 
         // resolve break statements inside repeat block
-        context.Function.ResolveAllBreaks(context.StackPosition, context.Function.Instructions.Length - 1, scopeContext);
+        context.Function.ResolveAllBreaks(a, context.Function.Instructions.Length - 1, scopeContext);
 
         return true;
     }
@@ -844,11 +844,11 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         context.Function.Instructions[conditionIndex].SBx = context.Function.Instructions.Length - 1 - conditionIndex;
 
         CompileConditionNode(node.ConditionNode, context, false);
-        var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackTopPosition : (byte)0;
+        var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackPosition : (byte)0;
         context.PushInstruction(Instruction.Jmp(a, conditionIndex - context.Function.Instructions.Length), node.Position);
 
         // resolve break statements inside while block
-        context.Function.ResolveAllBreaks(context.StackPosition, context.Function.Instructions.Length - 1, scopeContext);
+        context.Function.ResolveAllBreaks(scopeContext.StackPosition, context.Function.Instructions.Length - 1, scopeContext);
 
         return true;
     }
@@ -887,7 +887,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 childNode.Accept(this, scopeContext);
             }
 
-            scopeContext.TryPushCloseUpValue(node.Position);
+            scopeContext.TryPushCloseUpValue((byte)(startPosition + 1), node.Position);
         }
         context.Function.LoopLevel--;
 
@@ -897,7 +897,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         // push ForLoop
         context.PushInstruction(Instruction.ForLoop(startPosition, prepIndex - context.Function.Instructions.Length), node.Position);
 
-        context.Function.ResolveAllBreaks(startPosition, context.Function.Instructions.Length - 1, scopeContext);
+        context.Function.ResolveAllBreaks((byte)(startPosition + 1), context.Function.Instructions.Length - 1, scopeContext);
 
         context.StackPosition = startPosition;
 
@@ -950,7 +950,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 childNode.Accept(this, scopeContext);
             }
 
-            scopeContext.TryPushCloseUpValue(node.Position);
+            scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
         }
         context.Function.LoopLevel--;
 
@@ -961,7 +961,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         context.PushInstruction(Instruction.TForCall(startPosition, (ushort)node.Names.Length), node.Position);
         context.PushInstruction(Instruction.TForLoop((byte)(startPosition + 2), startJumpIndex - context.Function.Instructions.Length), node.Position);
 
-        context.Function.ResolveAllBreaks(startPosition, context.Function.Instructions.Length - 1, scopeContext);
+        context.Function.ResolveAllBreaks((byte)(startPosition + 1), context.Function.Instructions.Length - 1, scopeContext);
         context.StackPosition = startPosition;
 
         return true;
