@@ -761,7 +761,6 @@ public static partial class LuaVirtualMachine
                     }
                 case OpCode.ForLoop:
                     {
-                        state.CloseUpValues(thread, RA);
                         stack.EnsureCapacity(RA + 4);
 
                         // TODO: add error message
