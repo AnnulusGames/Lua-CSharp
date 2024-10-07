@@ -845,7 +845,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
         CompileConditionNode(node.ConditionNode, context, false);
         var a = scopeContext.HasCapturedLocalVariables ? scopeContext.StackPosition : (byte)0;
-        context.PushInstruction(Instruction.Jmp(a, conditionIndex - context.Function.Instructions.Length), node.Position);
+        scopeContext.PushInstruction(Instruction.Jmp(a, conditionIndex - context.Function.Instructions.Length), node.Position);
+        scopeContext.TryPushCloseUpValue(scopeContext.StackPosition, node.Position);
 
         // resolve break statements inside while block
         context.Function.ResolveAllBreaks(scopeContext.StackPosition, context.Function.Instructions.Length - 1, scopeContext);
