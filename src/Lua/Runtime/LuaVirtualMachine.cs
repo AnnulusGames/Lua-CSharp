@@ -281,7 +281,12 @@ public static partial class LuaVirtualMachine
 
                             if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
                             {
-                                stack.UnsafeGet(RA) = valueB % valueC;
+                                var mod = valueB % valueC;
+                                if ((valueC > 0 && mod < 0) || (valueC < 0 && mod > 0))
+                                {
+                                    mod += valueC;
+                                }
+                                stack.UnsafeGet(RA) = mod;
                             }
                             else if (vb.TryGetMetamethod(state, Metamethods.Mod, out var metamethod) || vc.TryGetMetamethod(state, Metamethods.Mod, out metamethod))
                             {
