@@ -8,6 +8,7 @@ public static class HexConverter
     public static double ToDouble(ReadOnlySpan<char> text)
     {
         var sign = 1;
+        text = text.Trim();
         if (text[0] == '-')
         {
             // Remove the "-0x"
@@ -25,7 +26,12 @@ public static class HexConverter
 
         if (dotIndex == -1 && expIndex == -1)
         {
-            return (double)BigInteger.Parse(text, NumberStyles.HexNumber);
+            // unsigned big integer
+            // TODO: optimize
+            using var buffer = new PooledArray<char>(text.Length + 1);
+            text.CopyTo(buffer.AsSpan()[1..]);
+            buffer[0] = '0';
+            return sign * (double)BigInteger.Parse(buffer.AsSpan()[..(text.Length + 1)], NumberStyles.AllowHexSpecifier);
         }
 
         var intPart = dotIndex == -1 ? [] : text[..dotIndex];
@@ -36,7 +42,7 @@ public static class HexConverter
 
         var value = intPart.Length == 0
             ? 0
-            : long.Parse(intPart, NumberStyles.HexNumber);
+            : long.Parse(intPart, NumberStyles.AllowHexSpecifier);
 
         var decimalValue = 0.0;
         for (int i = 0; i < decimalPart.Length; i++)
