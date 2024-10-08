@@ -42,6 +42,11 @@ public sealed class LuaTable
         }
         set
         {
+            if (key.Type is LuaValueType.Number && double.IsNaN(key.Read<double>()))
+            {
+                throw new ArgumentException("table index is NaN");
+            }
+
             if (TryGetInteger(key, out var index))
             {
                 if (0 < index && index <= Math.Max(array.Length * 2, 8))
