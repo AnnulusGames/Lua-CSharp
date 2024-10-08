@@ -959,6 +959,11 @@ public static partial class LuaVirtualMachine
         var stack = state.CurrentThread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
+        if (key.Type is LuaValueType.Number && key.TryRead<double>(out var d) && double.IsNaN(d))
+        {
+            throw new LuaRuntimeException(GetTracebacks(state, chunk, pc), "table index is NaN");
+        }
+
         if (isTable && t.ContainsKey(key))
         {
             t[key] = value;
