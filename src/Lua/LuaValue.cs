@@ -84,8 +84,20 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     var str = (string)referenceValue!;
                     var span = str.AsSpan().Trim();
 
+                    if (span.Length == 0)
+                    {
+                        result = default!;
+                        return false;
+                    }
+
                     var sign = 1;
-                    if (span.Length > 0 && span[0] == '-')
+                    var first = span[0];
+                    if (first is '+')
+                    {
+                        sign = 1;
+                        span = span[1..];
+                    }
+                    else if (first is '-')
                     {
                         sign = -1;
                         span = span[1..];
