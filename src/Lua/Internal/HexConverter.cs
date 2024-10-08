@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Numerics;
 
 namespace Lua.Internal;
 
@@ -24,7 +25,7 @@ public static class HexConverter
 
         if (dotIndex == -1 && expIndex == -1)
         {
-            return long.Parse(text, NumberStyles.AllowHexSpecifier);
+            return (double)BigInteger.Parse(text, NumberStyles.HexNumber);
         }
 
         var intPart = dotIndex == -1 ? [] : text[..dotIndex];
@@ -35,7 +36,7 @@ public static class HexConverter
 
         var value = intPart.Length == 0
             ? 0
-            : long.Parse(intPart, NumberStyles.AllowHexSpecifier);
+            : long.Parse(intPart, NumberStyles.HexNumber);
 
         var decimalValue = 0.0;
         for (int i = 0; i < decimalPart.Length; i++)
