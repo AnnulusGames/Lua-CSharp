@@ -9,18 +9,6 @@ public sealed class LuaTable
     {
     }
 
-    public LuaTable(IEnumerable<LuaValue> values)
-    {
-        array = values.ToArray();
-        dictionary = [];
-    }
-
-    public LuaTable(IEnumerable<KeyValuePair<LuaValue, LuaValue>> values)
-    {
-        array = [];
-        dictionary = new Dictionary<LuaValue, LuaValue>(values);
-    }
-
     public LuaTable(int arrayCapacity, int dictionaryCapacity)
     {
         array = new LuaValue[arrayCapacity];
