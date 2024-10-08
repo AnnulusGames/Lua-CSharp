@@ -10,9 +10,16 @@ public sealed class NextFunction : LuaFunction
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.HasArgument(1) ? context.Arguments[1] : LuaValue.Nil;
 
-        var kv = arg0.GetNext(arg1);
-        buffer.Span[0] = kv.Key;
-        buffer.Span[1] = kv.Value;
-        return new(2);
+        if (arg0.TryGetNext(arg1, out var kv))
+        {
+            buffer.Span[0] = kv.Key;
+            buffer.Span[1] = kv.Value;
+            return new(2);
+        }
+        else
+        {
+            buffer.Span[0] = LuaValue.Nil;
+            return new(1);
+        }
     }
 }

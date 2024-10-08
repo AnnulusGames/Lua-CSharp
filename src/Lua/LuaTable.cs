@@ -170,7 +170,7 @@ public sealed class LuaTable
         array[arrayIndex] = value;
     }
 
-    public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
+    public bool TryGetNext(LuaValue key, out KeyValuePair<LuaValue, LuaValue> pair)
     {
         var index = -1;
         if (key.Type is LuaValueType.Nil)
@@ -189,30 +189,37 @@ public sealed class LuaTable
             {
                 if (span[i].Type is not LuaValueType.Nil)
                 {
-                    return new(index + i + 1, span[i]);
+                    pair = new(index + i + 1, span[i]);
+                    return true;
                 }
             }
 
-            foreach (var pair in dictionary)
+            foreach (var kv in dictionary)
             {
-                return pair;
+                pair = kv;
+                return true;
             }
         }
         else
         {
             var foundKey = false;
-            foreach (var pair in dictionary)
+            foreach (var kv in dictionary)
             {
-                if (foundKey) return pair;
+                if (foundKey)
+                {
+                    pair = kv;
+                    return true;
+                }
 
-                if (pair.Key.Equals(key))
+                if (kv.Key.Equals(key))
                 {
                     foundKey = true;
                 }
             }
         }
 
-        return default;
+        pair = default;
+        return false;
     }
 
     public void Clear()
