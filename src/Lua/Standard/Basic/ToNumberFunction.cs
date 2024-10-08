@@ -1,5 +1,4 @@
-using System.Globalization;
-using Lua.Runtime;
+using Lua.Internal;
 
 namespace Lua.Standard.Basic;
 
@@ -10,42 +9,35 @@ public sealed class ToNumberFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.GetArgument(0);
-        int? arg1 = context.HasArgument(1)
+        var e = context.GetArgument(0);
+        int? toBase = context.HasArgument(1)
             ? (int)context.GetArgument<double>(1)
             : null;
 
-        if (arg1 != null && (arg1 < 2 || arg1 > 36))
+        if (toBase != null && (toBase < 2 || toBase > 36))
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'tonumber' (base out of range)");
         }
 
-        if (arg0.Type is LuaValueType.Number)
+        double? value = null;
+        if (e.Type is LuaValueType.Number)
         {
-            buffer.Span[0] = arg0;
+            value = e.Read<double>();
         }
-        else if (arg0.TryRead<string>(out var str))
+        else if (e.TryRead<string>(out var str))
         {
-            if (arg1 == null)
+            if (toBase == null)
             {
-                if (arg0.TryRead<double>(out var result))
+                if (e.TryRead<double>(out var result))
                 {
-                    buffer.Span[0] = result;
-                }
-                else
-                {
-                    buffer.Span[0] = LuaValue.Nil;
+                    value = result;
                 }
             }
-            else if (arg1 == 10)
+            else if (toBase == 10)
             {
                 if (double.TryParse(str, out var result))
                 {
-                    buffer.Span[0] = result;
-                }
-                else
-                {
-                    buffer.Span[0] = LuaValue.Nil;
+                    value = result;
                 }
             }
             else
@@ -54,24 +46,43 @@ public sealed class ToNumberFunction : LuaFunction
                 {
                     // if the base is not 10, str cannot contain a minus sign
                     var span = str.AsSpan().Trim();
-                    var sign = span[0] == '-' ? -1 : 1;
-                    if (sign == -1)
+                    if (span.Length == 0) goto END;
+
+                    var first = span[0];
+                    var sign = first == '-' ? -1 : 1;
+                    if (first is '+' or '-')
                     {
                         span = span[1..];
                     }
-                    buffer.Span[0] = sign * StringToDouble(span, arg1.Value);
+                    if (span.Length == 0) goto END;
+
+                    if (toBase == 16 && span.Length > 2 && span[0] is '0' && span[1] is 'x' or 'X')
+                    {
+                        value = sign * HexConverter.ToDouble(span);
+                    }
+                    else
+                    {
+                        value = sign * StringToDouble(span, toBase.Value);
+                    }
                 }
                 catch (FormatException)
                 {
-                    buffer.Span[0] = LuaValue.Nil;
+                    goto END;
                 }
             }
         }
         else
         {
-            buffer.Span[0] = LuaValue.Nil;
+            goto END;
         }
 
+    END:
+        if (value != null && double.IsNaN(value.Value))
+        {
+            value = null;
+        }
+
+        buffer.Span[0] = value == null ? LuaValue.Nil : value.Value;
         return new(1);
     }
 
