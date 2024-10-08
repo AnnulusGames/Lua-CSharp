@@ -319,7 +319,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.Nil => true,
             LuaValueType.Boolean => Read<bool>().Equals(other.Read<bool>()),
             LuaValueType.String => Read<string>().Equals(other.Read<string>()),
-            LuaValueType.Number => Read<double>().Equals(other.Read<double>()),
+            LuaValueType.Number => Read<double>() == other.Read<double>(),
             LuaValueType.Function => Read<LuaFunction>().Equals(other.Read<LuaFunction>()),
             LuaValueType.Thread => Read<LuaThread>().Equals(other.Read<LuaThread>()),
             LuaValueType.Table => Read<LuaTable>().Equals(other.Read<LuaTable>()),
