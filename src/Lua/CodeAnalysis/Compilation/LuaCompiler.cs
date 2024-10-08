@@ -164,12 +164,12 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
                 break;
             case BinaryOperator.GreaterThan:
-                context.PushInstruction(Instruction.Le(1, c, b), node.Position);
+                context.PushInstruction(Instruction.Lt(1, c, b), node.Position);
                 context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
                 context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
                 break;
             case BinaryOperator.GreaterThanOrEqual:
-                context.PushInstruction(Instruction.Lt(1, c, b), node.Position);
+                context.PushInstruction(Instruction.Le(1, c, b), node.Position);
                 context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
                 context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
                 break;
@@ -1089,13 +1089,13 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 case BinaryOperator.GreaterThan:
                     {
                         (var b, var c) = GetBAndC(binaryExpression, context);
-                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
+                        context.PushInstruction(Instruction.Lt(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
                         return;
                     }
                 case BinaryOperator.GreaterThanOrEqual:
                     {
                         (var b, var c) = GetBAndC(binaryExpression, context);
-                        context.PushInstruction(Instruction.Lt(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
+                        context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
                         return;
                     }
             }
