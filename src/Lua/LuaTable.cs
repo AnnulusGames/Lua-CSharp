@@ -57,20 +57,13 @@ public sealed class LuaTable
                 }
             }
 
-            if (value.Type is LuaValueType.Nil)
-            {
-                dictionary.Remove(key);
-            }
-            else
-            {
-                dictionary[key] = value;
-            }
+            dictionary[key] = value;
         }
     }
 
     public int HashMapCount
     {
-        get => dictionary.Count;
+        get => dictionary.Count(x => x.Value.Type is not LuaValueType.Nil);
     }
 
     public int ArrayLength
@@ -189,8 +182,11 @@ public sealed class LuaTable
 
             foreach (var kv in dictionary)
             {
-                pair = kv;
-                return true;
+                if (kv.Value.Type is not LuaValueType.Nil)
+                {
+                    pair = kv;
+                    return true;
+                }
             }
         }
         else
