@@ -111,7 +111,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     {
         node.FunctionNode.Accept(this, context);
         context.Append("(");
-        AddStatementList(node.ArgumentNodes, context);
+        VisitSyntaxNodes(node.ArgumentNodes, context);
         context.Append(")");
         return true;
     }
@@ -141,7 +141,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     public bool VisitFunctionDeclarationExpressionNode(FunctionDeclarationExpressionNode node, Context context)
     {
         context.Append("function(");
-        AddStatementList(node.ParameterNodes, context);
+        VisitSyntaxNodes(node.ParameterNodes, context);
         if (node.HasVariableArguments)
         {
             if (node.ParameterNodes.Length > 0) context.Append(", ");
@@ -168,7 +168,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
         context.Append("function ");
         context.Append(node.Name.ToString());
         context.Append("(");
-        AddStatementList(node.ParameterNodes, context);
+        VisitSyntaxNodes(node.ParameterNodes, context);
         if (node.HasVariableArguments)
         {
             if (node.ParameterNodes.Length > 0) context.Append(", ");
@@ -209,7 +209,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
         }
 
         context.Append("(");
-        AddStatementList(node.ParameterNodes, context);
+        VisitSyntaxNodes(node.ParameterNodes, context);
         if (node.HasVariableArguments)
         {
             if (node.ParameterNodes.Length > 0) context.Append(", ");
@@ -234,9 +234,9 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     public bool VisitGenericForStatementNode(GenericForStatementNode node, Context context)
     {
         context.Append($"for ");
-        AddStatementList(node.Names, context);
+        VisitSyntaxNodes(node.Names, context);
         context.Append(" in ");
-        node.ExpressionNode.Accept(this, context);
+        VisitSyntaxNodes(node.ExpressionNodes, context);
         context.AppendLine(" do");
         using (context.BeginIndentScope())
         {
@@ -321,12 +321,12 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
 
     public bool VisitAssignmentStatementNode(AssignmentStatementNode node, Context context)
     {
-        AddStatementList(node.LeftNodes, context);
+        VisitSyntaxNodes(node.LeftNodes, context);
 
         if (node.RightNodes.Length > 0)
         {
             context.Append(" = ");
-            AddStatementList(node.RightNodes, context);
+            VisitSyntaxNodes(node.RightNodes, context);
         }
 
         return true;
@@ -405,7 +405,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     public bool VisitReturnStatementNode(ReturnStatementNode node, Context context)
     {
         context.Append("return ");
-        AddStatementList(node.Nodes, context);
+        VisitSyntaxNodes(node.Nodes, context);
         return true;
     }
 
@@ -491,7 +491,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
     {
         node.TableNode.Accept(this, context);
         context.Append($":{node.MethodName}(");
-        AddStatementList(node.ArgumentNodes, context);
+        VisitSyntaxNodes(node.ArgumentNodes, context);
         context.Append(")");
         return true;
     }
@@ -536,7 +536,7 @@ public sealed class DisplayStringSyntaxVisitor : ISyntaxNodeVisitor<DisplayStrin
         return true;
     }
 
-    void AddStatementList(SyntaxNode[] nodes, Context context)
+    void VisitSyntaxNodes(SyntaxNode[] nodes, Context context)
     {
         for (int i = 0; i < nodes.Length; i++)
         {

@@ -435,7 +435,7 @@ public ref struct Parser
         CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.In, out _);
         enumerator.SkipEoL();
 
-        var expression = ParseExpression(ref enumerator, OperatorPrecedence.NonOperator);
+        var expressions = ParseExpressionList(ref enumerator);
         MoveNextWithValidation(ref enumerator);
         enumerator.SkipEoL();
 
@@ -445,7 +445,7 @@ public ref struct Parser
         // parse statements
         var statements = ParseStatementList(ref enumerator, SyntaxTokenType.End);
 
-        return new GenericForStatementNode(identifiers, expression, statements, forToken.Position);
+        return new GenericForStatementNode(identifiers, expressions, statements, forToken.Position);
     }
 
     FunctionDeclarationStatementNode ParseFunctionDeclarationStatement(ref SyntaxTokenEnumerator enumerator, SyntaxToken functionToken)
@@ -903,7 +903,7 @@ public ref struct Parser
         while (true)
         {
             enumerator.SkipEoL();
-            
+
             if (!TryParseExpression(ref enumerator, OperatorPrecedence.NonOperator, out var expression))
             {
                 enumerator.MovePrevious();
