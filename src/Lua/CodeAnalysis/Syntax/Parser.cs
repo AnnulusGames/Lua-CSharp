@@ -44,6 +44,7 @@ public ref struct Parser
     {
         switch (enumerator.Current.Type)
         {
+            case SyntaxTokenType.LParen:
             case SyntaxTokenType.Identifier:
                 {
                     var firstExpression = ParseExpression(ref enumerator, OperatorPrecedence.NonOperator);
