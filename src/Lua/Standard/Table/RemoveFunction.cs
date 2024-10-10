@@ -16,9 +16,20 @@ public sealed class RemoveFunction : LuaFunction
 
         var n = (int)n_arg;
 
-        if (n <= 0 || n > table.ArrayLength)
+        if (n <= 0 || n > table.GetArraySpan().Length)
         {
+            if (!context.HasArgument(1) && n == 0)
+            {
+                buffer.Span[0] = LuaValue.Nil;
+                return new(1);
+            }
+            
             throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'remove' (position out of bounds)");
+        }
+        else if (n > table.ArrayLength)
+        {
+            buffer.Span[0] = LuaValue.Nil;
+            return new(1);
         }
 
         buffer.Span[0] = table.RemoveAt(n);
