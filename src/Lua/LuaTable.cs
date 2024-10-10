@@ -194,7 +194,7 @@ public sealed class LuaTable
             var foundKey = false;
             foreach (var kv in dictionary)
             {
-                if (foundKey)
+                if (foundKey && kv.Value.Type is not LuaValueType.Nil)
                 {
                     pair = kv;
                     return true;
