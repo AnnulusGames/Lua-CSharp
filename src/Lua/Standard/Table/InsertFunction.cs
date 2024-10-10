@@ -13,21 +13,20 @@ public sealed class InsertFunction : LuaFunction
             ? context.GetArgument(2)
             : context.GetArgument(1);
 
-        var pos = context.HasArgument(2)
+        var pos_arg = context.HasArgument(2)
             ? context.GetArgument<double>(1)
             : table.ArrayLength + 1;
 
-        if (!MathEx.IsInteger(pos))
-        {
-            throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'insert' (number has no integer representation)");
-        }
+        LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, pos_arg);
+
+        var pos = (int)pos_arg;
 
         if (pos <= 0 || pos > table.ArrayLength + 1)
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'insert' (position out of bounds)");
         }
 
-        table.Insert((int)pos, value);
+        table.Insert(pos, value);
         return new(0);
     }
 }
