@@ -15,6 +15,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
     }
 
     byte status;
+    bool isFirstCall = true;
     LuaState threadState;
     ValueTask<int> functionTask;
 
@@ -22,6 +23,12 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
     ManualResetValueTaskSourceCore<YieldContext> yield;
 
     public override LuaThreadStatus GetStatus() => (LuaThreadStatus)status;
+
+    public override void UnsafeSetStatus(LuaThreadStatus status)
+    {
+        this.status = (byte)status;
+    }
+
     public bool IsProtectedMode { get; }
     public LuaFunction Function { get; }
 
@@ -34,33 +41,33 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
     public override async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
+        var baseThread = context.State.CurrentThread;
+        baseThread.UnsafeSetStatus(LuaThreadStatus.Normal);
+
         context.State.ThreadStack.Push(this);
         try
         {
             switch ((LuaThreadStatus)Volatile.Read(ref status))
             {
-                case LuaThreadStatus.Normal:
-                    Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
-
-                    // first argument is LuaThread object
-                    for (int i = 0; i < context.ArgumentCount - 1; i++)
-                    {
-                        threadState.Push(context.Arguments[i + 1]);
-                    }
-
-                    functionTask = Function.InvokeAsync(new()
-                    {
-                        State = threadState,
-                        ArgumentCount = context.ArgumentCount - 1,
-                        ChunkName = Function.Name,
-                        RootChunkName = context.RootChunkName,
-                    }, buffer[1..], cancellationToken).Preserve();
-
-                    break;
                 case LuaThreadStatus.Suspended:
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
-                    yield.SetResult(new());
+                    
+                    if (isFirstCall)
+                    {
+                        functionTask = Function.InvokeAsync(new()
+                        {
+                            State = threadState,
+                            ArgumentCount = context.ArgumentCount - 1,
+                            ChunkName = Function.Name,
+                            RootChunkName = context.RootChunkName,
+                        }, buffer[1..], cancellationToken).Preserve();
+                    }
+                    else
+                    {
+                        yield.SetResult(new());
+                    }
                     break;
+                case LuaThreadStatus.Normal:
                 case LuaThreadStatus.Running:
                     if (IsProtectedMode)
                     {
@@ -99,6 +106,16 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
             try
             {
+                if (isFirstCall)
+                {
+                    for (int i = 0; i < context.ArgumentCount - 1; i++)
+                    {
+                        threadState.Push(context.Arguments[i + 1]);
+                    }
+
+                    Volatile.Write(ref isFirstCall, false);
+                }
+
                 (var index, var result0, var result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
 
                 if (index == 0)
@@ -143,6 +160,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
         finally
         {
             context.State.ThreadStack.Pop();
+            baseThread.UnsafeSetStatus(LuaThreadStatus.Running);
         }
     }
 

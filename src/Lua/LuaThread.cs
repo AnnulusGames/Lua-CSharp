@@ -6,6 +6,7 @@ namespace Lua;
 public abstract class LuaThread
 {
     public abstract LuaThreadStatus GetStatus();
+    public abstract void UnsafeSetStatus(LuaThreadStatus status);
     public abstract ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
     public abstract ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default);
 
