@@ -902,6 +902,8 @@ public ref struct Parser
 
         while (true)
         {
+            enumerator.SkipEoL();
+            
             if (!TryParseExpression(ref enumerator, OperatorPrecedence.NonOperator, out var expression))
             {
                 enumerator.MovePrevious();
