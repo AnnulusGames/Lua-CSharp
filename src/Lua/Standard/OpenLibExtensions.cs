@@ -168,7 +168,7 @@ public static class OpenLibExtensions
         var coroutine = new LuaTable(0, coroutineFunctions.Length);
         foreach (var func in coroutineFunctions)
         {
-            state.Environment[func.Name] = func;
+            coroutine[func.Name] = func;
         }
 
         state.Environment["coroutine"] = coroutine;
