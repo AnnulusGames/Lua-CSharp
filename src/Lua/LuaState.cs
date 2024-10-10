@@ -64,6 +64,7 @@ public sealed class LuaState
             return await closure.InvokeAsync(new()
             {
                 State = this,
+                Thread = CurrentThread,
                 ArgumentCount = 0,
                 StackPosition = 0,
                 SourcePosition = null,

@@ -41,7 +41,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
     public override async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
-        var baseThread = context.State.CurrentThread;
+        var baseThread = context.Thread;
         baseThread.UnsafeSetStatus(LuaThreadStatus.Normal);
 
         context.State.ThreadStack.Push(this);
@@ -51,12 +51,18 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
             {
                 case LuaThreadStatus.Suspended:
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Running);
-                    
+
                     if (isFirstCall)
                     {
+                        // copy stack value
+                        Stack.EnsureCapacity(baseThread.Stack.Count);
+                        baseThread.Stack.AsSpan().CopyTo(Stack.GetBuffer());
+                        Stack.NotifyTop(baseThread.Stack.Count);
+
                         functionTask = Function.InvokeAsync(new()
                         {
                             State = threadState,
+                            Thread = this,
                             ArgumentCount = context.ArgumentCount - 1,
                             ChunkName = Function.Name,
                             RootChunkName = context.RootChunkName,

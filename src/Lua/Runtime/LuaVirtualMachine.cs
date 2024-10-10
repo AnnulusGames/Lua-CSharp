@@ -141,6 +141,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -180,6 +181,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -219,6 +221,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -258,6 +261,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -302,6 +306,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -341,6 +346,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -378,6 +384,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 1,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -422,6 +429,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 1,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -479,6 +487,7 @@ public static partial class LuaVirtualMachine
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     SourcePosition = chunk.SourcePositions[pc],
                                 }, methodBuffer.AsMemory(), cancellationToken);
@@ -523,6 +532,7 @@ public static partial class LuaVirtualMachine
                                     await func.InvokeAsync(new()
                                     {
                                         State = state,
+                                        Thread = thread,
                                         ArgumentCount = 2,
                                         SourcePosition = chunk.SourcePositions[pc],
                                     }, methodBuffer, cancellationToken);
@@ -572,6 +582,7 @@ public static partial class LuaVirtualMachine
                                     await func.InvokeAsync(new()
                                     {
                                         State = state,
+                                        Thread = thread,
                                         ArgumentCount = 2,
                                         SourcePosition = chunk.SourcePositions[pc],
                                     }, methodBuffer, cancellationToken);
@@ -625,6 +636,7 @@ public static partial class LuaVirtualMachine
                                     await func.InvokeAsync(new()
                                     {
                                         State = state,
+                                        Thread = thread,
                                         ArgumentCount = 2,
                                         SourcePosition = chunk.SourcePositions[pc],
                                     }, methodBuffer, cancellationToken);
@@ -691,6 +703,7 @@ public static partial class LuaVirtualMachine
                                 var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = argumentCount,
                                     StackPosition = newBase,
                                     SourcePosition = chunk.SourcePositions[pc],
@@ -741,6 +754,7 @@ public static partial class LuaVirtualMachine
                             return await func.InvokeAsync(new()
                             {
                                 State = state,
+                                Thread = thread,
                                 ArgumentCount = argumentCount,
                                 StackPosition = newBase,
                                 SourcePosition = chunk.SourcePositions[pc],
@@ -814,6 +828,7 @@ public static partial class LuaVirtualMachine
                                 await iterator.InvokeAsync(new()
                                 {
                                     State = state,
+                                    Thread = thread,
                                     ArgumentCount = 2,
                                     StackPosition = nextBase,
                                     SourcePosition = chunk.SourcePositions[pc],
@@ -905,7 +920,8 @@ public static partial class LuaVirtualMachine
 #endif
     static async ValueTask<LuaValue> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, CancellationToken cancellationToken)
     {
-        var stack = state.CurrentThread.Stack;
+        var thread = state.CurrentThread;
+        var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
         if (isTable && t.TryGetValue(key, out var result))
@@ -929,6 +945,7 @@ public static partial class LuaVirtualMachine
                 await indexTable.InvokeAsync(new()
                 {
                     State = state,
+                    Thread = thread,
                     ArgumentCount = 2,
                     SourcePosition = chunk.SourcePositions[pc],
                 }, methodBuffer, cancellationToken);
@@ -956,7 +973,8 @@ public static partial class LuaVirtualMachine
 #endif
     static async ValueTask SetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, CancellationToken cancellationToken)
     {
-        var stack = state.CurrentThread.Stack;
+        var thread = state.CurrentThread;
+        var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
         if (key.Type is LuaValueType.Number && key.TryRead<double>(out var d) && double.IsNaN(d))
@@ -986,6 +1004,7 @@ public static partial class LuaVirtualMachine
                 await indexTable.InvokeAsync(new()
                 {
                     State = state,
+                    Thread = thread,
                     ArgumentCount = 3,
                     SourcePosition = chunk.SourcePositions[pc],
                 }, methodBuffer, cancellationToken);

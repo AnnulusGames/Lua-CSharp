@@ -6,6 +6,7 @@ namespace Lua;
 public readonly record struct LuaFunctionExecutionContext
 {
     public required LuaState State { get; init; }
+    public required LuaThread Thread { get; init; }
     public required int ArgumentCount { get; init; }
     public int? StackPosition { get; init; }
     public SourcePosition? SourcePosition { get; init; }
@@ -16,8 +17,7 @@ public readonly record struct LuaFunctionExecutionContext
     {
         get
         {
-            var thread = State.CurrentThread;
-            return thread.GetStackValues().Slice(thread.GetCurrentFrame().Base, ArgumentCount);
+            return Thread.GetStackValues().Slice(Thread.GetCurrentFrame().Base, ArgumentCount);
         }
     }
 
@@ -42,14 +42,13 @@ public readonly record struct LuaFunctionExecutionContext
         var arg = Arguments[index];
         if (!arg.TryRead<T>(out var argValue))
         {
-            var thread = State.CurrentThread;
             if (LuaValue.TryGetLuaValueType(typeof(T), out var type))
             {
-                LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, thread.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, Thread.GetCurrentFrame().Function.Name, type.ToString(), arg.Type.ToString());
             }
             else
             {
-                LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, thread.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
+                LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, Thread.GetCurrentFrame().Function.Name, typeof(T).Name, arg.Type.ToString());
             }
         }
 
@@ -60,7 +59,7 @@ public readonly record struct LuaFunctionExecutionContext
     {
         if (ArgumentCount <= index)
         {
-            LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, State.CurrentThread.GetCurrentFrame().Function.Name);
+            LuaRuntimeException.BadArgument(State.GetTraceback(), index + 1, Thread.GetCurrentFrame().Function.Name);
         }
     }
 }

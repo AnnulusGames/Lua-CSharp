@@ -8,7 +8,7 @@ public sealed class CoroutineYieldFunction : LuaFunction
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        await context.State.CurrentThread.Yield(context, cancellationToken);
+        await context.Thread.Yield(context, cancellationToken);
         return 0;
     }
 }
