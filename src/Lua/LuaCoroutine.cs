@@ -1,5 +1,7 @@
+using System.Buffers;
 using System.Threading.Tasks.Sources;
 using Lua.Internal;
+using Lua.Runtime;
 
 namespace Lua;
 
@@ -7,20 +9,30 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 {
     struct YieldContext
     {
+        public required LuaValue[] Results;
     }
 
     struct ResumeContext
     {
-        public LuaValue[] Results;
+        public required LuaValue[] Results;
     }
 
     byte status;
     bool isFirstCall = true;
-    LuaState threadState;
     ValueTask<int> functionTask;
+    LuaValue[] buffer;
 
     ManualResetValueTaskSourceCore<ResumeContext> resume;
     ManualResetValueTaskSourceCore<YieldContext> yield;
+
+    public LuaCoroutine(LuaFunction function, bool isProtectedMode)
+    {
+        IsProtectedMode = isProtectedMode;
+        Function = function;
+
+        buffer = ArrayPool<LuaValue>.Shared.Rent(1024);
+        buffer.AsSpan().Clear();
+    }
 
     public override LuaThreadStatus GetStatus() => (LuaThreadStatus)status;
 
@@ -31,13 +43,6 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
     public bool IsProtectedMode { get; }
     public LuaFunction Function { get; }
-
-    internal LuaCoroutine(LuaState state, LuaFunction function, bool isProtectedMode)
-    {
-        IsProtectedMode = isProtectedMode;
-        threadState = state;
-        Function = function;
-    }
 
     public override async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
@@ -59,18 +64,19 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                         baseThread.Stack.AsSpan().CopyTo(Stack.GetBuffer());
                         Stack.NotifyTop(baseThread.Stack.Count);
 
-                        functionTask = Function.InvokeAsync(new()
-                        {
-                            State = threadState,
-                            Thread = this,
-                            ArgumentCount = context.ArgumentCount - 1,
-                            ChunkName = Function.Name,
-                            RootChunkName = context.RootChunkName,
-                        }, buffer[1..], cancellationToken).Preserve();
+                        // copy callstack value
+                        CallStack.EnsureCapacity(baseThread.CallStack.Count);
+                        baseThread.CallStack.AsSpan().CopyTo(CallStack.GetBuffer());
+                        CallStack.NotifyTop(baseThread.CallStack.Count);
                     }
                     else
                     {
-                        yield.SetResult(new());
+                        yield.SetResult(new()
+                        {
+                            Results = context.ArgumentCount == 1
+                                ? []
+                                : context.Arguments[1..].ToArray()
+                        });
                     }
                     break;
                 case LuaThreadStatus.Normal:
@@ -114,10 +120,46 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
             {
                 if (isFirstCall)
                 {
-                    for (int i = 0; i < context.ArgumentCount - 1; i++)
+                    int frameBase;
+                    var variableArgumentCount = Function.GetVariableArgumentCount(context.ArgumentCount - 1);
+                    
+                    if (variableArgumentCount > 0)
                     {
-                        threadState.Push(context.Arguments[i + 1]);
+                        var fixedArgumentCount = context.ArgumentCount - 1 - variableArgumentCount;
+
+                        for (int i = 0; i < variableArgumentCount; i++)
+                        {
+                            Stack.Push(context.GetArgument(i + fixedArgumentCount + 1));
+                        }
+
+                        Stack.Push(Function);
+                        frameBase = Stack.Count;
+
+                        for (int i = 0; i < fixedArgumentCount; i++)
+                        {
+                            Stack.Push(context.GetArgument(i + 1));
+                        }
                     }
+                    else
+                    {
+                        Stack.Push(Function);
+                        frameBase = Stack.Count;
+
+                        for (int i = 0; i < context.ArgumentCount - 1; i++)
+                        {
+                            Stack.Push(context.GetArgument(i + 1));
+                        }
+                    }
+
+                    functionTask = Function.InvokeAsync(new()
+                    {
+                        State = context.State,
+                        Thread = this,
+                        ArgumentCount = context.ArgumentCount - 1,
+                        FrameBase = frameBase,
+                        ChunkName = Function.Name,
+                        RootChunkName = context.RootChunkName,
+                    }, this.buffer, cancellationToken).Preserve();
 
                     Volatile.Write(ref isFirstCall, false);
                 }
@@ -138,6 +180,8 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                 }
                 else
                 {
+                    ArrayPool<LuaValue>.Shared.Return(this.buffer);
+                    
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = true;
                     return 1 + functionTask!.Result;
@@ -147,6 +191,8 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
             {
                 if (IsProtectedMode)
                 {
+                    ArrayPool<LuaValue>.Shared.Return(this.buffer);
+
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
                     buffer.Span[1] = ex.Message;
@@ -170,7 +216,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
         }
     }
 
-    public override async ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default)
+    public override async ValueTask<int> Yield(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
         if (Volatile.Read(ref status) != (byte)LuaThreadStatus.Running)
         {
@@ -197,16 +243,24 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
     RETRY:
         try
         {
-            await new ValueTask<YieldContext>(this, yield.Version);
+            var result = await new ValueTask<YieldContext>(this, yield.Version);
+            for (int i = 0; i < result.Results.Length; i++)
+            {
+                buffer.Span[i] = result.Results[i];
+            }
+
+            return result.Results.Length;
         }
         catch (Exception ex) when (ex is not OperationCanceledException)
         {
             yield.Reset();
             goto RETRY;
         }
-
-        registration.Dispose();
-        yield.Reset();
+        finally
+        {
+            registration.Dispose();
+            yield.Reset();
+        }
     }
 
     YieldContext IValueTaskSource<YieldContext>.GetResult(short token)

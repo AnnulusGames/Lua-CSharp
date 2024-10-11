@@ -66,7 +66,7 @@ public sealed class LuaState
                 State = this,
                 Thread = CurrentThread,
                 ArgumentCount = 0,
-                StackPosition = 0,
+                FrameBase = 0,
                 SourcePosition = null,
                 RootChunkName = chunk.Name ?? DefaultChunkName,
                 ChunkName = chunk.Name ?? DefaultChunkName,
@@ -81,11 +81,6 @@ public sealed class LuaState
     public void Push(LuaValue value)
     {
         CurrentThread.Stack.Push(value);
-    }
-
-    public LuaThread CreateThread(LuaFunction function, bool isProtectedMode = true)
-    {
-        return new LuaCoroutine(this, function, isProtectedMode);
     }
 
     public Traceback GetTraceback()

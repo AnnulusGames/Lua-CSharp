@@ -694,7 +694,7 @@ public static partial class LuaVirtualMachine
                                 }
                             }
 
-                            (var newBase, var argumentCount) = PrepareForFunctionCall(state, func, instruction, RA, false);
+                            (var newBase, var argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, false);
 
                             var resultBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
                             resultBuffer.AsSpan().Clear();
@@ -705,7 +705,7 @@ public static partial class LuaVirtualMachine
                                     State = state,
                                     Thread = thread,
                                     ArgumentCount = argumentCount,
-                                    StackPosition = newBase,
+                                    FrameBase = newBase,
                                     SourcePosition = chunk.SourcePositions[pc],
                                     ChunkName = chunk.Name,
                                     RootChunkName = chunk.GetRoot().Name,
@@ -749,14 +749,14 @@ public static partial class LuaVirtualMachine
                                 }
                             }
 
-                            (var newBase, var argumentCount) = PrepareForFunctionCall(state, func, instruction, RA, true);
+                            (var newBase, var argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, true);
 
                             return await func.InvokeAsync(new()
                             {
                                 State = state,
                                 Thread = thread,
                                 ArgumentCount = argumentCount,
-                                StackPosition = newBase,
+                                FrameBase = newBase,
                                 SourcePosition = chunk.SourcePositions[pc],
                                 ChunkName = chunk.Name,
                                 RootChunkName = chunk.GetRoot().Name,
@@ -830,7 +830,7 @@ public static partial class LuaVirtualMachine
                                     State = state,
                                     Thread = thread,
                                     ArgumentCount = 2,
-                                    StackPosition = nextBase,
+                                    FrameBase = nextBase,
                                     SourcePosition = chunk.SourcePositions[pc],
                                     ChunkName = chunk.Name,
                                     RootChunkName = chunk.GetRoot().Name,
@@ -887,7 +887,7 @@ public static partial class LuaVirtualMachine
                             for (int i = 0; i < count; i++)
                             {
                                 stack.UnsafeGet(RA + i) = frame.VariableArgumentCount > i
-                                    ? stack.UnsafeGet(frame.Base - (frame.VariableArgumentCount - i))
+                                    ? stack.UnsafeGet(frame.Base - (frame.VariableArgumentCount - i + 1))
                                     : LuaValue.Nil;
                             }
                             stack.NotifyTop(RA + count);
@@ -1024,9 +1024,9 @@ public static partial class LuaVirtualMachine
         }
     }
 
-    static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaState state, LuaFunction function, Instruction instruction, int RA, bool isTailCall)
+    static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaThread thread, LuaFunction function, Instruction instruction, int RA, bool isTailCall)
     {
-        var stack = state.CurrentThread.Stack;
+        var stack = thread.Stack;
 
         var argumentCount = instruction.B - 1;
         if (instruction.B == 0)
@@ -1040,15 +1040,13 @@ public static partial class LuaVirtualMachine
         // Therefore, a call can be made without allocating new registers.
         if (isTailCall)
         {
-            var currentBase = state.CurrentThread.GetCurrentFrame().Base;
+            var currentBase = thread.GetCurrentFrame().Base;
             var stackBuffer = stack.GetBuffer();
             stackBuffer.Slice(newBase, argumentCount).CopyTo(stackBuffer.Slice(currentBase, argumentCount));
             newBase = currentBase;
         }
 
-        var variableArgumentCount = function is Closure luaClosure
-            ? argumentCount - luaClosure.Proto.ParameterCount
-            : 0;
+        var variableArgumentCount = function.GetVariableArgumentCount(argumentCount);
 
         // If there are variable arguments, the base of the stack is moved by that number and the values ​​of the variable arguments are placed in front of it.
         // see: https://wubingzheng.github.io/build-lua-in-rust/en/ch08-02.arguments.html

@@ -19,7 +19,7 @@ public sealed class PCallFunction : LuaFunction
             {
                 State = context.State,
                 ArgumentCount = context.ArgumentCount - 1,
-                StackPosition = context.StackPosition + 1,
+                FrameBase = context.FrameBase + 1,
             }, methodBuffer.AsMemory(), cancellationToken);
 
             buffer.Span[0] = true;

@@ -6,9 +6,8 @@ public sealed class CoroutineYieldFunction : LuaFunction
     public static readonly CoroutineYieldFunction Instance = new();
     public override string Name => "yield";
 
-    protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        await context.Thread.Yield(context, cancellationToken);
-        return 0;
+        return context.Thread.Yield(context, buffer, cancellationToken);
     }
 }

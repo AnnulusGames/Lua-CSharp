@@ -9,7 +9,7 @@ public sealed class CoroutineCreateFunction : LuaFunction
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaFunction>(0);
-        buffer.Span[0] = context.State.CreateThread(arg0, true);
+        buffer.Span[0] = new LuaCoroutine(arg0, true);
         return new(1);
     }
 }

@@ -19,7 +19,7 @@ public sealed class LuaMainThread : LuaThread
         return new(2);
     }
 
-    public override ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default)
+    public override ValueTask<int> Yield(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
         throw new LuaRuntimeException(context.State.GetTraceback(), "attempt to yield from outside a coroutine");
     }

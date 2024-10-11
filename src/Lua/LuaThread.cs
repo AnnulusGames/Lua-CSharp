@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Lua.Internal;
 using Lua.Runtime;
 
@@ -8,12 +9,13 @@ public abstract class LuaThread
     public abstract LuaThreadStatus GetStatus();
     public abstract void UnsafeSetStatus(LuaThreadStatus status);
     public abstract ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
-    public abstract ValueTask Yield(LuaFunctionExecutionContext context, CancellationToken cancellationToken = default);
+    public abstract ValueTask<int> Yield(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
 
     LuaStack stack = new();
     FastStackCore<CallStackFrame> callStack;
 
     internal LuaStack Stack => stack;
+    internal ref FastStackCore<CallStackFrame> CallStack => ref callStack;
 
     public CallStackFrame GetCurrentFrame()
     {
@@ -25,7 +27,7 @@ public abstract class LuaThread
         return stack.AsSpan();
     }
 
-    internal ReadOnlySpan<CallStackFrame> GetCallStackFrames()
+    public ReadOnlySpan<CallStackFrame> GetCallStackFrames()
     {
         return callStack.AsSpan();
     }

@@ -21,7 +21,7 @@ public sealed class XPCallFunction : LuaFunction
             {
                 State = context.State,
                 ArgumentCount = context.ArgumentCount - 2,
-                StackPosition = context.StackPosition + 2,
+                FrameBase = context.FrameBase + 2,
             }, methodBuffer.AsMemory(), cancellationToken);
 
             buffer.Span[0] = true;
@@ -40,7 +40,7 @@ public sealed class XPCallFunction : LuaFunction
             {
                 State = context.State,
                 ArgumentCount = 1,
-                StackPosition = null,
+                FrameBase = null,
             }, methodBuffer.AsMemory(), cancellationToken);
 
             buffer.Span[0] = false;
