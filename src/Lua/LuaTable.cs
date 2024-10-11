@@ -9,18 +9,6 @@ public sealed class LuaTable
     {
     }
 
-    public LuaTable(IEnumerable<LuaValue> values)
-    {
-        array = values.ToArray();
-        dictionary = [];
-    }
-
-    public LuaTable(IEnumerable<KeyValuePair<LuaValue, LuaValue>> values)
-    {
-        array = [];
-        dictionary = new Dictionary<LuaValue, LuaValue>(values);
-    }
-
     public LuaTable(int arrayCapacity, int dictionaryCapacity)
     {
         array = new LuaValue[arrayCapacity];
@@ -54,6 +42,11 @@ public sealed class LuaTable
         }
         set
         {
+            if (key.Type is LuaValueType.Number && double.IsNaN(key.Read<double>()))
+            {
+                throw new ArgumentException("table index is NaN");
+            }
+
             if (TryGetInteger(key, out var index))
             {
                 if (0 < index && index <= Math.Max(array.Length * 2, 8))
@@ -64,20 +57,13 @@ public sealed class LuaTable
                 }
             }
 
-            if (value.Type is LuaValueType.Nil)
-            {
-                dictionary.Remove(key);
-            }
-            else
-            {
-                dictionary[key] = value;
-            }
+            dictionary[key] = value;
         }
     }
 
     public int HashMapCount
     {
-        get => dictionary.Count;
+        get => dictionary.Count(x => x.Value.Type is not LuaValueType.Nil);
     }
 
     public int ArrayLength
@@ -170,7 +156,7 @@ public sealed class LuaTable
         array[arrayIndex] = value;
     }
 
-    public KeyValuePair<LuaValue, LuaValue> GetNext(LuaValue key)
+    public bool TryGetNext(LuaValue key, out KeyValuePair<LuaValue, LuaValue> pair)
     {
         var index = -1;
         if (key.Type is LuaValueType.Nil)
@@ -189,30 +175,40 @@ public sealed class LuaTable
             {
                 if (span[i].Type is not LuaValueType.Nil)
                 {
-                    return new(index + i + 1, span[i]);
+                    pair = new(index + i + 1, span[i]);
+                    return true;
                 }
             }
 
-            foreach (var pair in dictionary)
+            foreach (var kv in dictionary)
             {
-                return pair;
+                if (kv.Value.Type is not LuaValueType.Nil)
+                {
+                    pair = kv;
+                    return true;
+                }
             }
         }
         else
         {
             var foundKey = false;
-            foreach (var pair in dictionary)
+            foreach (var kv in dictionary)
             {
-                if (foundKey) return pair;
+                if (foundKey && kv.Value.Type is not LuaValueType.Nil)
+                {
+                    pair = kv;
+                    return true;
+                }
 
-                if (pair.Key.Equals(key))
+                if (kv.Key.Equals(key))
                 {
                     foundKey = true;
                 }
             }
         }
 
-        return default;
+        pair = default;
+        return false;
     }
 
     public void Clear()

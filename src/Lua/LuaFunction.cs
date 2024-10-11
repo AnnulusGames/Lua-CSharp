@@ -9,11 +9,18 @@ public abstract partial class LuaFunction
     public async ValueTask<int> InvokeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var state = context.State;
-        var thread = state.CurrentThread;
+        
+        if (context.FrameBase == null)
+        {
+            context = context with
+            {
+                FrameBase = context.Thread.Stack.Count - context.ArgumentCount
+            };
+        }
 
         var frame = new CallStackFrame
         {
-            Base = context.StackPosition == null ? thread.Stack.Count - context.ArgumentCount : context.StackPosition.Value,
+            Base = context.FrameBase.Value,
             CallPosition = context.SourcePosition,
             ChunkName = context.ChunkName ?? LuaState.DefaultChunkName,
             RootChunkName = context.RootChunkName ?? LuaState.DefaultChunkName,
@@ -21,14 +28,14 @@ public abstract partial class LuaFunction
             Function = this,
         };
 
-        thread.PushCallStackFrame(frame);
+        context.Thread.PushCallStackFrame(frame);
         try
         {
             return await InvokeAsyncCore(context, buffer, cancellationToken);
         }
         finally
         {
-            thread.PopCallStackFrame();
+            context.Thread.PopCallStackFrame();
         }
     }
 

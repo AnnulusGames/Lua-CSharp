@@ -3,9 +3,8 @@ namespace Lua.Standard.Coroutines;
 
 public sealed class CoroutineResumeFunction : LuaFunction
 {
-    public const string FunctionName = "resume";
-
-    public override string Name => FunctionName;
+    public static readonly CoroutineResumeFunction Instance = new();
+    public override string Name => "resume";
 
     protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {

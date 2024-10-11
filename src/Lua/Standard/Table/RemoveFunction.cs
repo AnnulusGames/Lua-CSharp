@@ -7,22 +7,32 @@ public sealed class RemoveFunction : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var arg0 = context.GetArgument<LuaTable>(0);
-        var arg1 = context.HasArgument(1)
+        var table = context.GetArgument<LuaTable>(0);
+        var n_arg = context.HasArgument(1)
             ? context.GetArgument<double>(1)
-            : arg0.ArrayLength;
+            : table.ArrayLength;
 
-        if (!MathEx.IsInteger(arg1))
-        {
-            throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'remove' (number has no integer representation)");
-        }
+        LuaRuntimeException.ThrowBadArgumentIfNumberIsNotInteger(context.State, this, 2, n_arg);
 
-        if (arg1 <= 0 || arg1 > arg0.ArrayLength)
+        var n = (int)n_arg;
+
+        if (n <= 0 || n > table.GetArraySpan().Length)
         {
+            if (!context.HasArgument(1) && n == 0)
+            {
+                buffer.Span[0] = LuaValue.Nil;
+                return new(1);
+            }
+            
             throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #2 to 'remove' (position out of bounds)");
         }
+        else if (n > table.ArrayLength)
+        {
+            buffer.Span[0] = LuaValue.Nil;
+            return new(1);
+        }
 
-        buffer.Span[0] = arg0.RemoveAt((int)arg1);
+        buffer.Span[0] = table.RemoveAt(n);
         return new(1);
     }
 }

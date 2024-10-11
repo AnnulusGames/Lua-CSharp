@@ -84,8 +84,20 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     var str = (string)referenceValue!;
                     var span = str.AsSpan().Trim();
 
+                    if (span.Length == 0)
+                    {
+                        result = default!;
+                        return false;
+                    }
+
                     var sign = 1;
-                    if (span.Length > 0 && span[0] == '-')
+                    var first = span[0];
+                    if (first is '+')
+                    {
+                        sign = 1;
+                        span = span[1..];
+                    }
+                    else if (first is '-')
                     {
                         sign = -1;
                         span = span[1..];
@@ -307,11 +319,11 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             LuaValueType.Nil => true,
             LuaValueType.Boolean => Read<bool>().Equals(other.Read<bool>()),
             LuaValueType.String => Read<string>().Equals(other.Read<string>()),
-            LuaValueType.Number => Read<double>().Equals(other.Read<double>()),
+            LuaValueType.Number => Read<double>() == other.Read<double>(),
             LuaValueType.Function => Read<LuaFunction>().Equals(other.Read<LuaFunction>()),
             LuaValueType.Thread => Read<LuaThread>().Equals(other.Read<LuaThread>()),
             LuaValueType.Table => Read<LuaTable>().Equals(other.Read<LuaTable>()),
-            LuaValueType.UserData => referenceValue == other.referenceValue,
+            LuaValueType.UserData => Read<LuaUserData>().Equals(other.Read<LuaUserData>()),
             _ => false,
         };
     }
@@ -398,7 +410,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             return func.InvokeAsync(context with
             {
                 ArgumentCount = 1,
-                StackPosition = context.State.CurrentThread.Stack.Count,
+                FrameBase = context.Thread.Stack.Count,
             }, buffer, cancellationToken);
         }
         else

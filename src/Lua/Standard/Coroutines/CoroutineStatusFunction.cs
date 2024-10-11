@@ -3,9 +3,8 @@ namespace Lua.Standard.Coroutines;
 
 public sealed class CoroutineStatusFunction : LuaFunction
 {
-    public const string FunctionName = "status";
-
-    public override string Name => FunctionName;
+    public static readonly CoroutineStatusFunction Instance = new();
+    public override string Name => "status";
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {

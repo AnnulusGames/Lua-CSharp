@@ -50,6 +50,15 @@ public static class OpenLibExtensions
         SelectFunction.Instance,
     ];
 
+    static readonly LuaFunction[] coroutineFunctions = [
+        CoroutineCreateFunction.Instance,
+        CoroutineResumeFunction.Instance,
+        CoroutineYieldFunction.Instance,
+        CoroutineStatusFunction.Instance,
+        CoroutineRunningFunction.Instance,
+        CoroutineWrapFunction.Instance,
+    ];
+
     static readonly LuaFunction[] mathFunctions = [
         AbsFunction.Instance,
         AcosFunction.Instance,
@@ -156,13 +165,11 @@ public static class OpenLibExtensions
         }
 
         // coroutine
-        var coroutine = new LuaTable(0, 6);
-        coroutine[CoroutineCreateFunction.FunctionName] = new CoroutineCreateFunction();
-        coroutine[CoroutineResumeFunction.FunctionName] = new CoroutineResumeFunction();
-        coroutine[CoroutineYieldFunction.FunctionName] = new CoroutineYieldFunction();
-        coroutine[CoroutineStatusFunction.FunctionName] = new CoroutineStatusFunction();
-        coroutine[CoroutineRunningFunction.FunctionName] = new CoroutineRunningFunction();
-        coroutine[CoroutineWrapFunction.FunctionName] = new CoroutineWrapFunction();
+        var coroutine = new LuaTable(0, coroutineFunctions.Length);
+        foreach (var func in coroutineFunctions)
+        {
+            coroutine[func.Name] = func;
+        }
 
         state.Environment["coroutine"] = coroutine;
     }

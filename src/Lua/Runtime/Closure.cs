@@ -15,7 +15,7 @@ public sealed class Closure : LuaFunction
         for (int i = 0; i < proto.UpValues.Length; i++)
         {
             var description = proto.UpValues[i];
-            var upValue = GetUpValueFromDescription(state, environment == null ? state.EnvUpValue : UpValue.Closed(state.CurrentThread, environment), proto, description);
+            var upValue = GetUpValueFromDescription(state, environment == null ? state.EnvUpValue : UpValue.Closed(environment), proto, description, 1);
             upValues.Add(upValue);
         }
     }
@@ -27,15 +27,17 @@ public sealed class Closure : LuaFunction
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.State.CurrentThread.GetCurrentFrame(), buffer, cancellationToken);
+        return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.Thread.GetCurrentFrame(), buffer, cancellationToken);
     }
 
-    static UpValue GetUpValueFromDescription(LuaState state, UpValue envUpValue, Chunk proto, UpValueInfo description)
+    static UpValue GetUpValueFromDescription(LuaState state, UpValue envUpValue, Chunk proto, UpValueInfo description, int depth)
     {
         if (description.IsInRegister)
         {
             var thread = state.CurrentThread;
-            return state.GetOrAddUpValue(thread, thread.GetCurrentFrame().Base + description.Index);
+            var callStack = thread.GetCallStackFrames();
+            var frame = callStack[^depth];
+            return state.GetOrAddUpValue(thread, frame.Base + description.Index);
         }
         else if (description.Index == -1) // -1 is global environment
         {
@@ -43,7 +45,7 @@ public sealed class Closure : LuaFunction
         }
         else
         {
-            return GetUpValueFromDescription(state, envUpValue, proto.Parent!, proto.Parent!.UpValues[description.Index]);
+            return GetUpValueFromDescription(state, envUpValue, proto.Parent!, proto.Parent!.UpValues[description.Index], depth + 1);
         }
     }
 }

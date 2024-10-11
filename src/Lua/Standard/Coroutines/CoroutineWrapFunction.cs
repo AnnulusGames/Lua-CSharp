@@ -1,16 +1,18 @@
 
+using Lua.Runtime;
+
 namespace Lua.Standard.Coroutines;
 
 public sealed class CoroutineWrapFunction : LuaFunction
 {
-    public const string FunctionName = "wrap";
+    public static readonly CoroutineWrapFunction Instance = new();
+    public override string Name => "wrap";
 
-    public override string Name => FunctionName;
 
     protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaFunction>(0);
-        var thread = context.State.CreateThread(arg0, false);
+        var thread = new LuaCoroutine(arg0, false);
         buffer.Span[0] = new Wrapper(thread);
         return new(1);
     }
@@ -19,7 +21,28 @@ public sealed class CoroutineWrapFunction : LuaFunction
     {
         protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
-            return await targetThread.Resume(context, buffer, cancellationToken);
+            var stack = context.Thread.Stack;
+            var frameBase = stack.Count;
+
+            stack.Push(targetThread);
+            PushArguments(stack, context.Arguments);
+
+            var resultCount = await targetThread.Resume(context with
+            {
+                ArgumentCount = context.ArgumentCount + 1,
+                FrameBase = frameBase,
+            }, buffer, cancellationToken);
+
+            buffer.Span[1..].CopyTo(buffer.Span[0..]);
+            return resultCount - 1;
+        }
+
+        static void PushArguments(LuaStack stack, ReadOnlySpan<LuaValue> arguments)
+        {
+            foreach (var arg in arguments)
+            {
+                stack.Push(arg);
+            }
         }
     }
 }

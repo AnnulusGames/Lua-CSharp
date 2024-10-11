@@ -50,7 +50,7 @@ public sealed class LuaState
     LuaState()
     {
         environment = new();
-        envUpValue = UpValue.Closed(mainThread, environment);
+        envUpValue = UpValue.Closed(environment);
     }
 
     public async ValueTask<int> RunAsync(Chunk chunk, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
@@ -64,8 +64,9 @@ public sealed class LuaState
             return await closure.InvokeAsync(new()
             {
                 State = this,
+                Thread = CurrentThread,
                 ArgumentCount = 0,
-                StackPosition = 0,
+                FrameBase = 0,
                 SourcePosition = null,
                 RootChunkName = chunk.Name ?? DefaultChunkName,
                 ChunkName = chunk.Name ?? DefaultChunkName,
@@ -82,11 +83,6 @@ public sealed class LuaState
         CurrentThread.Stack.Push(value);
     }
 
-    public LuaThread CreateThread(LuaFunction function, bool isProtectedMode = true)
-    {
-        return new LuaCoroutine(this, function, isProtectedMode);
-    }
-
     public Traceback GetTraceback()
     {
         // TODO: optimize
@@ -94,7 +90,7 @@ public sealed class LuaState
         {
             StackFrames = threadStack.AsSpan().ToArray()
                 .Append(MainThread)
-                .SelectMany(x => x.GetStackFrames())
+                .SelectMany(x => x.GetCallStackFrames()[1..].ToArray())
                 .ToArray()
         };
     }

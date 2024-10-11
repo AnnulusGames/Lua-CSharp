@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 namespace Lua.Internal;
@@ -10,12 +11,18 @@ public struct FastStackCore<T>
     T?[] array;
     int tail;
 
-    public int Size => tail;
+    public int Count => tail;
 
     public readonly ReadOnlySpan<T> AsSpan()
     {
         if (array == null) return [];
         return array.AsSpan(0, tail);
+    }
+
+    public readonly Span<T?> GetBuffer()
+    {
+        if (array == null) return [];
+        return array.AsSpan();
     }
 
     public readonly T? this[int index]
@@ -41,6 +48,7 @@ public struct FastStackCore<T>
         tail++;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPop(out T value)
     {
         if (tail == 0)
@@ -62,6 +70,7 @@ public struct FastStackCore<T>
         return result;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryPeek(out T value)
     {
         if (tail == 0)
@@ -80,6 +89,31 @@ public struct FastStackCore<T>
         return result;
     }
 
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void EnsureCapacity(int capacity)
+    {
+        if (array == null)
+        {
+            array = new T[InitialCapacity];
+        }
+
+        var newSize = array.Length;
+        while (newSize < capacity)
+        {
+            newSize *= 2;
+        }
+
+        Array.Resize(ref array, newSize);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void NotifyTop(int top)
+    {
+        if (tail < top) tail = top;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Clear()
     {
         array.AsSpan(0, tail).Clear();

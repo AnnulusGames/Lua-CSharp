@@ -2,8 +2,8 @@ namespace Lua;
 
 public enum LuaThreadStatus : byte
 {
-    Normal,
     Suspended,
+    Normal,
     Running,
     Dead,
 }
