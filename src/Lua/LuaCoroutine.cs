@@ -178,11 +178,15 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                 }
                 else
                 {
-                    ArrayPool<LuaValue>.Shared.Return(this.buffer);
-                    
+                    var resultCount = functionTask!.Result;
+
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = true;
-                    return 1 + functionTask!.Result;
+                    this.buffer[0..resultCount].CopyTo(buffer.Span[1..]);
+
+                    ArrayPool<LuaValue>.Shared.Return(this.buffer);
+
+                    return 1 + resultCount;
                 }
             }
             catch (Exception ex) when (ex is not OperationCanceledException)
