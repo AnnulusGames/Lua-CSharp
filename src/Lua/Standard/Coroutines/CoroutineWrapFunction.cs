@@ -1,4 +1,6 @@
 
+using Lua.Runtime;
+
 namespace Lua.Standard.Coroutines;
 
 public sealed class CoroutineWrapFunction : LuaFunction
@@ -17,22 +19,30 @@ public sealed class CoroutineWrapFunction : LuaFunction
 
     class Wrapper(LuaThread targetThread) : LuaFunction
     {
-        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+        protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
             var stack = context.Thread.Stack;
             var frameBase = stack.Count;
 
             stack.Push(targetThread);
-            foreach (var arg in context.Arguments)
-            {
-                stack.Push(arg);
-            }
+            PushArguments(stack, context.Arguments);
 
-            return targetThread.Resume(context with
+            var resultCount = await targetThread.Resume(context with
             {
                 ArgumentCount = context.ArgumentCount + 1,
                 FrameBase = frameBase,
             }, buffer, cancellationToken);
+
+            buffer.Span[1..].CopyTo(buffer.Span[0..]);
+            return resultCount - 1;
+        }
+
+        static void PushArguments(LuaStack stack, ReadOnlySpan<LuaValue> arguments)
+        {
+            foreach (var arg in arguments)
+            {
+                stack.Push(arg);
+            }
         }
     }
 }
