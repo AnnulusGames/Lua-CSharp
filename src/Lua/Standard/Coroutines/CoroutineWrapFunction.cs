@@ -17,9 +17,22 @@ public sealed class CoroutineWrapFunction : LuaFunction
 
     class Wrapper(LuaThread targetThread) : LuaFunction
     {
-        protected override async ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
-            return await targetThread.Resume(context, buffer, cancellationToken);
+            var stack = context.Thread.Stack;
+            var frameBase = stack.Count;
+
+            stack.Push(targetThread);
+            foreach (var arg in context.Arguments)
+            {
+                stack.Push(arg);
+            }
+
+            return targetThread.Resume(context with
+            {
+                ArgumentCount = context.ArgumentCount + 1,
+                FrameBase = frameBase,
+            }, buffer, cancellationToken);
         }
     }
 }
