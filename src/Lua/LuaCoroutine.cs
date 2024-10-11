@@ -132,7 +132,6 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                             Stack.Push(context.GetArgument(i + fixedArgumentCount + 1));
                         }
 
-                        Stack.Push(Function);
                         frameBase = Stack.Count;
 
                         for (int i = 0; i < fixedArgumentCount; i++)
@@ -142,7 +141,6 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     }
                     else
                     {
-                        Stack.Push(Function);
                         frameBase = Stack.Count;
 
                         for (int i = 0; i < context.ArgumentCount - 1; i++)
