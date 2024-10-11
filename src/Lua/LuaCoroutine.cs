@@ -89,7 +89,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     }
                     else
                     {
-                        throw new InvalidOperationException("cannot resume non-suspended coroutine");
+                        throw new LuaRuntimeException(context.State.GetTraceback(), "cannot resume non-suspended coroutine");
                     }
                 case LuaThreadStatus.Dead:
                     if (IsProtectedMode)
@@ -100,7 +100,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     }
                     else
                     {
-                        throw new InvalidOperationException("cannot resume dead coroutine");
+                        throw new LuaRuntimeException(context.State.GetTraceback(), "cannot resume dead coroutine");
                     }
             }
 
@@ -222,7 +222,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
     {
         if (Volatile.Read(ref status) != (byte)LuaThreadStatus.Running)
         {
-            throw new InvalidOperationException("cannot call yield on a coroutine that is not currently running");
+            throw new LuaRuntimeException(context.State.GetTraceback(), "cannot call yield on a coroutine that is not currently running");
         }
 
         resume.SetResult(new()
