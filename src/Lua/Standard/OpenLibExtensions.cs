@@ -267,4 +267,16 @@ public static class OpenLibExtensions
 
         state.Environment["bit32"] = bit32;
     }
+
+    public static void OpenStandardLibraries(this LuaState state)
+    {
+        state.OpenBasicLibrary();
+        state.OpenBitwiseLibrary();
+        state.OpenIOLibrary();
+        state.OpenMathLibrary();
+        state.OpenModuleLibrary();
+        state.OpenOperatingSystemLibrary();
+        state.OpenStringLibrary();
+        state.OpenTableLibrary();
+    }
 }
