@@ -65,7 +65,7 @@ public sealed class GSubFunction : LuaFunction
                 await func.InvokeAsync(context with
                 {
                     ArgumentCount = match.Groups.Count,
-                    FrameBase = null
+                    FrameBase = context.Thread.Stack.Count - context.ArgumentCount,
                 }, methodBuffer.AsMemory(), cancellationToken);
 
                 result = methodBuffer[0];

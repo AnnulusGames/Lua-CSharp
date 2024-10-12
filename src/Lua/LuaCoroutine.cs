@@ -44,7 +44,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
     public bool IsProtectedMode { get; }
     public LuaFunction Function { get; }
 
-    public override async ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
+    public override async ValueTask<int> ResumeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
         var baseThread = context.Thread;
         baseThread.UnsafeSetStatus(LuaThreadStatus.Normal);
@@ -122,7 +122,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                 {
                     int frameBase;
                     var variableArgumentCount = Function.GetVariableArgumentCount(context.ArgumentCount - 1);
-                    
+
                     if (variableArgumentCount > 0)
                     {
                         var fixedArgumentCount = context.ArgumentCount - 1 - variableArgumentCount;
@@ -218,7 +218,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
         }
     }
 
-    public override async ValueTask<int> Yield(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
+    public override async ValueTask<int> YieldAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default)
     {
         if (Volatile.Read(ref status) != (byte)LuaThreadStatus.Running)
         {

@@ -8,7 +8,7 @@ public readonly record struct LuaFunctionExecutionContext
     public required LuaState State { get; init; }
     public required LuaThread Thread { get; init; }
     public required int ArgumentCount { get; init; }
-    public int? FrameBase { get; init; }
+    public int FrameBase { get; init; }
     public SourcePosition? SourcePosition { get; init; }
     public string? RootChunkName { get; init; }
     public string? ChunkName { get; init; }
@@ -17,7 +17,7 @@ public readonly record struct LuaFunctionExecutionContext
     {
         get
         {
-            return Thread.GetStackValues().Slice(FrameBase!.Value, ArgumentCount);
+            return Thread.GetStackValues().Slice(FrameBase, ArgumentCount);
         }
     }
 

@@ -63,7 +63,7 @@ public sealed class SortFunction : LuaFunction
             await comparer.InvokeAsync(context with
             {
                 ArgumentCount = 2,
-                FrameBase = null,
+                FrameBase = context.Thread.Stack.Count - context.ArgumentCount,
             }, methodBuffer.AsMemory(), cancellationToken);
 
             if (methodBuffer[0].ToBoolean())

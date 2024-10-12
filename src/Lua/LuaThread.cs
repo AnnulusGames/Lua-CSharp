@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using Lua.Internal;
 using Lua.Runtime;
 
@@ -8,8 +7,8 @@ public abstract class LuaThread
 {
     public abstract LuaThreadStatus GetStatus();
     public abstract void UnsafeSetStatus(LuaThreadStatus status);
-    public abstract ValueTask<int> Resume(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
-    public abstract ValueTask<int> Yield(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
+    public abstract ValueTask<int> ResumeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
+    public abstract ValueTask<int> YieldAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken = default);
 
     LuaStack stack = new();
     FastStackCore<CallStackFrame> callStack;

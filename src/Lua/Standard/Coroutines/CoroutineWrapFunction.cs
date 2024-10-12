@@ -27,7 +27,7 @@ public sealed class CoroutineWrapFunction : LuaFunction
             stack.Push(targetThread);
             PushArguments(stack, context.Arguments);
 
-            var resultCount = await targetThread.Resume(context with
+            var resultCount = await targetThread.ResumeAsync(context with
             {
                 ArgumentCount = context.ArgumentCount + 1,
                 FrameBase = frameBase,
