@@ -131,74 +131,96 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     public bool VisitBinaryExpressionNode(BinaryExpressionNode node, ScopeCompilationContext context)
     {
         var r = context.StackPosition;
-        (var b, var c) = GetBAndC(node, context);
-
-        switch (node.OperatorType)
+        if (node.OperatorType is BinaryOperator.And or BinaryOperator.Or)
         {
-            case BinaryOperator.Addition:
-                context.PushInstruction(Instruction.Add(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Subtraction:
-                context.PushInstruction(Instruction.Sub(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Multiplication:
-                context.PushInstruction(Instruction.Mul(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Division:
-                context.PushInstruction(Instruction.Div(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Modulo:
-                context.PushInstruction(Instruction.Mod(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Exponentiation:
-                context.PushInstruction(Instruction.Pow(r, b, c), node.Position);
-                break;
-            case BinaryOperator.Equality:
-                context.PushInstruction(Instruction.Eq(1, b, c), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.Inequality:
-                context.PushInstruction(Instruction.Eq(0, b, c), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.GreaterThan:
-                context.PushInstruction(Instruction.Lt(1, c, b), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.GreaterThanOrEqual:
-                context.PushInstruction(Instruction.Le(1, c, b), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.LessThan:
-                context.PushInstruction(Instruction.Lt(1, b, c), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.LessThanOrEqual:
-                context.PushInstruction(Instruction.Le(1, b, c), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
-                context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
-                break;
-            case BinaryOperator.Concat:
-                context.PushInstruction(Instruction.Concat(r, b, c), node.Position);
-                break;
-            case BinaryOperator.And:
-                context.PushInstruction(Instruction.TestSet(r, b, 0), node.Position);
-                context.PushInstruction(Instruction.Jmp(0, 1), node.Position);
-                context.PushInstruction(Instruction.Move(r, c), node.Position);
-                break;
-            case BinaryOperator.Or:
-                context.PushInstruction(Instruction.TestSet(r, b, 1), node.Position);
-                context.PushInstruction(Instruction.Jmp(0, 1), node.Position);
-                context.PushInstruction(Instruction.Move(r, c), node.Position);
-                break;
-        }
+            byte a;
+            if (node.LeftNode is IdentifierNode leftIdentifier)
+            {
+                a = LoadIdentifier(leftIdentifier.Name, context, leftIdentifier.Position, true);
+            }
+            else
+            {
+                node.LeftNode.Accept(this, context);
+                a = context.StackTopPosition;
+            }
 
-        context.StackPosition = (byte)(r + 1);
+            context.PushInstruction(Instruction.Test(a, (byte)(node.OperatorType is BinaryOperator.And ? 0 : 1)), node.Position);
+            var testJmpIndex = context.Function.Instructions.Length;
+            context.PushInstruction(Instruction.Jmp(0, 0), node.Position);
+
+            context.StackPosition = r;
+            if (node.RightNode is IdentifierNode rightIdentifier)
+            {
+                LoadIdentifier(rightIdentifier.Name, context, rightIdentifier.Position, true);
+            }
+            else
+            {
+                node.RightNode.Accept(this, context);
+            }
+
+            context.Function.Instructions[testJmpIndex].SBx = context.Function.Instructions.Length - testJmpIndex - 1;
+        }
+        else
+        {
+            (var b, var c) = GetBAndC(node, context);
+
+            switch (node.OperatorType)
+            {
+                case BinaryOperator.Addition:
+                    context.PushInstruction(Instruction.Add(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Subtraction:
+                    context.PushInstruction(Instruction.Sub(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Multiplication:
+                    context.PushInstruction(Instruction.Mul(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Division:
+                    context.PushInstruction(Instruction.Div(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Modulo:
+                    context.PushInstruction(Instruction.Mod(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Exponentiation:
+                    context.PushInstruction(Instruction.Pow(r, b, c), node.Position);
+                    break;
+                case BinaryOperator.Equality:
+                    context.PushInstruction(Instruction.Eq(1, b, c), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.Inequality:
+                    context.PushInstruction(Instruction.Eq(0, b, c), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.GreaterThan:
+                    context.PushInstruction(Instruction.Lt(1, c, b), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.GreaterThanOrEqual:
+                    context.PushInstruction(Instruction.Le(1, c, b), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.LessThan:
+                    context.PushInstruction(Instruction.Lt(1, b, c), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.LessThanOrEqual:
+                    context.PushInstruction(Instruction.Le(1, b, c), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 1, 1), node.Position);
+                    context.PushInstruction(Instruction.LoadBool(r, 0, 0), node.Position);
+                    break;
+                case BinaryOperator.Concat:
+                    context.PushInstruction(Instruction.Concat(r, b, c), node.Position);
+                    break;
+            }
+
+            context.StackPosition = (byte)(r + 1);
+        }
 
         return true;
     }
