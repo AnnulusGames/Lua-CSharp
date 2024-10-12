@@ -6,6 +6,11 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+
+    <!-- NuGet Packaging -->
+    <PackageId>LuaCSharp</PackageId>
+    <PackageTags>lua;interpreter</PackageTags>
+    <Description>High performance Lua interpreter implemented in C# for .NET and Unity</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +18,16 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(TargetFramework) == 'netstandard2.1'">
+      <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="6.0.0" />
+  </ItemGroup>
+  
+  <ItemGroup>
+      <None Include="../../Icon.png" Pack="true" PackagePath="/" />
+      <None Include="..\..\README.md" Pack="true" PackagePath="README.md"/>
+      <EmbeddedResource Include="..\..\LICENSE" />
   </ItemGroup>
 
 </Project>
