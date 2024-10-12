@@ -1,0 +1,16 @@
+<Project>
+
+    <PropertyGroup>
+        <!-- NuGet Packaging -->
+        <PackageVersion>0.1.0</PackageVersion>
+        <Authors>Annulus Games</Authors>
+        <Copyright>© Annulus Games</Copyright>
+        <PackageProjectUrl>https://github.com/AnnulusGames/Lua-CSharp</PackageProjectUrl>
+        <RepositoryUrl>$(PackageProjectUrl)</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <PackageReadmeFile>README.md</PackageReadmeFile>
+        <PackageIcon>Icon.png</PackageIcon>
+    </PropertyGroup>
+
+</Project>
