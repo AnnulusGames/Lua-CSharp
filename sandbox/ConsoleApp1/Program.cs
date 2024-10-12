@@ -3,73 +3,45 @@ using Lua.CodeAnalysis.Compilation;
 using Lua.Runtime;
 using Lua;
 using Lua.Standard;
+using System.Reflection;
 
 var state = LuaState.Create();
-state.OpenBasicLibrary();
+state.OpenStandardLibraries();
+
+state.Environment["wait"] = LuaFunction.Create(async (@args, ct) =>
+{
+    await Task.Delay(TimeSpan.FromSeconds(args[0].Read<double>()), ct);
+    return default!;
+});
+
+state.Environment["dumpframe"] = LuaFunction.Create((@args, ct) =>
+{
+    var thread = state.CurrentThread;
+    Console.WriteLine(thread.GetCallStackFrames()[^2]);
+    return default;
+});
+
+state.Environment["dumpstack"] = LuaFunction.Create((@args, ct) =>
+{
+    var thread = state.CurrentThread;
+    thread.GetType().GetMethod("DumpStackValues", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(thread, null);
+    return default;
+});
 
 try
 {
-    var source =
-"""
--- メインコルーチンの定義
-local co_main = coroutine.create(function ()
-    print("Main coroutine starts")
+    var source = File.ReadAllText("test.lua");
 
-    -- コルーチンAの定義
-    local co_a = coroutine.create(function()
-        for i = 1, 3 do
-            print("Coroutine A, iteration "..i)
-            coroutine.yield()
-        end
-        print("Coroutine A ends")
-    end)
-
-    --コルーチンBの定義
-    local co_b = coroutine.create(function()
-        print("Coroutine B starts")
-        coroutine.yield()-- 一時停止
-        print("Coroutine B resumes")
-    end)
-
-    -- コルーチンCの定義(コルーチンBを呼び出す)
-    local co_c = coroutine.create(function()
-        print("Coroutine C starts")
-        coroutine.resume(co_b)-- コルーチンBを実行
-        print("Coroutine C calls B and resumes")
-        coroutine.yield()-- 一時停止
-        print("Coroutine C resumes")
-    end)
-
-    -- コルーチンAとCの交互実行
-    for _ = 1, 2 do
-            coroutine.resume(co_a)
-        coroutine.resume(co_c)
-    end
-
-    -- コルーチンAを再開し完了させる
-    coroutine.resume(co_a)
-
-    -- コルーチンCを再開し完了させる
-    coroutine.resume(co_c)
-
-    print("Main coroutine ends")
-end)
-
---メインコルーチンを開始
-coroutine.resume(co_main)
-""";
-
-    var syntaxTree = LuaSyntaxTree.Parse(source, "main.lua");
+    var syntaxTree = LuaSyntaxTree.Parse(source, "test.lua");
 
     Console.WriteLine("Source Code " + new string('-', 50));
 
     var debugger = new DisplayStringSyntaxVisitor();
     Console.WriteLine(debugger.GetDisplayString(syntaxTree));
 
-    var chunk = LuaCompiler.Default.Compile(syntaxTree, "main.lua");
+    var chunk = LuaCompiler.Default.Compile(syntaxTree, "test.lua");
 
-    var id = 0;
-    DebugChunk(chunk, ref id);
+    DebugChunk(chunk, 0);
 
     Console.WriteLine("Output " + new string('-', 50));
 
@@ -90,15 +62,16 @@ catch (Exception ex)
     Console.WriteLine(ex);
 }
 
-static void DebugChunk(Chunk chunk, ref int id)
+static void DebugChunk(Chunk chunk, int id)
 {
-    Console.WriteLine($"Chunk[{id++}]" + new string('=', 50));
+    Console.WriteLine($"Chunk[{id}]" + new string('=', 50));
+    Console.WriteLine($"Parameters:{chunk.ParameterCount}");
 
     Console.WriteLine("Instructions " + new string('-', 50));
     var index = 0;
     foreach (var inst in chunk.Instructions.ToArray())
     {
-        Console.WriteLine($"[{index}]\t{chunk.SourcePositions[index]}\t{inst}");
+        Console.WriteLine($"[{index}]\t{chunk.SourcePositions[index]}\t\t{inst}");
         index++;
     }
 
@@ -118,8 +91,10 @@ static void DebugChunk(Chunk chunk, ref int id)
 
     Console.WriteLine();
 
+    var nestedChunkId = 0;
     foreach (var localChunk in chunk.Functions)
     {
-        DebugChunk(localChunk, ref id);
+        DebugChunk(localChunk, nestedChunkId);
+        nestedChunkId++;
     }
 }

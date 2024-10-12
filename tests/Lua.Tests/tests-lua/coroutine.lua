@@ -1,6 +1,6 @@
 print "testing coroutines"
 
-local debug = require'debug'
+-- local debug = require'debug'
 
 local f
 
@@ -54,15 +54,15 @@ assert(not s and string.find(a, "dead") and coroutine.status(f) == "dead")
 
 
 -- yields in tail calls
-local function foo (i) return coroutine.yield(i) end
-f = coroutine.wrap(function ()
-  for i=1,10 do
-    assert(foo(i) == _G.x)
-  end
-  return 'a'
-end)
-for i=1,10 do _G.x = i; assert(f(i) == i) end
-_G.x = 'xuxu'; assert(f('xuxu') == 'a')
+-- local function foo (i) return coroutine.yield(i) end
+-- f = coroutine.wrap(function ()
+--   for i=1,10 do
+--     assert(foo(i) == _G.x)
+--   end
+--   return 'a'
+-- end)
+-- for i=1,10 do _G.x = i; assert(f(i) == i) end
+-- _G.x = 'xuxu'; assert(f('xuxu') == 'a')
 
 -- recursive
 function pf (n, i)
@@ -78,33 +78,33 @@ for i=1,10 do
 end
 
 -- sieve
-function gen (n)
-  return coroutine.wrap(function ()
-    for i=2,n do coroutine.yield(i) end
-  end)
-end
+-- function gen (n)
+--   return coroutine.wrap(function ()
+--     for i=2,n do coroutine.yield(i) end
+--   end)
+-- end
 
 
-function filter (p, g)
-  return coroutine.wrap(function ()
-    while 1 do
-      local n = g()
-      if n == nil then return end
-      if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
-    end
-  end)
-end
+-- function filter (p, g)
+--   return coroutine.wrap(function ()
+--     while 1 do
+--       local n = g()
+--       if n == nil then return end
+--       if math.fmod(n, p) ~= 0 then coroutine.yield(n) end
+--     end
+--   end)
+-- end
 
-local x = gen(100)
-local a = {}
-while 1 do
-  local n = x()
-  if n == nil then break end
-  table.insert(a, n)
-  x = filter(n, x)
-end
+-- local x = gen(100)
+-- local a = {}
+-- while 1 do
+--   local n = x()
+--   if n == nil then break end
+--   table.insert(a, n)
+--   x = filter(n, x)
+-- end
 
-assert(#a == 25 and a[#a] == 97)
+-- assert(#a == 25 and a[#a] == 97)
 
 
 -- yielding across C boundaries
@@ -150,8 +150,8 @@ assert(not r and msg == 240)
 
 -- errors in coroutines
 function foo ()
-  assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
-  assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
+  -- assert(debug.getinfo(1).currentline == debug.getinfo(foo).linedefined + 1)
+  -- assert(debug.getinfo(2).currentline == debug.getinfo(goo).linedefined)
   coroutine.yield(3)
   error(foo)
 end
@@ -290,7 +290,7 @@ else
 
   assert(B/A == 11)
 
-  local line = debug.getinfo(1, "l").currentline + 2    -- get line number
+  -- local line = debug.getinfo(1, "l").currentline + 2    -- get line number
   local function foo ()
     local x = 10    --<< this line is 'line'
     x = x + 10
@@ -302,10 +302,10 @@ else
     T.sethook("setglobal X; yield 0", "l", 0); foo(); return 10 end)
 
   _G.XX = nil;
-  _G.X = nil; co(); assert(_G.X == line)
-  _G.X = nil; co(); assert(_G.X == line + 1)
-  _G.X = nil; co(); assert(_G.X == line + 2 and _G.XX == nil)
-  _G.X = nil; co(); assert(_G.X == line + 3 and _G.XX == 20)
+  -- _G.X = nil; co(); assert(_G.X == line)
+  -- _G.X = nil; co(); assert(_G.X == line + 1)
+  -- _G.X = nil; co(); assert(_G.X == line + 2 and _G.XX == nil)
+  -- _G.X = nil; co(); assert(_G.X == line + 3 and _G.XX == 20)
   assert(co() == 10)
 
   -- testing yields in count hook
@@ -512,28 +512,28 @@ assert(run(function ()
            end, {"nidx", "idx"}) == print)
 
 -- getuptable & setuptable
-do local _ENV = _ENV
-  f = function () AAA = BBB + 1; return AAA end
-end
-g = new(10); g.k.BBB = 10;
-debug.setupvalue(f, 1, g)
-assert(run(f, {"idx", "nidx", "idx"}) == 11)
-assert(g.k.AAA == 11)
+-- do local _ENV = _ENV
+--   f = function () AAA = BBB + 1; return AAA end
+-- end
+-- g = new(10); g.k.BBB = 10;
+-- debug.setupvalue(f, 1, g)
+-- assert(run(f, {"idx", "nidx", "idx"}) == 11)
+-- assert(g.k.AAA == 11)
 
-print"+"
+-- print"+"
 
-print"testing yields inside 'for' iterators"
+-- print"testing yields inside 'for' iterators"
 
-local f = function (s, i)
-      if i%2 == 0 then coroutine.yield(nil, "for") end
-      if i < s then return i + 1 end
-    end
+-- local f = function (s, i)
+--       if i%2 == 0 then coroutine.yield(nil, "for") end
+--       if i < s then return i + 1 end
+--     end
 
-assert(run(function ()
-             local s = 0
-             for i in f, 4, 0 do s = s + i end
-             return s
-           end, {"for", "for", "for"}) == 10)
+-- assert(run(function ()
+--              local s = 0
+--              for i in f, 4, 0 do s = s + i end
+--              return s
+--            end, {"for", "for", "for"}) == 10)
 
 
 

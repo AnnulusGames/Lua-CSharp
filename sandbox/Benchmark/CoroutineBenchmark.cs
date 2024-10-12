@@ -1,5 +1,6 @@
 using BenchmarkDotNet.Attributes;
 using Lua;
+using Lua.Standard;
 using MoonSharp.Interpreter;
 
 [Config(typeof(BenchmarkConfig))]
@@ -12,6 +13,7 @@ public class CoroutineBenchmark
     public void GlobalSetup()
     {
         core.Setup("coroutine.lua");
+        core.LuaCSharpState.OpenBasicLibrary();
     }
 
     [Benchmark(Description = "MoonSharp (RunString)")]
