@@ -101,7 +101,7 @@ public sealed class LuaTable
             }
         }
 
-        return dictionary.TryGetValue(key, out value);
+        return dictionary.TryGetValue(key, out value) && value.Type is not LuaValueType.Nil;
     }
 
     public bool ContainsKey(LuaValue key)
@@ -116,7 +116,7 @@ public sealed class LuaTable
             return index > 0 && index <= array.Length && array[index - 1].Type != LuaValueType.Nil;
         }
 
-        return dictionary.ContainsKey(key);
+        return dictionary.TryGetValue(key, out var value) && value.Type is not LuaValueType.Nil;
     }
 
     public LuaValue RemoveAt(int index)

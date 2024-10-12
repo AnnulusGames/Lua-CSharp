@@ -13,18 +13,6 @@ namespace Lua.Standard;
 
 public static class OpenLibExtensions
 {
-    sealed class StringIndexMetamethod(LuaTable table) : LuaFunction
-    {
-        protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            context.GetArgument<string>(0);
-            var key = context.GetArgument(1);
-
-            buffer.Span[0] = table[key];
-            return new(1);
-        }
-    }
-
     static readonly LuaFunction[] baseFunctions = [
         AssertFunction.Instance,
         ErrorFunction.Instance,
@@ -188,14 +176,14 @@ public static class OpenLibExtensions
         math["huge"] = double.PositiveInfinity;
 
         state.Environment["math"] = math;
+        state.LoadedModules["math"] = math;
     }
 
     public static void OpenModuleLibrary(this LuaState state)
     {
-        var package = new LuaTable(0, 1);
-        package["loaded"] = new LuaTable();
+        var package = new LuaTable();
+        package["loaded"] = state.LoadedModules;
         state.Environment["package"] = package;
-
         state.Environment[RequireFunction.Instance.Name] = RequireFunction.Instance;
     }
 
@@ -208,6 +196,7 @@ public static class OpenLibExtensions
         }
 
         state.Environment["table"] = table;
+        state.LoadedModules["table"] = table;
     }
 
     public static void OpenStringLibrary(this LuaState state)
@@ -219,6 +208,7 @@ public static class OpenLibExtensions
         }
 
         state.Environment["string"] = @string;
+        state.LoadedModules["string"] = @string;
 
         // set __index
         var key = new LuaValue("");
@@ -244,6 +234,7 @@ public static class OpenLibExtensions
         io["stderr"] = new FileHandle(Console.OpenStandardError());
 
         state.Environment["io"] = io;
+        state.LoadedModules["io"] = io;
     }
 
     public static void OpenOperatingSystemLibrary(this LuaState state)
@@ -255,6 +246,7 @@ public static class OpenLibExtensions
         }
 
         state.Environment["os"] = os;
+        state.LoadedModules["os"] = os;
     }
 
     public static void OpenBitwiseLibrary(this LuaState state)
@@ -266,6 +258,7 @@ public static class OpenLibExtensions
         }
 
         state.Environment["bit32"] = bit32;
+        state.LoadedModules["bit32"] = bit32;
     }
 
     public static void OpenStandardLibraries(this LuaState state)
