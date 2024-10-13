@@ -52,7 +52,7 @@ public static partial class LuaVirtualMachine
                     case OpCode.GetUpVal:
                         {
                             stack.EnsureCapacity(RA + 1);
-                            var upValue = closure.UpValues[instruction.B];
+                            var upValue = MemoryMarshalEx.UnsafeElementAt(closure.UpValues, instruction.B);
                             stack.UnsafeGet(RA) = upValue.GetValue();
                             stack.NotifyTop(RA + 1);
                             break;
@@ -61,7 +61,7 @@ public static partial class LuaVirtualMachine
                         {
                             stack.EnsureCapacity(RA + 1);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            var upValue = closure.UpValues[instruction.B];
+                            var upValue = MemoryMarshalEx.UnsafeElementAt(closure.UpValues, instruction.B);
                             var table = upValue.GetValue();
                             await GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
                             var value = resultBuffer[0];
@@ -85,14 +85,14 @@ public static partial class LuaVirtualMachine
                             var vb = RK(stack, chunk, instruction.B, frame.Base);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                            var upValue = closure.UpValues[instruction.A];
+                            var upValue = MemoryMarshalEx.UnsafeElementAt(closure.UpValues, instruction.A);
                             var table = upValue.GetValue();
                             await SetTableValue(state, thread, chunk, rootChunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
                             break;
                         }
                     case OpCode.SetUpVal:
                         {
-                            var upValue = closure.UpValues[instruction.B];
+                            var upValue = MemoryMarshalEx.UnsafeElementAt(closure.UpValues, instruction.B);
                             upValue.SetValue(stack.UnsafeGet(RA));
                             break;
                         }
