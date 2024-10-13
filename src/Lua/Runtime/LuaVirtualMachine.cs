@@ -85,7 +85,7 @@ public static partial class LuaVirtualMachine
 
                             var upValue = closure.UpValues[instruction.A];
                             var table = upValue.GetValue();
-                            await SetTableValue(state, chunk, pc, table, vb, vc, cancellationToken);
+                            await SetTableValue(state, chunk, pc, table, vb, vc, methodBuffer.AsMemory(), cancellationToken);
                             break;
                         }
                     case OpCode.SetUpVal:
@@ -99,7 +99,7 @@ public static partial class LuaVirtualMachine
                             var table = stack.UnsafeGet(RA);
                             var vb = RK(stack, chunk, instruction.B, frame.Base);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            await SetTableValue(state, chunk, pc, table, vb, vc, cancellationToken);
+                            await SetTableValue(state, chunk, pc, table, vb, vc, methodBuffer.AsMemory(), cancellationToken);
                         }
                         break;
                     case OpCode.NewTable:
@@ -964,10 +964,7 @@ public static partial class LuaVirtualMachine
         }
     }
 
-#if NET6_0_OR_GREATER
-    [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder))]
-#endif
-    static async ValueTask SetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, CancellationToken cancellationToken)
+    static ValueTask<int> SetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = state.CurrentThread;
         var stack = thread.Stack;
@@ -981,6 +978,7 @@ public static partial class LuaVirtualMachine
         if (isTable && t.ContainsKey(key))
         {
             t[key] = value;
+            return new(1);
         }
         else if (table.TryGetMetamethod(state, Metamethods.NewIndex, out var metamethod))
         {
@@ -993,33 +991,26 @@ public static partial class LuaVirtualMachine
             stack.Push(key);
             stack.Push(value);
 
-            var methodBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
-            methodBuffer.AsSpan().Clear();
-            try
+            return indexTable.InvokeAsync(new()
             {
-                await indexTable.InvokeAsync(new()
-                {
-                    State = state,
-                    Thread = thread,
-                    ArgumentCount = 3,
-                    FrameBase = stack.Count - 3,
-                    SourcePosition = chunk.SourcePositions[pc],
-                    ChunkName = chunk.Name,
-                    RootChunkName = chunk.GetRoot().Name,
-                }, methodBuffer, cancellationToken);
-            }
-            finally
-            {
-                ArrayPool<LuaValue>.Shared.Return(methodBuffer);
-            }
+                State = state,
+                Thread = thread,
+                ArgumentCount = 3,
+                FrameBase = stack.Count - 3,
+                SourcePosition = chunk.SourcePositions[pc],
+                ChunkName = chunk.Name,
+                RootChunkName = chunk.GetRoot().Name,
+            }, buffer, cancellationToken);
         }
         else if (isTable)
         {
             t[key] = value;
+            return new(1);
         }
         else
         {
             LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(state, chunk, pc), "index", table);
+            return default; // dummy
         }
     }
 
