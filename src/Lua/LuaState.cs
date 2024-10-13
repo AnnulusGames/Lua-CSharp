@@ -70,8 +70,8 @@ public sealed class LuaState
                 ArgumentCount = 0,
                 FrameBase = 0,
                 SourcePosition = null,
-                RootChunkName = chunk.Name ?? DefaultChunkName,
-                ChunkName = chunk.Name ?? DefaultChunkName,
+                RootChunkName = chunk.Name,
+                ChunkName = chunk.Name,
             }, buffer, cancellationToken);
         }
         finally
