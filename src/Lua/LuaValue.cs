@@ -28,6 +28,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     public LuaValueType Type => type;
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRead<T>(out T result)
     {
         var t = typeof(T);
