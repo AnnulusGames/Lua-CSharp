@@ -2,6 +2,8 @@
 
 High performance Lua interpreter implemented in C# for .NET and Unity
 
+![img](docs/Header.png)
+
 [![NuGet](https://img.shields.io/nuget/v/LuaCSharp.svg)](https://www.nuget.org/packages/Lua)
 [![Releases](https://img.shields.io/github/release/AnnulusGames/Lua-CSharp.svg)](https://github.com/AnnulusGames/Lua-CSharp/releases)
 [![license](https://img.shields.io/badge/LICENSE-MIT-green.svg)](LICENSE)
