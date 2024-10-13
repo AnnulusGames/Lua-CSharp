@@ -1001,7 +1001,7 @@ public static partial class LuaVirtualMachine
             throw new LuaRuntimeException(GetTracebacks(state, chunk, pc), "table index is NaN");
         }
 
-        if (isTable && t.ContainsKey(key))
+        if (isTable)
         {
             t[key] = value;
             return new(1);
@@ -1027,11 +1027,6 @@ public static partial class LuaVirtualMachine
                 ChunkName = chunk.Name,
                 RootChunkName = rootChunk.Name,
             }, buffer, cancellationToken);
-        }
-        else if (isTable)
-        {
-            t[key] = value;
-            return new(1);
         }
         else
         {
