@@ -920,12 +920,7 @@ public static partial class LuaVirtualMachine
     {
         if (index >= 256)
         {
-#if NET6_0_OR_GREATER
-            return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(chunk.Constants), index - 256);
-#else
-            ref var reference = ref MemoryMarshal.GetReference(chunk.Constants.AsSpan());
-            return ref Unsafe.Add(ref reference, index - 256);
-#endif
+            return ref MemoryMarshalEx.UnsafeElementAt(chunk.Constants, index - 256);
         }
         else
         {
