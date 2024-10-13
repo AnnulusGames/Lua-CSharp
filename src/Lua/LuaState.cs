@@ -61,25 +61,23 @@ public sealed class LuaState
         ThrowIfRunning();
 
         Volatile.Write(ref isRunning, true);
-        var funcContext = LuaFunctionExecutionContextPool.Rent();
         try
         {
             var closure = new Closure(this, chunk);
-
-            funcContext.State = this;
-            funcContext.Thread = CurrentThread;
-            funcContext.ArgumentCount = 0;
-            funcContext.FrameBase = 0;
-            funcContext.SourcePosition = null;
-            funcContext.RootChunkName = chunk.Name;
-            funcContext.ChunkName = chunk.Name;
-
-            return await closure.InvokeAsync(funcContext, buffer, cancellationToken);
+            return await closure.InvokeAsync(new()
+            {
+                State = this,
+                Thread = CurrentThread,
+                ArgumentCount = 0,
+                FrameBase = 0,
+                SourcePosition = null,
+                RootChunkName = chunk.Name,
+                ChunkName = chunk.Name,
+            }, buffer, cancellationToken);
         }
         finally
         {
             Volatile.Write(ref isRunning, false);
-            LuaFunctionExecutionContextPool.Return(funcContext);
         }
     }
 
