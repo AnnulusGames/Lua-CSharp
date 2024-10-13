@@ -4,7 +4,6 @@ namespace Lua;
 
 public static class LuaFunctionExtensions
 {
-
     public static async ValueTask<LuaValue[]> InvokeAsync(this LuaFunction function, LuaState state, LuaValue[] arguments, CancellationToken cancellationToken = default)
     {
         using var buffer = new PooledArray<LuaValue>(1024);
@@ -17,13 +16,23 @@ public static class LuaFunctionExtensions
             thread.Stack.Push(arguments[i]);
         }
 
-        var resultCount = await function.InvokeAsync(new()
+        var funcContext = LuaFunctionExecutionContextPool.Rent();
+        funcContext.State = state;
+        funcContext.Thread = thread;
+        funcContext.ArgumentCount = arguments.Length;
+        funcContext.FrameBase = frameBase;
+        funcContext.ChunkName = function.Name;
+        funcContext.RootChunkName = function.Name;
+
+        int resultCount;
+        try
         {
-            State = state,
-            Thread = thread,
-            ArgumentCount = arguments.Length,
-            FrameBase = frameBase,
-        }, buffer.AsMemory(), cancellationToken);
+            resultCount = await function.InvokeAsync(funcContext, buffer.AsMemory(), cancellationToken);
+        }
+        finally
+        {
+            LuaFunctionExecutionContextPool.Return(funcContext);
+        }
 
         return buffer.AsSpan()[0..resultCount].ToArray();
     }

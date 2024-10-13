@@ -63,10 +63,21 @@ public static partial class LuaVirtualMachine
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
                             var upValue = closure.UpValues[instruction.B];
                             var table = upValue.GetValue();
-                            await GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
-                            var value = resultBuffer[0];
-                            stack.UnsafeGet(RA) = value;
-                            stack.NotifyTop(RA + 1);
+
+                            (var task, var funcContext) = GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            try
+                            {
+                                await task;
+                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.NotifyTop(RA + 1);
+                            }
+                            finally
+                            {
+                                if (funcContext != null)
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
+                            }
                             break;
                         }
                     case OpCode.GetTable:
@@ -74,10 +85,20 @@ public static partial class LuaVirtualMachine
                             stack.EnsureCapacity(RA + 1);
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            await GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
-                            var value = resultBuffer[0];
-                            stack.UnsafeGet(RA) = value;
-                            stack.NotifyTop(RA + 1);
+                            (var task, var funcContext) = GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            try
+                            {
+                                await task;
+                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.NotifyTop(RA + 1);
+                            }
+                            finally
+                            {
+                                if (funcContext != null)
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
+                            }
                         }
                         break;
                     case OpCode.SetTabUp:
@@ -87,9 +108,21 @@ public static partial class LuaVirtualMachine
 
                             var upValue = closure.UpValues[instruction.A];
                             var table = upValue.GetValue();
-                            await SetTableValue(state, thread, chunk, rootChunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
-                            break;
+
+                            (var task, var funcContext) = SetTableValue(state, thread, chunk, rootChunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
+                            try
+                            {
+                                await task;
+                            }
+                            finally
+                            {
+                                if (funcContext != null)
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
+                            }
                         }
+                        break;
                     case OpCode.SetUpVal:
                         {
                             var upValue = closure.UpValues[instruction.B];
@@ -101,7 +134,19 @@ public static partial class LuaVirtualMachine
                             var table = stack.UnsafeGet(RA);
                             var vb = RK(stack, chunk, instruction.B, frame.Base);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            await SetTableValue(state, thread, chunk, rootChunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
+
+                            (var task, var funcContext) = SetTableValue(state, thread, chunk, rootChunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
+                            try
+                            {
+                                await task;
+                            }
+                            finally
+                            {
+                                if (funcContext != null)
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
+                            }
                         }
                         break;
                     case OpCode.NewTable:
@@ -115,12 +160,22 @@ public static partial class LuaVirtualMachine
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                            await GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
-                            var value = resultBuffer[0];
-
-                            stack.UnsafeGet(RA + 1) = table;
-                            stack.UnsafeGet(RA) = value;
-                            stack.NotifyTop(RA + 2);
+                            (var task, var funcContext) = GetTableValue(state, thread, chunk, rootChunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            try
+                            {
+                                await task; 
+                                var value = resultBuffer[0];
+                                stack.UnsafeGet(RA + 1) = table;
+                                stack.UnsafeGet(RA) = value;
+                                stack.NotifyTop(RA + 2);
+                            }
+                            finally
+                            {
+                                if (funcContext != null)
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
+                            }
                         }
                         break;
                     case OpCode.Add:
@@ -144,16 +199,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -186,16 +247,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -228,16 +295,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -270,16 +343,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -317,16 +396,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -359,16 +444,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -399,16 +490,22 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 1;
+                                funcContext.FrameBase = stack.Count - 1;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 1,
-                                    FrameBase = stack.Count - 1,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -446,16 +543,22 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 1;
+                                funcContext.FrameBase = stack.Count - 1;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 1,
-                                    FrameBase = stack.Count - 1,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -506,16 +609,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 stack.UnsafeGet(RA) = resultBuffer[0];
                             }
@@ -550,16 +659,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 compareResult = resultBuffer[0].ToBoolean();
                             }
@@ -594,16 +709,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 compareResult = resultBuffer[0].ToBoolean();
                             }
@@ -642,16 +763,22 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = 2;
+                                funcContext.FrameBase = stack.Count - 2;
+                                funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                                funcContext.ChunkName = chunk.Name;
+                                funcContext.RootChunkName = rootChunk.Name;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = 2,
-                                    FrameBase = stack.Count - 2,
-                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                    ChunkName = chunk.Name,
-                                    RootChunkName = rootChunk.Name,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    await func.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
 
                                 compareResult = resultBuffer[0].ToBoolean();
                             }
@@ -718,18 +845,25 @@ public static partial class LuaVirtualMachine
                             });
 
                             int rawResultCount;
+
                             try
                             {
-                                rawResultCount = await func.InternalInvokeAsyncCore(new()
+                                var funcContext = LuaFunctionExecutionContextPool.Rent();
+                                funcContext.State = state;
+                                funcContext.Thread = thread;
+                                funcContext.ArgumentCount = argumentCount;
+                                funcContext.FrameBase = newBase;
+                                funcContext.SourcePosition = callPosition;
+                                funcContext.ChunkName = chunkName;
+                                funcContext.RootChunkName = rootChunkName;
+                                try
                                 {
-                                    State = state,
-                                    Thread = thread,
-                                    ArgumentCount = argumentCount,
-                                    FrameBase = newBase,
-                                    SourcePosition = callPosition,
-                                    ChunkName = chunkName,
-                                    RootChunkName = rootChunkName,
-                                }, resultBuffer.AsMemory(), cancellationToken);
+                                    rawResultCount = await func.InternalInvokeAsyncCore(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                                }
+                                finally
+                                {
+                                    LuaFunctionExecutionContextPool.Return(funcContext);
+                                }
                             }
                             finally
                             {
@@ -775,16 +909,22 @@ public static partial class LuaVirtualMachine
 
                             (var newBase, var argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, resultBuffer.AsSpan(), true);
 
-                            return await func.InvokeAsync(new()
+                            var funcContext = LuaFunctionExecutionContextPool.Rent();
+                            funcContext.State = state;
+                            funcContext.Thread = thread;
+                            funcContext.ArgumentCount = argumentCount;
+                            funcContext.FrameBase = newBase;
+                            funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                            funcContext.ChunkName = chunk.Name;
+                            funcContext.RootChunkName = rootChunk.Name;
+                            try
                             {
-                                State = state,
-                                Thread = thread,
-                                ArgumentCount = argumentCount,
-                                FrameBase = newBase,
-                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                ChunkName = chunk.Name,
-                                RootChunkName = rootChunk.Name,
-                            }, buffer, cancellationToken);
+                                return await func.InvokeAsync(funcContext, buffer, cancellationToken);
+                            }
+                            finally
+                            {
+                                LuaFunctionExecutionContextPool.Return(funcContext);
+                            }
                         }
                     case OpCode.Return:
                         {
@@ -868,16 +1008,24 @@ public static partial class LuaVirtualMachine
                             stack.UnsafeGet(nextBase + 1) = stack.UnsafeGet(RA + 2);
                             stack.NotifyTop(nextBase + 2);
 
-                            var resultCount = await iterator.InvokeAsync(new()
+                            var funcContext = LuaFunctionExecutionContextPool.Rent();
+                            funcContext.State = state;
+                            funcContext.Thread = thread;
+                            funcContext.ArgumentCount = 2;
+                            funcContext.FrameBase = nextBase;
+                            funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                            funcContext.ChunkName = chunk.Name;
+                            funcContext.RootChunkName = rootChunk.Name;
+
+                            int resultCount;
+                            try
                             {
-                                State = state,
-                                Thread = thread,
-                                ArgumentCount = 2,
-                                FrameBase = nextBase,
-                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                ChunkName = chunk.Name,
-                                RootChunkName = rootChunk.Name,
-                            }, resultBuffer.AsMemory(), cancellationToken);
+                                resultCount = await iterator.InvokeAsync(funcContext, resultBuffer.AsMemory(), cancellationToken);
+                            }
+                            finally
+                            {
+                                LuaFunctionExecutionContextPool.Return(funcContext);
+                            }
 
                             stack.EnsureCapacity(RA + instruction.C + 3);
                             for (int i = 1; i <= instruction.C; i++)
@@ -970,7 +1118,7 @@ public static partial class LuaVirtualMachine
         }
     }
 
-    static ValueTask<int> GetTableValue(LuaState state, LuaThread thread, Chunk chunk, Chunk rootChunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    static (ValueTask<int> Task, LuaFunctionExecutionContext? Context) GetTableValue(LuaState state, LuaThread thread, Chunk chunk, Chunk rootChunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
@@ -978,7 +1126,7 @@ public static partial class LuaVirtualMachine
         if (isTable && t.TryGetValue(key, out var result))
         {
             buffer.Span[0] = result;
-            return new(1);
+            return (new(1), null);
         }
         else if (table.TryGetMetamethod(state, Metamethods.Index, out var metamethod))
         {
@@ -990,21 +1138,21 @@ public static partial class LuaVirtualMachine
             stack.Push(table);
             stack.Push(key);
 
-            return indexTable.InvokeAsync(new()
-            {
-                State = state,
-                Thread = thread,
-                ArgumentCount = 2,
-                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                FrameBase = stack.Count - 2,
-                ChunkName = chunk.Name,
-                RootChunkName = rootChunk.Name,
-            }, buffer, cancellationToken);
+            var funcContext = LuaFunctionExecutionContextPool.Rent();
+            funcContext.State = state;
+            funcContext.Thread = thread;
+            funcContext.ArgumentCount = 2;
+            funcContext.FrameBase = stack.Count - 2;
+            funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+            funcContext.ChunkName = chunk.Name;
+            funcContext.RootChunkName = rootChunk.Name;
+
+            return (indexTable.InvokeAsync(funcContext, buffer, cancellationToken), funcContext);
         }
         else if (isTable)
         {
             buffer.Span[0] = LuaValue.Nil;
-            return new(1);
+            return (new(1), null);
         }
         else
         {
@@ -1013,7 +1161,7 @@ public static partial class LuaVirtualMachine
         }
     }
 
-    static ValueTask<int> SetTableValue(LuaState state, LuaThread thread, Chunk chunk, Chunk rootChunk, int pc, LuaValue table, LuaValue key, LuaValue value, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    static (ValueTask<int> Task, LuaFunctionExecutionContext? Context) SetTableValue(LuaState state, LuaThread thread, Chunk chunk, Chunk rootChunk, int pc, LuaValue table, LuaValue key, LuaValue value, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
@@ -1030,7 +1178,7 @@ public static partial class LuaVirtualMachine
         if (isTable)
         {
             t[key] = value;
-            return new(1);
+            return (new(1), null);
         }
         else if (table.TryGetMetamethod(state, Metamethods.NewIndex, out var metamethod))
         {
@@ -1043,16 +1191,16 @@ public static partial class LuaVirtualMachine
             stack.Push(key);
             stack.Push(value);
 
-            return indexTable.InvokeAsync(new()
-            {
-                State = state,
-                Thread = thread,
-                ArgumentCount = 3,
-                FrameBase = stack.Count - 3,
-                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                ChunkName = chunk.Name,
-                RootChunkName = rootChunk.Name,
-            }, buffer, cancellationToken);
+            var funcContext = LuaFunctionExecutionContextPool.Rent();
+            funcContext.State = state;
+            funcContext.Thread = thread;
+            funcContext.ArgumentCount = 3;
+            funcContext.FrameBase = stack.Count - 3;
+            funcContext.SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+            funcContext.ChunkName = chunk.Name;
+            funcContext.RootChunkName = rootChunk.Name;
+
+            return (indexTable.InvokeAsync(funcContext, buffer, cancellationToken), funcContext);
         }
         else
         {

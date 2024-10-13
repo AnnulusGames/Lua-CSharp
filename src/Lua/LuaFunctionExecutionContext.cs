@@ -1,17 +1,47 @@
+using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
 using Lua.CodeAnalysis;
 
 namespace Lua;
 
-public readonly record struct LuaFunctionExecutionContext
+public static class LuaFunctionExecutionContextPool
 {
-    public required LuaState State { get; init; }
-    public required LuaThread Thread { get; init; }
-    public required int ArgumentCount { get; init; }
-    public required int FrameBase { get; init; }
-    public SourcePosition? SourcePosition { get; init; }
-    public string? RootChunkName { get; init; }
-    public string? ChunkName { get; init; }
+    static readonly ConcurrentStack<LuaFunctionExecutionContext> stack = new();
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static LuaFunctionExecutionContext Rent()
+    {
+        if (!stack.TryPop(out var context))
+        {
+            context = new();
+        }
+
+        return context;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static void Return(LuaFunctionExecutionContext context)
+    {
+        context.State = default!;
+        context.Thread = default!;
+        context.ArgumentCount = default;
+        context.FrameBase = default;
+        context.SourcePosition = default;
+        context.RootChunkName = default;
+        context.ChunkName = default;
+        stack.Push(context);
+    }
+}
+
+public record LuaFunctionExecutionContext
+{
+    public LuaState State { get; set; } = default!;
+    public LuaThread Thread { get; set; } = default!;
+    public int ArgumentCount { get; set; }
+    public int FrameBase { get; set; }
+    public SourcePosition? SourcePosition { get; set; }
+    public string? RootChunkName { get; set; }
+    public string? ChunkName { get; set; }
 
     public ReadOnlySpan<LuaValue> Arguments
     {
