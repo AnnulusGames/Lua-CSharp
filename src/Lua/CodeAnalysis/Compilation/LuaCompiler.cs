@@ -1091,10 +1091,77 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                     value = stringLiteral.Text.ToString();
                 }
                 return true;
-            default:
-                value = default;
-                return false;
+            case UnaryExpressionNode unaryExpression:
+                if (TryGetConstant(unaryExpression.Node, context, out var unaryNodeValue))
+                {
+                    switch (unaryExpression.Operator)
+                    {
+                        case UnaryOperator.Negate:
+                            if (unaryNodeValue.TryRead<double>(out var d1))
+                            {
+                                value = -d1;
+                                return true;
+                            }
+                            break;
+                        case UnaryOperator.Not:
+                            if (unaryNodeValue.TryRead<bool>(out var b))
+                            {
+                                value = !b;
+                                return true;
+                            }
+                            break;
+                    }
+                }
+                break;
+            case BinaryExpressionNode binaryExpression:
+                if (TryGetConstant(binaryExpression.LeftNode, context, out var leftValue) &&
+                    TryGetConstant(binaryExpression.RightNode, context, out var rightValue))
+                {
+                    switch (binaryExpression.OperatorType)
+                    {
+                        case BinaryOperator.Addition:
+                            {
+                                if (leftValue.TryRead<double>(out var d1) && rightValue.TryRead<double>(out var d2))
+                                {
+                                    value = d1 + d2;
+                                    return true;
+                                }
+                            }
+                            break;
+                        case BinaryOperator.Subtraction:
+                            {
+                                if (leftValue.TryRead<double>(out var d1) && rightValue.TryRead<double>(out var d2))
+                                {
+                                    value = d1 - d2;
+                                    return true;
+                                }
+                            }
+                            break;
+                        case BinaryOperator.Multiplication:
+                            {
+                                if (leftValue.TryRead<double>(out var d1) && rightValue.TryRead<double>(out var d2))
+                                {
+                                    value = d1 * d2;
+                                    return true;
+                                }
+                            }
+                            break;
+                        case BinaryOperator.Division:
+                            {
+                                if (leftValue.TryRead<double>(out var d1) && rightValue.TryRead<double>(out var d2) && d2 != 0)
+                                {
+                                    value = d1 / d2;
+                                    return true;
+                                }
+                            }
+                            break;
+                    }
+                }
+                break;
         }
+
+        value = default;
+        return false;
     }
 
     static bool IsFixedNumberOfReturnValues(ExpressionNode node)
@@ -1186,6 +1253,12 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 CompileVariableArgumentsExpression(varArg, context, resultCount);
                 isLastFunction = isLast;
+            }
+            else if (TryGetConstant(expression, context, out var constant))
+            {
+                var index = context.Function.GetConstantIndex(constant);
+                context.PushInstruction(Instruction.LoadK(context.StackPosition, index), expression.Position, true);
+                isLastFunction = false;
             }
             else
             {
