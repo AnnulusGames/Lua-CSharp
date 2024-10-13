@@ -62,7 +62,7 @@ public static partial class LuaVirtualMachine
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
                             var upValue = closure.UpValues[instruction.B];
                             var table = upValue.GetValue();
-                            await GetTableValue(state, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            await GetTableValue(state, thread, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
                             var value = resultBuffer[0];
                             stack.UnsafeGet(RA) = value;
                             stack.NotifyTop(RA + 1);
@@ -73,7 +73,7 @@ public static partial class LuaVirtualMachine
                             stack.EnsureCapacity(RA + 1);
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            await GetTableValue(state, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            await GetTableValue(state, thread, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
                             var value = resultBuffer[0];
                             stack.UnsafeGet(RA) = value;
                             stack.NotifyTop(RA + 1);
@@ -86,7 +86,7 @@ public static partial class LuaVirtualMachine
 
                             var upValue = closure.UpValues[instruction.A];
                             var table = upValue.GetValue();
-                            await SetTableValue(state, chunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
+                            await SetTableValue(state, thread, chunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
                             break;
                         }
                     case OpCode.SetUpVal:
@@ -100,7 +100,7 @@ public static partial class LuaVirtualMachine
                             var table = stack.UnsafeGet(RA);
                             var vb = RK(stack, chunk, instruction.B, frame.Base);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            await SetTableValue(state, chunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
+                            await SetTableValue(state, thread, chunk, pc, table, vb, vc, resultBuffer.AsMemory(), cancellationToken);
                         }
                         break;
                     case OpCode.NewTable:
@@ -114,7 +114,7 @@ public static partial class LuaVirtualMachine
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
 
-                            await GetTableValue(state, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
+                            await GetTableValue(state, thread, chunk, pc, table, vc, resultBuffer.AsMemory(), cancellationToken);
                             var value = resultBuffer[0];
 
                             stack.UnsafeGet(RA + 1) = table;
@@ -921,9 +921,8 @@ public static partial class LuaVirtualMachine
         }
     }
 
-    static ValueTask<int> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    static ValueTask<int> GetTableValue(LuaState state, LuaThread thread, Chunk chunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var thread = state.CurrentThread;
         var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
@@ -965,9 +964,8 @@ public static partial class LuaVirtualMachine
         }
     }
 
-    static ValueTask<int> SetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    static ValueTask<int> SetTableValue(LuaState state, LuaThread thread, Chunk chunk, int pc, LuaValue table, LuaValue key, LuaValue value, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var thread = state.CurrentThread;
         var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
