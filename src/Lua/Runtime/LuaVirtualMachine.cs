@@ -702,17 +702,39 @@ public static partial class LuaVirtualMachine
                             }
 
                             (var newBase, var argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, resultBuffer.AsSpan(), false);
+                            
+                            var callPosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc);
+                            var chunkName = chunk.Name ?? LuaState.DefaultChunkName;
+                            var rootChunkName = rootChunk.Name ?? LuaState.DefaultChunkName;
 
-                            var rawResultCount = await func.InvokeAsync(new()
+                            thread.PushCallStackFrame(new CallStackFrame
                             {
-                                State = state,
-                                Thread = thread,
-                                ArgumentCount = argumentCount,
-                                FrameBase = newBase,
-                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
-                                ChunkName = chunk.Name,
-                                RootChunkName = rootChunk.Name,
-                            }, resultBuffer.AsMemory(), cancellationToken);
+                                Base = newBase,
+                                CallPosition = callPosition,
+                                ChunkName = chunkName,
+                                RootChunkName = rootChunkName,
+                                VariableArgumentCount = func is Closure cl ? Math.Max(argumentCount - cl.Proto.ParameterCount, 0) : 0,
+                                Function = func,
+                            });
+
+                            int rawResultCount;
+                            try
+                            {
+                                rawResultCount = await func.InternalInvokeAsyncCore(new()
+                                {
+                                    State = state,
+                                    Thread = thread,
+                                    ArgumentCount = argumentCount,
+                                    FrameBase = newBase,
+                                    SourcePosition = callPosition,
+                                    ChunkName = chunkName,
+                                    RootChunkName = rootChunkName,
+                                }, resultBuffer.AsMemory(), cancellationToken);
+                            }
+                            finally
+                            {
+                                thread.PopCallStackFrame();
+                            }
 
                             var resultCount = rawResultCount;
 

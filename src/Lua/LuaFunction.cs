@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Lua.Runtime;
 
 namespace Lua;
@@ -30,4 +31,10 @@ public abstract partial class LuaFunction
     }
 
     protected abstract ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ValueTask<int> InternalInvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    {
+        return InvokeAsyncCore(context, buffer, cancellationToken);
+    }
 }
