@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Lua.Internal;
 using Lua.Loaders;
 using Lua.Runtime;
@@ -97,6 +98,7 @@ public sealed class LuaState
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetMetatable(LuaValue value, [NotNullWhen(true)] out LuaTable? result)
     {
         result = value.Type switch
@@ -115,6 +117,7 @@ public sealed class LuaState
         return result != null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetMetatable(LuaValue value, LuaTable metatable)
     {
         switch (value.Type)
