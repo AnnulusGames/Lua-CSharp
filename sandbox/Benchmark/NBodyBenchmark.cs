@@ -1,18 +1,20 @@
 using BenchmarkDotNet.Attributes;
 using Lua;
+using Lua.Standard;
 using MoonSharp.Interpreter;
 
 [Config(typeof(BenchmarkConfig))]
-public class AddBenchmark
+public class NBodyBenchmark
 {
-    BenchmarkCore core = new();
+    BenchmarkCore core = default!;
     LuaValue[] buffer = new LuaValue[1];
 
     [IterationSetup]
     public void Setup()
     {
         core = new();
-        core.Setup("add.lua");
+        core.Setup("n-body.lua");
+        core.LuaCSharpState.OpenStandardLibraries();
     }
 
     [IterationCleanup]
