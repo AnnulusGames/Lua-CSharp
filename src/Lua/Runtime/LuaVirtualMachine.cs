@@ -785,12 +785,22 @@ public static partial class LuaVirtualMachine
                         {
                             stack.EnsureCapacity(RA + 4);
 
-                            // TODO: add error message
-                            var variable = stack.UnsafeGet(RA).Read<double>();
-                            var limit = stack.UnsafeGet(RA + 1).Read<double>();
-                            var step = stack.UnsafeGet(RA + 2).Read<double>();
+                            if (!stack.UnsafeGet(RA).TryRead<double>(out var init))
+                            {
+                                throw new LuaRuntimeException(state.GetTraceback(), "'for' initial value must be a number");
+                            }
 
-                            var va = variable + step;
+                            if (!stack.UnsafeGet(RA + 1).TryRead<double>(out var limit))
+                            {
+                                throw new LuaRuntimeException(state.GetTraceback(), "'for' limit must be a number");
+                            }
+
+                            if (!stack.UnsafeGet(RA + 2).TryRead<double>(out var step))
+                            {
+                                throw new LuaRuntimeException(state.GetTraceback(), "'for' step must be a number");
+                            }
+
+                            var va = init + step;
                             stack.UnsafeGet(RA) = va;
 
                             if (step >= 0 ? va <= limit : va >= limit)
@@ -807,15 +817,28 @@ public static partial class LuaVirtualMachine
                         break;
                     case OpCode.ForPrep:
                         {
-                            // TODO: add error message
-                            stack.UnsafeGet(RA) = stack.UnsafeGet(RA).Read<double>() - stack.UnsafeGet(RA + 2).Read<double>();
+                            if (!stack.UnsafeGet(RA).TryRead<double>(out var init))
+                            {
+                                throw new LuaRuntimeException(state.GetTraceback(), "'for' initial value must be a number");
+                            }
+
+                            if (!stack.UnsafeGet(RA + 2).TryRead<double>(out var step))
+                            {
+                                throw new LuaRuntimeException(state.GetTraceback(), "'for' step must be a number");
+                            }
+
+                            stack.UnsafeGet(RA) = init - step;
                             stack.NotifyTop(RA + 1);
                             pc += instruction.SBx;
                         }
                         break;
                     case OpCode.TForCall:
                         {
-                            var iterator = stack.UnsafeGet(RA).Read<LuaFunction>();
+                            var iteratorRaw = stack.UnsafeGet(RA);
+                            if (!iteratorRaw.TryRead<LuaFunction>(out var iterator))
+                            {
+                                LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(state, chunk, pc), "call", iteratorRaw);
+                            }
 
                             var nextBase = RA + 3 + instruction.C;
                             stack.UnsafeGet(nextBase) = stack.UnsafeGet(RA + 1);
@@ -856,7 +879,10 @@ public static partial class LuaVirtualMachine
                         break;
                     case OpCode.SetList:
                         {
-                            var table = stack.UnsafeGet(RA).Read<LuaTable>();
+                            if (!stack.UnsafeGet(RA).TryRead<LuaTable>(out var table))
+                            {
+                                throw new LuaException("internal error");
+                            }
 
                             var count = instruction.B == 0
                                 ? stack.Count - (RA + 1)
