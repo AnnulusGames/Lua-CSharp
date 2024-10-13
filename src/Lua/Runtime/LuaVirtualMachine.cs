@@ -8,6 +8,7 @@ public static partial class LuaVirtualMachine
 {
     internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, Closure closure, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
+        using var methodBuffer = new PooledArray<LuaValue>(1024);
         var thread = state.CurrentThread;
         var stack = thread.Stack;
         var chunk = closure.Proto;
@@ -60,7 +61,8 @@ public static partial class LuaVirtualMachine
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
                             var upValue = closure.UpValues[instruction.B];
                             var table = upValue.GetValue();
-                            var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
+                            await GetTableValue(state, chunk, pc, table, vc, methodBuffer.AsMemory(), cancellationToken);
+                            var value = methodBuffer[0];
                             stack.UnsafeGet(RA) = value;
                             stack.NotifyTop(RA + 1);
                             break;
@@ -70,7 +72,8 @@ public static partial class LuaVirtualMachine
                             stack.EnsureCapacity(RA + 1);
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
+                            await GetTableValue(state, chunk, pc, table, vc, methodBuffer.AsMemory(), cancellationToken);
+                            var value = methodBuffer[0];
                             stack.UnsafeGet(RA) = value;
                             stack.NotifyTop(RA + 1);
                         }
@@ -109,7 +112,9 @@ public static partial class LuaVirtualMachine
                             stack.EnsureCapacity(RA + 2);
                             var table = stack.UnsafeGet(RB);
                             var vc = RK(stack, chunk, instruction.C, frame.Base);
-                            var value = await GetTableValue(state, chunk, pc, table, vc, cancellationToken);
+
+                            await GetTableValue(state, chunk, pc, table, vc, methodBuffer.AsMemory(), cancellationToken);
+                            var value = methodBuffer[0];
 
                             stack.UnsafeGet(RA + 1) = table;
                             stack.UnsafeGet(RA) = value;
@@ -137,7 +142,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -180,7 +184,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -223,7 +226,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -266,7 +268,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -314,7 +315,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -357,7 +357,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -398,7 +397,6 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -446,7 +444,6 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -507,7 +504,6 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                using var methodBuffer = new PooledArray<LuaValue>(1024);
                                 await func.InvokeAsync(new()
                                 {
                                     State = state,
@@ -552,27 +548,18 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                var methodBuffer = ArrayPool<LuaValue>.Shared.Rent(1);
-                                methodBuffer.AsSpan().Clear();
-                                try
+                                await func.InvokeAsync(new()
                                 {
-                                    await func.InvokeAsync(new()
-                                    {
-                                        State = state,
-                                        Thread = thread,
-                                        ArgumentCount = 2,
-                                        FrameBase = stack.Count - 2,
-                                        SourcePosition = chunk.SourcePositions[pc],
-                                        ChunkName = chunk.Name,
-                                        RootChunkName = chunk.GetRoot().Name,
-                                    }, methodBuffer, cancellationToken);
+                                    State = state,
+                                    Thread = thread,
+                                    ArgumentCount = 2,
+                                    FrameBase = stack.Count - 2,
+                                    SourcePosition = chunk.SourcePositions[pc],
+                                    ChunkName = chunk.Name,
+                                    RootChunkName = chunk.GetRoot().Name,
+                                }, methodBuffer.AsMemory(), cancellationToken);
 
-                                    compareResult = methodBuffer[0].ToBoolean();
-                                }
-                                finally
-                                {
-                                    ArrayPool<LuaValue>.Shared.Return(methodBuffer);
-                                }
+                                compareResult = methodBuffer[0].ToBoolean();
                             }
 
                             if (compareResult != (instruction.A == 1))
@@ -605,27 +592,18 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                var methodBuffer = ArrayPool<LuaValue>.Shared.Rent(1);
-                                methodBuffer.AsSpan().Clear();
-                                try
+                                await func.InvokeAsync(new()
                                 {
-                                    await func.InvokeAsync(new()
-                                    {
-                                        State = state,
-                                        Thread = thread,
-                                        ArgumentCount = 2,
-                                        FrameBase = stack.Count - 2,
-                                        SourcePosition = chunk.SourcePositions[pc],
-                                        ChunkName = chunk.Name,
-                                        RootChunkName = chunk.GetRoot().Name,
-                                    }, methodBuffer, cancellationToken);
+                                    State = state,
+                                    Thread = thread,
+                                    ArgumentCount = 2,
+                                    FrameBase = stack.Count - 2,
+                                    SourcePosition = chunk.SourcePositions[pc],
+                                    ChunkName = chunk.Name,
+                                    RootChunkName = chunk.GetRoot().Name,
+                                }, methodBuffer.AsMemory(), cancellationToken);
 
-                                    compareResult = methodBuffer[0].ToBoolean();
-                                }
-                                finally
-                                {
-                                    ArrayPool<LuaValue>.Shared.Return(methodBuffer);
-                                }
+                                compareResult = methodBuffer[0].ToBoolean();
                             }
                             else
                             {
@@ -662,27 +640,18 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                var methodBuffer = ArrayPool<LuaValue>.Shared.Rent(1);
-                                methodBuffer.AsSpan().Clear();
-                                try
+                                await func.InvokeAsync(new()
                                 {
-                                    await func.InvokeAsync(new()
-                                    {
-                                        State = state,
-                                        Thread = thread,
-                                        ArgumentCount = 2,
-                                        FrameBase = stack.Count - 2,
-                                        SourcePosition = chunk.SourcePositions[pc],
-                                        ChunkName = chunk.Name,
-                                        RootChunkName = chunk.GetRoot().Name,
-                                    }, methodBuffer, cancellationToken);
+                                    State = state,
+                                    Thread = thread,
+                                    ArgumentCount = 2,
+                                    FrameBase = stack.Count - 2,
+                                    SourcePosition = chunk.SourcePositions[pc],
+                                    ChunkName = chunk.Name,
+                                    RootChunkName = chunk.GetRoot().Name,
+                                }, methodBuffer.AsMemory(), cancellationToken);
 
-                                    compareResult = methodBuffer[0].ToBoolean();
-                                }
-                                finally
-                                {
-                                    ArrayPool<LuaValue>.Shared.Return(methodBuffer);
-                                }
+                                compareResult = methodBuffer[0].ToBoolean();
                             }
                             else
                             {
@@ -951,10 +920,7 @@ public static partial class LuaVirtualMachine
         return index >= 256 ? chunk.Constants[index - 256] : stack.UnsafeGet(index + frameBase);
     }
 
-#if NET6_0_OR_GREATER
-    [AsyncMethodBuilder(typeof(PoolingAsyncValueTaskMethodBuilder<>))]
-#endif
-    static async ValueTask<LuaValue> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, CancellationToken cancellationToken)
+    static ValueTask<int> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = state.CurrentThread;
         var stack = thread.Stack;
@@ -962,7 +928,8 @@ public static partial class LuaVirtualMachine
 
         if (isTable && t.TryGetValue(key, out var result))
         {
-            return result;
+            buffer.Span[0] = result;
+            return new(1);
         }
         else if (table.TryGetMetamethod(state, Metamethods.Index, out var metamethod))
         {
@@ -974,31 +941,21 @@ public static partial class LuaVirtualMachine
             stack.Push(table);
             stack.Push(key);
 
-            var methodBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
-            methodBuffer.AsSpan().Clear();
-            try
+            return indexTable.InvokeAsync(new()
             {
-                await indexTable.InvokeAsync(new()
-                {
-                    State = state,
-                    Thread = thread,
-                    ArgumentCount = 2,
-                    SourcePosition = chunk.SourcePositions[pc],
-                    FrameBase = stack.Count - 2,
-                    ChunkName = chunk.Name,
-                    RootChunkName = chunk.GetRoot().Name,
-                }, methodBuffer, cancellationToken);
-
-                return methodBuffer[0];
-            }
-            finally
-            {
-                ArrayPool<LuaValue>.Shared.Return(methodBuffer);
-            }
+                State = state,
+                Thread = thread,
+                ArgumentCount = 2,
+                SourcePosition = chunk.SourcePositions[pc],
+                FrameBase = stack.Count - 2,
+                ChunkName = chunk.Name,
+                RootChunkName = chunk.GetRoot().Name,
+            }, buffer, cancellationToken);
         }
         else if (isTable)
         {
-            return LuaValue.Nil;
+            buffer.Span[0] = LuaValue.Nil;
+            return new(1);
         }
         else
         {
