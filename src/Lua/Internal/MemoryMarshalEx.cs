@@ -15,4 +15,10 @@ internal static class MemoryMarshalEx
         return ref Unsafe.Add(ref reference, index);
 #endif
     }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static ref T UnsafeElementAt<T>(Span<T> array, int index)
+    {
+        return ref Unsafe.Add(ref MemoryMarshal.GetReference(array), index);
+    }
 }
