@@ -150,7 +150,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -192,7 +192,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -234,7 +234,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -276,7 +276,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -323,7 +323,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -365,7 +365,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -405,7 +405,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 1,
                                     FrameBase = stack.Count - 1,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -452,7 +452,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 1,
                                     FrameBase = stack.Count - 1,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -512,7 +512,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -556,7 +556,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -600,7 +600,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -648,7 +648,7 @@ public static partial class LuaVirtualMachine
                                     Thread = thread,
                                     ArgumentCount = 2,
                                     FrameBase = stack.Count - 2,
-                                    SourcePosition = chunk.SourcePositions[pc],
+                                    SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                     ChunkName = chunk.Name,
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
@@ -709,7 +709,7 @@ public static partial class LuaVirtualMachine
                                 Thread = thread,
                                 ArgumentCount = argumentCount,
                                 FrameBase = newBase,
-                                SourcePosition = chunk.SourcePositions[pc],
+                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                 ChunkName = chunk.Name,
                                 RootChunkName = rootChunk.Name,
                             }, resultBuffer.AsMemory(), cancellationToken);
@@ -759,7 +759,7 @@ public static partial class LuaVirtualMachine
                                 Thread = thread,
                                 ArgumentCount = argumentCount,
                                 FrameBase = newBase,
-                                SourcePosition = chunk.SourcePositions[pc],
+                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                 ChunkName = chunk.Name,
                                 RootChunkName = rootChunk.Name,
                             }, buffer, cancellationToken);
@@ -852,7 +852,7 @@ public static partial class LuaVirtualMachine
                                 Thread = thread,
                                 ArgumentCount = 2,
                                 FrameBase = nextBase,
-                                SourcePosition = chunk.SourcePositions[pc],
+                                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                                 ChunkName = chunk.Name,
                                 RootChunkName = rootChunk.Name,
                             }, resultBuffer.AsMemory(), cancellationToken);
@@ -973,10 +973,10 @@ public static partial class LuaVirtualMachine
                 State = state,
                 Thread = thread,
                 ArgumentCount = 2,
-                SourcePosition = chunk.SourcePositions[pc],
+                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                 FrameBase = stack.Count - 2,
                 ChunkName = chunk.Name,
-                RootChunkName = chunk.GetRoot().Name,
+                RootChunkName = rootChunk.Name,
             }, buffer, cancellationToken);
         }
         else if (isTable)
@@ -1027,7 +1027,7 @@ public static partial class LuaVirtualMachine
                 Thread = thread,
                 ArgumentCount = 3,
                 FrameBase = stack.Count - 3,
-                SourcePosition = chunk.SourcePositions[pc],
+                SourcePosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
                 ChunkName = chunk.Name,
                 RootChunkName = rootChunk.Name,
             }, buffer, cancellationToken);
@@ -1088,7 +1088,7 @@ public static partial class LuaVirtualMachine
         var frame = state.CurrentThread.GetCurrentFrame();
         state.CurrentThread.PushCallStackFrame(frame with
         {
-            CallPosition = chunk.SourcePositions[pc],
+            CallPosition = MemoryMarshalEx.UnsafeElementAt(chunk.SourcePositions, pc),
             ChunkName = chunk.Name,
             RootChunkName = chunk.GetRoot().Name,
         });
