@@ -333,10 +333,10 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         node.TableNode.Accept(this, context);
 
         // load key
-        node.KeyNode.Accept(this, context);
+        var keyPosition = (ushort)GetRKIndex(node.KeyNode, context);
 
         // push interuction
-        context.PushInstruction(Instruction.GetTable(tablePosition, tablePosition, (ushort)(context.StackPosition - 1)), node.Position);
+        context.PushInstruction(Instruction.GetTable(tablePosition, tablePosition, keyPosition), node.Position);
         context.StackPosition = (byte)(tablePosition + 1);
 
         return true;
