@@ -996,9 +996,13 @@ public static partial class LuaVirtualMachine
         var stack = thread.Stack;
         var isTable = table.TryRead<LuaTable>(out var t);
 
-        if (key.Type is LuaValueType.Number && key.TryRead<double>(out var d) && double.IsNaN(d))
+        if (key.Type is LuaValueType.Number)
         {
-            throw new LuaRuntimeException(GetTracebacks(state, chunk, pc), "table index is NaN");
+            var d = key.UnsafeRead<double>();
+            if (double.IsNaN(d))
+            {
+                throw new LuaRuntimeException(GetTracebacks(state, chunk, pc), "table index is NaN");
+            }
         }
 
         if (isTable)

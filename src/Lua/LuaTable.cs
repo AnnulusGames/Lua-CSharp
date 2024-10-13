@@ -41,7 +41,7 @@ public sealed class LuaTable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            if (key.Type is LuaValueType.Number && double.IsNaN(key.Read<double>()))
+            if (key.Type is LuaValueType.Number && double.IsNaN(key.UnsafeRead<double>()))
             {
                 ThrowIndexIsNaN();
             }

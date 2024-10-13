@@ -28,7 +28,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     public LuaValueType Type => type;
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryRead<T>(out T result)
     {
         var t = typeof(T);
@@ -209,6 +208,35 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     {
         if (!TryRead<T>(out var result)) throw new InvalidOperationException($"Cannot convert LuaValueType.{Type} to {typeof(T).FullName}.");
         return result;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal T UnsafeRead<T>()
+    {
+        switch (type)
+        {
+            case LuaValueType.Boolean:
+                {
+                    var v = value == 1;
+                    return Unsafe.As<bool, T>(ref v);
+                }
+            case LuaValueType.Number:
+                {
+                    var v = value;
+                    return Unsafe.As<double, T>(ref v);
+                }
+            case LuaValueType.String:
+            case LuaValueType.Thread:
+            case LuaValueType.Function:
+            case LuaValueType.Table:
+            case LuaValueType.UserData:
+                {
+                    var v = referenceValue!;
+                    return Unsafe.As<object, T>(ref v);
+                }
+        }
+
+        return default!;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

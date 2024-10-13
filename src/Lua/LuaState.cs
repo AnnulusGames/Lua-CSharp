@@ -109,8 +109,8 @@ public sealed class LuaState
             LuaValueType.Number => numberMetatable,
             LuaValueType.Function => functionMetatable,
             LuaValueType.Thread => threadMetatable,
-            LuaValueType.UserData => value.Read<LuaUserData>().Metatable,
-            LuaValueType.Table => value.Read<LuaTable>().Metatable,
+            LuaValueType.UserData => value.UnsafeRead<LuaUserData>().Metatable,
+            LuaValueType.Table => value.UnsafeRead<LuaTable>().Metatable,
             _ => null
         };
 
@@ -141,10 +141,10 @@ public sealed class LuaState
                 threadMetatable = metatable;
                 break;
             case LuaValueType.UserData:
-                value.Read<LuaUserData>().Metatable = metatable;
+                value.UnsafeRead<LuaUserData>().Metatable = metatable;
                 break;
             case LuaValueType.Table:
-                value.Read<LuaTable>().Metatable = metatable;
+                value.UnsafeRead<LuaTable>().Metatable = metatable;
                 break;
         }
     }
