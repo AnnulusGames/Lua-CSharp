@@ -297,17 +297,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
 
     public override int GetHashCode()
     {
-        var valueHash = type switch
-        {
-            LuaValueType.Nil => 0,
-            LuaValueType.Boolean => Read<bool>().GetHashCode(),
-            LuaValueType.String => Read<string>().GetHashCode(),
-            LuaValueType.Number => Read<double>().GetHashCode(),
-            LuaValueType.Function or LuaValueType.Thread or LuaValueType.Table or LuaValueType.UserData => referenceValue!.GetHashCode(),
-            _ => 0,
-        };
-
-        return HashCode.Combine(type, valueHash);
+        return HashCode.Combine(type, value, referenceValue);
     }
 
     public bool Equals(LuaValue other)
@@ -317,14 +307,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return type switch
         {
             LuaValueType.Nil => true,
-            LuaValueType.Boolean => Read<bool>().Equals(other.Read<bool>()),
-            LuaValueType.String => Read<string>().Equals(other.Read<string>()),
-            LuaValueType.Number => Read<double>() == other.Read<double>(),
-            LuaValueType.Function => Read<LuaFunction>().Equals(other.Read<LuaFunction>()),
-            LuaValueType.Thread => Read<LuaThread>().Equals(other.Read<LuaThread>()),
-            LuaValueType.Table => Read<LuaTable>().Equals(other.Read<LuaTable>()),
-            LuaValueType.UserData => Read<LuaUserData>().Equals(other.Read<LuaUserData>()),
-            _ => false,
+            LuaValueType.Boolean or LuaValueType.Number => other.value == value,
+            _ => other.referenceValue!.Equals(referenceValue)
         };
     }
 
