@@ -149,14 +149,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             context.PushInstruction(Instruction.Jmp(0, 0), node.Position);
 
             context.StackPosition = r;
-            if (node.RightNode is IdentifierNode rightIdentifier)
-            {
-                LoadIdentifier(rightIdentifier.Name, context, rightIdentifier.Position, true);
-            }
-            else
-            {
-                node.RightNode.Accept(this, context);
-            }
+            node.RightNode.Accept(this, context);
 
             context.Function.Instructions[testJmpIndex].SBx = context.Function.Instructions.Length - testJmpIndex - 1;
         }
