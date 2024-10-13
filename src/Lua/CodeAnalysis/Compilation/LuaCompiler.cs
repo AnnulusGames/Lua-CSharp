@@ -90,7 +90,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
     // identifier
     public bool VisitIdentifierNode(IdentifierNode node, ScopeCompilationContext context)
     {
-        LoadIdentifier(node.Name, context, node.Position, false);
+        GetOrLoadIdentifier(node.Name, context, node.Position, false);
         return true;
     }
 
@@ -136,7 +136,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             byte a;
             if (node.LeftNode is IdentifierNode leftIdentifier)
             {
-                a = LoadIdentifier(leftIdentifier.Name, context, leftIdentifier.Position, true);
+                a = GetOrLoadIdentifier(leftIdentifier.Name, context, leftIdentifier.Position, true);
             }
             else
             {
@@ -155,7 +155,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         }
         else
         {
-            (var b, var c) = GetBAndC(node, context);
+            var b = (ushort)GetRKIndex(node.LeftNode, context);
+            var c = (ushort)GetRKIndex(node.RightNode, context);
 
             switch (node.OperatorType)
             {
@@ -633,7 +634,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
         // assign global variable
         var first = node.MemberPath[0];
-        var tableIndex = LoadIdentifier(first.Name, context, first.Position, true);
+        var tableIndex = GetOrLoadIdentifier(first.Name, context, first.Position, true);
         
         for (int i = 1; i < node.MemberPath.Length - 1; i++)
         {
@@ -1004,7 +1005,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         return true;
     }
 
-    static byte LoadIdentifier(ReadOnlyMemory<char> name, ScopeCompilationContext context, SourcePosition sourcePosition, bool dontLoadLocalVariable)
+    static byte GetOrLoadIdentifier(ReadOnlyMemory<char> name, ScopeCompilationContext context, SourcePosition sourcePosition, bool dontLoadLocalVariable)
     {
         var p = context.StackPosition;
 
@@ -1045,6 +1046,57 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         }
     }
 
+    uint GetRKIndex(ExpressionNode node, ScopeCompilationContext context)
+    {
+        if (node is IdentifierNode identifier)
+        {
+            return GetOrLoadIdentifier(identifier.Name, context, identifier.Position, true);
+        }
+        else if (TryGetConstant(node, context, out var constant))
+        {
+            return context.Function.GetConstantIndex(constant) + 256;
+        }
+        else
+        {
+            node.Accept(this, context);
+            return context.StackTopPosition;
+        }
+    }
+
+    static bool TryGetConstant(ExpressionNode node, ScopeCompilationContext context, out LuaValue value)
+    {
+        switch (node)
+        {
+            case NilLiteralNode:
+                value = LuaValue.Nil;
+                return true;
+            case BooleanLiteralNode booleanLiteral:
+                value = booleanLiteral.Value;
+                return true;
+            case NumericLiteralNode numericLiteral:
+                value = numericLiteral.Value;
+                return true;
+            case StringLiteralNode stringLiteral:
+                if (stringLiteral.IsShortLiteral)
+                {
+                    if (!StringHelper.TryFromStringLiteral(stringLiteral.Text.Span, out var str))
+                    {
+                        throw new LuaParseException(context.Function.ChunkName, stringLiteral.Position, $"invalid escape sequence near '{stringLiteral.Text}'");
+                    }
+
+                    value = str;
+                }
+                else
+                {
+                    value = stringLiteral.Text.ToString();
+                }
+                return true;
+            default:
+                value = default;
+                return false;
+        }
+    }
+
     static bool IsFixedNumberOfReturnValues(ExpressionNode node)
     {
         return node is not (CallFunctionExpressionNode or CallTableMethodExpressionNode or VariableArgumentsExpressionNode);
@@ -1064,37 +1116,43 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             {
                 case BinaryOperator.Equality:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Eq(falseIsSkip ? (byte)0 : (byte)1, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.Inequality:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Eq(falseIsSkip ? (byte)1 : (byte)0, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.LessThan:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Lt(falseIsSkip ? (byte)0 : (byte)1, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.LessThanOrEqual:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, b, c), node.Position);
                         return;
                     }
                 case BinaryOperator.GreaterThan:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Lt(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
                         return;
                     }
                 case BinaryOperator.GreaterThanOrEqual:
                     {
-                        (var b, var c) = GetBAndC(binaryExpression, context);
+                        var b = (ushort)GetRKIndex(binaryExpression.LeftNode, context);
+                        var c = (ushort)GetRKIndex(binaryExpression.RightNode, context);
                         context.PushInstruction(Instruction.Le(falseIsSkip ? (byte)0 : (byte)1, c, b), node.Position);
                         return;
                     }
@@ -1143,30 +1201,5 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             context.PushInstruction(Instruction.LoadNil(context.StackPosition, (ushort)varCount), rootNode.Position);
             context.StackPosition = (byte)(context.StackPosition + varCount);
         }
-    }
-
-    (byte b, byte c) GetBAndC(BinaryExpressionNode node, ScopeCompilationContext context)
-    {
-        byte b, c;
-        if (node.LeftNode is IdentifierNode leftIdentifier)
-        {
-            b = LoadIdentifier(leftIdentifier.Name, context, leftIdentifier.Position, true);
-        }
-        else
-        {
-            node.LeftNode.Accept(this, context);
-            b = (byte)(context.StackPosition - 1);
-        }
-        if (node.RightNode is IdentifierNode rightIdentifier)
-        {
-            c = LoadIdentifier(rightIdentifier.Name, context, rightIdentifier.Position, true);
-        }
-        else
-        {
-            node.RightNode.Accept(this, context);
-            c = (byte)(context.StackPosition - 1);
-        }
-
-        return (b, c);
     }
 }
