@@ -75,8 +75,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.String:
                 if (t == typeof(string))
                 {
-                    var v = (string)referenceValue!;
-                    result = Unsafe.As<string, T>(ref v);
+                    var v = referenceValue!;
+                    result = Unsafe.As<object, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(double))
@@ -137,8 +137,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.Function:
                 if (t == typeof(LuaFunction) || t.IsSubclassOf(typeof(LuaFunction)))
                 {
-                    var v = (LuaFunction)referenceValue!;
-                    result = Unsafe.As<LuaFunction, T>(ref v);
+                    var v = referenceValue!;
+                    result = Unsafe.As<object, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(object))
@@ -153,8 +153,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.Thread:
                 if (t == typeof(LuaThread))
                 {
-                    var v = (LuaThread)referenceValue!;
-                    result = Unsafe.As<LuaThread, T>(ref v);
+                    var v = referenceValue!;
+                    result = Unsafe.As<object, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(object))
@@ -169,8 +169,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.UserData:
                 if (t == typeof(LuaUserData) || t.IsSubclassOf(typeof(LuaUserData)))
                 {
-                    var v = (LuaUserData)referenceValue!;
-                    result = Unsafe.As<LuaUserData, T>(ref v);
+                    var v = referenceValue!;
+                    result = Unsafe.As<object, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(object))
@@ -185,8 +185,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.Table:
                 if (t == typeof(LuaTable))
                 {
-                    var v = (LuaTable)referenceValue!;
-                    result = Unsafe.As<LuaTable, T>(ref v);
+                    var v = referenceValue!;
+                    result = Unsafe.As<object, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(object))
