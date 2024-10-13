@@ -1,5 +1,6 @@
 using System.Buffers;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Lua.Internal;
 
 namespace Lua.Runtime;
@@ -915,9 +916,21 @@ public static partial class LuaVirtualMachine
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static LuaValue RK(LuaStack stack, Chunk chunk, ushort index, int frameBase)
+    static ref LuaValue RK(LuaStack stack, Chunk chunk, ushort index, int frameBase)
     {
-        return index >= 256 ? chunk.Constants[index - 256] : stack.UnsafeGet(index + frameBase);
+        if (index >= 256)
+        {
+#if NET6_0_OR_GREATER
+            return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(chunk.Constants), index - 256);
+#else
+            ref var reference = ref MemoryMarshal.GetReference(chunk.Constants.AsSpan());
+            return ref Unsafe.Add(ref reference, index - 256);
+#endif
+        }
+        else
+        {
+            return ref stack.UnsafeGet(index + frameBase);
+        }
     }
 
     static ValueTask<int> GetTableValue(LuaState state, Chunk chunk, int pc, LuaValue table, LuaValue key, Memory<LuaValue> buffer, CancellationToken cancellationToken)
