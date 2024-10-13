@@ -21,12 +21,10 @@ public sealed class LuaTable
 
     public LuaValue this[LuaValue key]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (key.Type is LuaValueType.Nil)
-            {
-                throw new ArgumentException("table index is nil");
-            }
+            if (key.Type is LuaValueType.Nil) ThrowIndexIsNil();
 
             if (TryGetInteger(key, out var index))
             {
@@ -40,11 +38,12 @@ public sealed class LuaTable
             if (dictionary.TryGetValue(key, out var value)) return value;
             return LuaValue.Nil;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
             if (key.Type is LuaValueType.Number && double.IsNaN(key.Read<double>()))
             {
-                throw new ArgumentException("table index is NaN");
+                ThrowIndexIsNaN();
             }
 
             if (TryGetInteger(key, out var index))
@@ -276,5 +275,15 @@ public sealed class LuaTable
 
         integer = default;
         return false;
+    }
+
+    static void ThrowIndexIsNil()
+    {
+        throw new ArgumentException("the table index is nil");
+    }
+
+    static void ThrowIndexIsNaN()
+    {
+        throw new ArgumentException("the table index is NaN");
     }
 }
