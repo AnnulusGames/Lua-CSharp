@@ -396,7 +396,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             b = 0;
         }
 
-        CompileExpressionList(node, node.ArgumentNodes, b - 1, context);
+        CompileExpressionList(node, node.ArgumentNodes, b - 2, context);
 
         // push call interuction
         if (isTailCall)

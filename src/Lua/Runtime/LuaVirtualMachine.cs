@@ -948,6 +948,7 @@ public static partial class LuaVirtualMachine
                     Thread = thread,
                     ArgumentCount = 2,
                     SourcePosition = chunk.SourcePositions[pc],
+                    FrameBase = stack.Count - 2,
                 }, methodBuffer, cancellationToken);
 
                 return methodBuffer[0];
