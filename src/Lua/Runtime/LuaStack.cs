@@ -34,7 +34,7 @@ public class LuaStack(int initialSize = 256)
     public void Push(LuaValue value)
     {
         EnsureCapacity(top + 1);
-        array[top] = value;
+        UnsafeGet(top) = value;
         top++;
     }
 
@@ -43,8 +43,8 @@ public class LuaStack(int initialSize = 256)
     {
         if (top == 0) ThrowEmptyStack();
         top--;
-        var item = array[top];
-        array[top] = default;
+        var item = UnsafeGet(top);
+        UnsafeGet(top) = default;
         return item;
     }
 
