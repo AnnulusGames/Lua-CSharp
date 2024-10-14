@@ -365,4 +365,4 @@ While `collectgarbage()` is available, it simply calls the corresponding .NET ga
 
 ## License
 
-Lua-CSharp is licensed under the MIT License.
+Lua-CSharp is licensed under the [MIT License](LICENSE).
