@@ -49,18 +49,6 @@ public class NBodyBenchmark
         return core.NLuaState.DoFile(core.FilePath);
     }
 
-    [Benchmark(Description = "NeoLua (DoChunk(code))")]
-    public Neo.IronLua.LuaResult Benchmark_NeoLua_String()
-    {
-        return core.NeoLuaEnvironment.DoChunk(core.SourceText, "chunk");
-    }
-
-    [Benchmark(Description = "NeoLua (DoChunk(fileName))")]
-    public Neo.IronLua.LuaResult Benchmark_NeoLua_File()
-    {
-        return core.NeoLuaEnvironment.DoChunk(core.FilePath);
-    }
-
     [Benchmark(Description = "Lua-CSharp (DoString)")]
     public async Task<LuaValue> Benchmark_LuaCSharp_String()
     {

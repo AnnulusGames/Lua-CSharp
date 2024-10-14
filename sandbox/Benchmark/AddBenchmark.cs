@@ -29,7 +29,6 @@ public class AddBenchmark
         });
         core.MoonSharpState.Globals["add"] = (Func<double, double, double>)Add;
         core.NLuaState.RegisterFunction("add", typeof(AddBenchmark).GetMethod(nameof(Add), BindingFlags.Static | BindingFlags.Public));
-        core.NeoLuaEnvironment.SetValue("add", (Func<double, double, double>)Add);
     }
 
     [IterationCleanup]
@@ -62,18 +61,6 @@ public class AddBenchmark
     public object[] Benchmark_NLua_File()
     {
         return core.NLuaState.DoFile(core.FilePath);
-    }
-
-    [Benchmark(Description = "NeoLua (DoChunk(code))")]
-    public Neo.IronLua.LuaResult Benchmark_NeoLua_String()
-    {
-        return core.NeoLuaEnvironment.DoChunk(core.SourceText, "chunk");
-    }
-
-    [Benchmark(Description = "NeoLua (DoChunk(fileName))")]
-    public Neo.IronLua.LuaResult Benchmark_NeoLua_File()
-    {
-        return core.NeoLuaEnvironment.DoChunk(core.FilePath);
     }
 
     [Benchmark(Description = "Lua-CSharp (DoString)")]

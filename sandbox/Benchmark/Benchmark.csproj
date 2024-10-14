@@ -10,7 +10,6 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.14.0" />
     <PackageReference Include="MoonSharp" Version="2.0.0" />
-    <PackageReference Include="NeoLua" Version="1.3.14" />
     <PackageReference Include="NLua" Version="1.7.3" />
   </ItemGroup>
 

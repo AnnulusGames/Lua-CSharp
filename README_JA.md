@@ -14,7 +14,11 @@ High performance Lua interpreter implemented in C# for .NET and Unity
 
 Lua-CSharpはC#実装のLuaインタプリタを提供するライブラリです。Lua-CSharpを導入することで、.NETアプリケーション内で簡単にLuaスクリプトを組み込むことが可能になります。
 
-// TODO: ベンチマークの追加
+Lua-CSharpは最新のC#の機能を活用し、低アロケーション・ハイパフォーマンスを念頭において設計されています。Lua-CSharpはC#アプリケーションに組み込まれることを前提としているため、C#-Lua間の相互運用時に最大のパフォーマンスを発揮するように最適化されています。以下は[MoonSharp](https://github.com/moonsharp-devs/moonsharp/), [NLua](https://github.com/NLua/NLua)と比較したベンチマークです。
+
+![img](docs/Benchmark.png)
+
+MoonSharpは多くの場合で十分な速度を発揮しますが、設計上非常に大きいアロケーションが発生します。NLuaはCバインディングであるため動作そのものは高速ですが、C#レイヤーとのやり取りの際に大きなオーバーヘッドがかかります。Lua-CSharpは完全にC#で実装されているため、C#コードとオーバーヘッドなしでやり取りが可能です。また、IL生成などを一切使用しないためAOT環境でも安定して動作します。
 
 ## 特徴
 
