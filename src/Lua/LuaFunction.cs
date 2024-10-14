@@ -7,6 +7,10 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
     public string Name { get; } = name;
     internal Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> Func { get; } = func;
 
+    public LuaFunction(Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> func) : this("anonymous", func)
+    {
+    }
+
     public async ValueTask<int> InvokeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var frame = new CallStackFrame
