@@ -1,5 +1,5 @@
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using Lua.Internal;
 
 namespace Lua.Runtime;
 
@@ -34,7 +34,7 @@ public class LuaStack(int initialSize = 256)
     public void Push(LuaValue value)
     {
         EnsureCapacity(top + 1);
-        array[top] = value;
+        UnsafeGet(top) = value;
         top++;
     }
 
@@ -43,8 +43,8 @@ public class LuaStack(int initialSize = 256)
     {
         if (top == 0) ThrowEmptyStack();
         top--;
-        var item = array[top];
-        array[top] = default;
+        var item = UnsafeGet(top);
+        UnsafeGet(top) = default;
         return item;
     }
 
@@ -91,14 +91,7 @@ public class LuaStack(int initialSize = 256)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public ref LuaValue UnsafeGet(int index)
     {
-        // if (index < 0 || index >= array.Length) throw new IndexOutOfRangeException();
-
-#if NET6_0_OR_GREATER
-        return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
-#else
-        ref var reference = ref MemoryMarshal.GetReference(array.AsSpan());
-        return ref Unsafe.Add(ref reference, index);
-#endif
+        return ref MemoryMarshalEx.UnsafeElementAt(array, index);
     }
 
     static void ThrowEmptyStack()

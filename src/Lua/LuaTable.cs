@@ -21,30 +21,29 @@ public sealed class LuaTable
 
     public LuaValue this[LuaValue key]
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get
         {
-            if (key.Type is LuaValueType.Nil)
-            {
-                throw new ArgumentException("table index is nil");
-            }
+            if (key.Type is LuaValueType.Nil) ThrowIndexIsNil();
 
             if (TryGetInteger(key, out var index))
             {
                 if (index > 0 && index <= array.Length)
                 {
                     // Arrays in Lua are 1-origin...
-                    return array[index - 1];
+                    return MemoryMarshalEx.UnsafeElementAt(array, index - 1);
                 }
             }
 
             if (dictionary.TryGetValue(key, out var value)) return value;
             return LuaValue.Nil;
         }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            if (key.Type is LuaValueType.Number && double.IsNaN(key.Read<double>()))
+            if (key.Type is LuaValueType.Number && double.IsNaN(key.UnsafeRead<double>()))
             {
-                throw new ArgumentException("table index is NaN");
+                ThrowIndexIsNaN();
             }
 
             if (TryGetInteger(key, out var index))
@@ -52,7 +51,7 @@ public sealed class LuaTable
                 if (0 < index && index <= Math.Max(array.Length * 2, 8))
                 {
                     EnsureArrayCapacity(index);
-                    array[index - 1] = value;
+                    MemoryMarshalEx.UnsafeElementAt(array, index - 1) = value;
                     return;
                 }
             }
@@ -96,7 +95,7 @@ public sealed class LuaTable
         {
             if (index > 0 && index <= array.Length)
             {
-                value = array[index - 1];
+                value = MemoryMarshalEx.UnsafeElementAt(array, index - 1);
                 return value.Type is not LuaValueType.Nil;
             }
         }
@@ -113,7 +112,8 @@ public sealed class LuaTable
 
         if (TryGetInteger(key, out var index))
         {
-            return index > 0 && index <= array.Length && array[index - 1].Type != LuaValueType.Nil;
+            return index > 0 && index <= array.Length &&
+                MemoryMarshalEx.UnsafeElementAt(array, index - 1).Type != LuaValueType.Nil;
         }
 
         return dictionary.TryGetValue(key, out var value) && value.Type is not LuaValueType.Nil;
@@ -127,13 +127,14 @@ public sealed class LuaTable
         }
 
         var arrayIndex = index - 1;
-        var value = array[arrayIndex];
+        var value = MemoryMarshalEx.UnsafeElementAt(array, arrayIndex);
 
         if (arrayIndex < array.Length - 1)
         {
             array.AsSpan(arrayIndex + 1).CopyTo(array.AsSpan(arrayIndex));
         }
-        array[^1] = default;
+        
+        MemoryMarshalEx.UnsafeElementAt(array, array.Length - 1) = default;
 
         return value;
     }
@@ -274,5 +275,15 @@ public sealed class LuaTable
 
         integer = default;
         return false;
+    }
+
+    static void ThrowIndexIsNil()
+    {
+        throw new ArgumentException("the table index is nil");
+    }
+
+    static void ThrowIndexIsNaN()
+    {
+        throw new ArgumentException("the table index is NaN");
     }
 }

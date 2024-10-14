@@ -1,40 +1,20 @@
-using System.Reflection;
 using BenchmarkDotNet.Attributes;
 using Lua;
 using Lua.Standard;
 using MoonSharp.Interpreter;
 
-sealed class AddFunction : Lua.LuaFunction
-{
-    protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        buffer.Span[0] = context.GetArgument<double>(0) + context.GetArgument<double>(1);
-        return new(1);
-    }
-}
-
 [Config(typeof(BenchmarkConfig))]
-public class AddBenchmark
+public class NBodyBenchmark
 {
-    BenchmarkCore core = new();
+    BenchmarkCore core = default!;
     LuaValue[] buffer = new LuaValue[1];
-
-    public static double Add(double x, double y)
-    {
-        return x + y;
-    }
 
     [IterationSetup]
     public void Setup()
     {
         core = new();
-        core.Setup("add.lua");
+        core.Setup("n-body.lua");
         core.LuaCSharpState.OpenStandardLibraries();
-
-        core.LuaCSharpState.Environment["add"] = new AddFunction();
-        core.MoonSharpState.Globals["add"] = (Func<double, double, double>)Add;
-        core.NLuaState.RegisterFunction("add", typeof(AddBenchmark).GetMethod(nameof(Add), BindingFlags.Static | BindingFlags.Public));
-        core.NeoLuaEnvironment.SetValue("add", (Func<double, double, double>)Add);
     }
 
     [IterationCleanup]

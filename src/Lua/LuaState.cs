@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using Lua.Internal;
 using Lua.Loaders;
 using Lua.Runtime;
@@ -70,8 +71,8 @@ public sealed class LuaState
                 ArgumentCount = 0,
                 FrameBase = 0,
                 SourcePosition = null,
-                RootChunkName = chunk.Name ?? DefaultChunkName,
-                ChunkName = chunk.Name ?? DefaultChunkName,
+                RootChunkName = chunk.Name,
+                ChunkName = chunk.Name,
             }, buffer, cancellationToken);
         }
         finally
@@ -97,6 +98,7 @@ public sealed class LuaState
         };
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal bool TryGetMetatable(LuaValue value, [NotNullWhen(true)] out LuaTable? result)
     {
         result = value.Type switch
@@ -107,14 +109,15 @@ public sealed class LuaState
             LuaValueType.Number => numberMetatable,
             LuaValueType.Function => functionMetatable,
             LuaValueType.Thread => threadMetatable,
-            LuaValueType.UserData => value.Read<LuaUserData>().Metatable,
-            LuaValueType.Table => value.Read<LuaTable>().Metatable,
+            LuaValueType.UserData => value.UnsafeRead<LuaUserData>().Metatable,
+            LuaValueType.Table => value.UnsafeRead<LuaTable>().Metatable,
             _ => null
         };
 
         return result != null;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetMetatable(LuaValue value, LuaTable metatable)
     {
         switch (value.Type)
@@ -138,10 +141,10 @@ public sealed class LuaState
                 threadMetatable = metatable;
                 break;
             case LuaValueType.UserData:
-                value.Read<LuaUserData>().Metatable = metatable;
+                value.UnsafeRead<LuaUserData>().Metatable = metatable;
                 break;
             case LuaValueType.Table:
-                value.Read<LuaTable>().Metatable = metatable;
+                value.UnsafeRead<LuaTable>().Metatable = metatable;
                 break;
         }
     }

@@ -22,7 +22,7 @@ public sealed class ToNumberFunction : LuaFunction
         double? value = null;
         if (e.Type is LuaValueType.Number)
         {
-            value = e.Read<double>();
+            value = e.UnsafeRead<double>();
         }
         else if (e.TryRead<string>(out var str))
         {

@@ -1,8 +1,10 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Lua.CodeAnalysis;
 
 namespace Lua;
 
+[StructLayout(LayoutKind.Auto)]
 public readonly record struct LuaFunctionExecutionContext
 {
     public required LuaState State { get; init; }

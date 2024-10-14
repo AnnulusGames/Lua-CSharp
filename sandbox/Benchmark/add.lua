@@ -1,7 +1,7 @@
 local x = 0
 
-for i = 0, 10000 do
-    x = x + i;
+for _ = 0, 10000 do
+    x = add(x, 1)
 end
 
 return x
