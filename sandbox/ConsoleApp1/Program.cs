@@ -3,30 +3,9 @@ using Lua.CodeAnalysis.Compilation;
 using Lua.Runtime;
 using Lua;
 using Lua.Standard;
-using System.Reflection;
 
 var state = LuaState.Create();
 state.OpenStandardLibraries();
-
-state.Environment["wait"] = LuaFunction.Create(async (@args, ct) =>
-{
-    await Task.Delay(TimeSpan.FromSeconds(args[0].Read<double>()), ct);
-    return default!;
-});
-
-state.Environment["dumpframe"] = LuaFunction.Create((@args, ct) =>
-{
-    var thread = state.CurrentThread;
-    Console.WriteLine(thread.GetCallStackFrames()[^2]);
-    return default;
-});
-
-state.Environment["dumpstack"] = LuaFunction.Create((@args, ct) =>
-{
-    var thread = state.CurrentThread;
-    thread.GetType().GetMethod("DumpStackValues", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)!.Invoke(thread, null);
-    return default;
-});
 
 try
 {

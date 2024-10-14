@@ -199,13 +199,21 @@ Console.WriteLine(funcResults[0]);
 
 ### C#の関数をLua側から呼び出す
 
-`LuaFunction.Create()`を用いてラムダ式からLuaFunctionを作成できます。
+ラムダ式からLuaFunctionを作成することが可能です。
 
 ```cs
 // グローバル環境に関数を追加
-state.Environment["add"] = LuaFunction.Create((args, ct) =>
+state.Environment["add"] = new LuaFunction((context, buffer, ct) =>
 {
-    return [args[0].Read<double>() + ]
+    // context.GetArgument<T>()で引数を取得
+    var arg0 = context.GetArgument<double>(0);
+    var arg1 = context.GetArgument<double>(1);
+
+    // バッファに戻り値を記録
+    buffer.Span[0] = arg0 + arg1;
+
+    // 戻り値の数を返す
+    return new(1);
 });
 
 // Luaスクリプトを実行
@@ -221,7 +229,31 @@ Console.WriteLine(results[i]);
 return add(1, 2)
 ```
 
-ただし、`LuaFunction.Create()`で作成された関数は呼び出し時に余計なアロケーションを発生させます。最良のパフォーマンスを得るためには`LuaFunction`を継承したクラスを実装してください。
+また、`LuaFunction`は非同期メソッドとして動作します。そのため、以下のような関数を定義することでLua側から処理の待機を行うことも可能です。
+
+```cs
+// 与えられた秒数だけTask.Delayで待機する関数を定義
+state.Environment["wait"] = new LuaFunction(async (context, buffer, ct) =>
+{
+    var sec = context.GetArgument<double>(0);
+    await Task.Delay(TimeSpan.FromSeconds(sec));
+    return 0;
+});
+
+await state.DoFileAsync("sample.lua");
+```
+
+```lua
+-- sample.lua
+
+-- 1秒ごとにインクリメントされた値がコンソールに表示される
+local i = 0
+while true do
+    i = i + 1
+    print(i)
+    wait(1.0)
+end
+```
 
 ## コルーチン
 
