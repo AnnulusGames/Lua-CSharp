@@ -250,14 +250,20 @@ await state.DoFileAsync("sample.lua");
 ```lua
 -- sample.lua
 
--- 1秒ごとにインクリメントされた値がコンソールに表示される
-local i = 0
-while true do
-    i = i + 1
-    print(i)
-    wait(1.0)
-end
+print "hello!"
+
+wait(1.0) -- 1秒待機する
+
+print "how are you?"
+
+wait(1.0) -- 1秒待機する
+
+print "goodbye!"
 ```
+
+このコードは以下の図のように、awaitで待機した後にLuaスクリプトの実行を再開することができます。これはゲームに組み込むスクリプトを記述する際などに非常に有用です。
+
+![img](docs/img1.png)
 
 ## コルーチン
 

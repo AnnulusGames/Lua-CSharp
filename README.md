@@ -250,14 +250,20 @@ await state.DoFileAsync("sample.lua");
 ```lua
 -- sample.lua
 
--- The incremented value will be printed to the console every second
-local i = 0
-while true do
-    i = i + 1
-    print(i)
-    wait(1.0)
-end
+print "hello!"
+
+wait(1.0) -- wait 1 sec
+
+print "how are you?"
+
+wait(1.0) -- wait 1 sec
+
+print "goodbye!"
 ```
+
+This code can resume the execution of the Lua script after waiting with await, as shown in the following figure. This is very useful when writing scripts to be incorporated into games.
+
+![img](docs/img1.png)
 
 ## Coroutines
 
