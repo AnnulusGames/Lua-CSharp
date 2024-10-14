@@ -6,6 +6,7 @@ public static class OpenLibsExtensions
     {
         state.OpenBasicLibrary();
         state.OpenBitwiseLibrary();
+        state.OpenCoroutineLibrary();
         state.OpenIOLibrary();
         state.OpenMathLibrary();
         state.OpenModuleLibrary();
