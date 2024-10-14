@@ -8,7 +8,7 @@ public static class LuaStateExtensions
 {
     public static ValueTask<int> DoStringAsync(this LuaState state, string source, Memory<LuaValue> buffer, string? chunkName = null, CancellationToken cancellationToken = default)
     {
-        var syntaxTree = LuaSyntaxTree.Parse(source);
+        var syntaxTree = LuaSyntaxTree.Parse(source, chunkName);
         var chunk = LuaCompiler.Default.Compile(syntaxTree, chunkName);
         return state.RunAsync(chunk, buffer, cancellationToken);
     }
