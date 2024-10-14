@@ -199,20 +199,28 @@ Console.WriteLine(funcResults[0]);
 
 ### Calling C# Functions from Lua
 
-You can create a `LuaFunction` from a lambda expression using `LuaFunction.Create()`.
+It is possible to create a `LuaFunction` from a lambda expression.
 
 ```cs
-// Add a function to the global environment
-state.Environment["add"] = LuaFunction.Create((args, ct) =>
+// Add the function to the global environment
+state.Environment["add"] = new LuaFunction((context, buffer, ct) =>
 {
-    return new[] { args[0].Read<double>() + args[1].Read<double>() };
+    // Get the arguments using context.GetArgument<T>()
+    var arg0 = context.GetArgument<double>(0);
+    var arg1 = context.GetArgument<double>(1);
+
+    // Write the return value to the buffer
+    buffer.Span[0] = arg0 + arg1;
+
+    // Return the number of values
+    return new(1);
 });
 
-// Execute Lua script
+// Execute a Lua script
 var results = await state.DoFileAsync("cs2lua.lua");
 
 // 3
-Console.WriteLine(results[0]);
+Console.WriteLine(results[i]);
 ```
 
 ```lua
@@ -221,7 +229,31 @@ Console.WriteLine(results[0]);
 return add(1, 2)
 ```
 
-However, the function created with `LuaFunction.Create()` causes extra allocations during invocation. For optimal performance, you should implement a class that inherits from `LuaFunction`.
+Additionally, `LuaFunction` operates asynchronously. Therefore, you can define a function that waits for an operation in Lua, such as the example below:
+
+```cs
+// Define a function that waits for the given number of seconds using Task.Delay
+state.Environment["wait"] = new LuaFunction(async (context, buffer, ct) =>
+{
+    var sec = context.GetArgument<double>(0);
+    await Task.Delay(TimeSpan.FromSeconds(sec));
+    return 0;
+});
+
+await state.DoFileAsync("sample.lua");
+```
+
+```lua
+-- sample.lua
+
+-- The incremented value will be printed to the console every second
+local i = 0
+while true do
+    i = i + 1
+    print(i)
+    wait(1.0)
+end
+```
 
 ## Coroutines
 
