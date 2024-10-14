@@ -1,11 +1,11 @@
-using System.Runtime.CompilerServices;
 using Lua.Runtime;
 
 namespace Lua;
 
-public abstract partial class LuaFunction
+public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> func)
 {
-    public virtual string Name => GetType().Name;
+    public string Name { get; } = name;
+    internal Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> Func { get; } = func;
 
     public async ValueTask<int> InvokeAsync(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
@@ -22,19 +22,11 @@ public abstract partial class LuaFunction
         context.Thread.PushCallStackFrame(frame);
         try
         {
-            return await InvokeAsyncCore(context, buffer, cancellationToken);
+            return await Func(context, buffer, cancellationToken);
         }
         finally
         {
             context.Thread.PopCallStackFrame();
         }
-    }
-
-    protected abstract ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken);
-
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal ValueTask<int> InternalInvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        return InvokeAsyncCore(context, buffer, cancellationToken);
     }
 }

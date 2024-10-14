@@ -8,6 +8,7 @@ public sealed class Closure : LuaFunction
     FastListCore<UpValue> upValues;
 
     public Closure(LuaState state, Chunk proto, LuaTable? environment = null)
+        : base(proto.Name, (context, buffer, ct) => LuaVirtualMachine.ExecuteClosureAsync(context.State, context.Thread.GetCurrentFrame(), buffer, ct))
     {
         this.proto = proto;
 
@@ -22,13 +23,6 @@ public sealed class Closure : LuaFunction
 
     public Chunk Proto => proto;
     public ReadOnlySpan<UpValue> UpValues => upValues.AsSpan();
-
-    public override string Name => Proto.Name;
-
-    protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        return LuaVirtualMachine.ExecuteClosureAsync(context.State, this, context.Thread.GetCurrentFrame(), buffer, cancellationToken);
-    }
 
     static UpValue GetUpValueFromDescription(LuaState state, UpValue envUpValue, Chunk proto, UpValueInfo description, int depth)
     {

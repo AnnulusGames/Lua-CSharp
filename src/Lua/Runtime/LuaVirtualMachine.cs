@@ -6,10 +6,11 @@ namespace Lua.Runtime;
 
 public static partial class LuaVirtualMachine
 {
-    internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, Closure closure, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = state.CurrentThread;
         var stack = thread.Stack;
+        var closure = (Closure)frame.Function;
         var chunk = closure.Proto;
         var rootChunk = chunk.GetRoot();
 
@@ -720,7 +721,7 @@ public static partial class LuaVirtualMachine
                             int rawResultCount;
                             try
                             {
-                                rawResultCount = await func.InternalInvokeAsyncCore(new()
+                                rawResultCount = await func.Func(new()
                                 {
                                     State = state,
                                     Thread = thread,

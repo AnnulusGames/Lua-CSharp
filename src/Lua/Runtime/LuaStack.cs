@@ -39,6 +39,14 @@ public class LuaStack(int initialSize = 256)
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushRange(ReadOnlySpan<LuaValue> values)
+    {
+        EnsureCapacity(top + values.Length);
+        values.CopyTo(array.AsSpan()[top..]);
+        top += values.Length;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public LuaValue Pop()
     {
         if (top == 0) ThrowEmptyStack();

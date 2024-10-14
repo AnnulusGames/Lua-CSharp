@@ -4,15 +4,6 @@ using Lua;
 using Lua.Standard;
 using MoonSharp.Interpreter;
 
-sealed class AddFunction : Lua.LuaFunction
-{
-    protected override ValueTask<int> InvokeAsyncCore(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        buffer.Span[0] = context.GetArgument<double>(0) + context.GetArgument<double>(1);
-        return new(1);
-    }
-}
-
 [Config(typeof(BenchmarkConfig))]
 public class AddBenchmark
 {
@@ -31,7 +22,11 @@ public class AddBenchmark
         core.Setup("add.lua");
         core.LuaCSharpState.OpenStandardLibraries();
 
-        core.LuaCSharpState.Environment["add"] = new AddFunction();
+        core.LuaCSharpState.Environment["add"] = new LuaFunction("add", (context, buffer, ct) =>
+        {
+            buffer.Span[0] = context.GetArgument<double>(0) + context.GetArgument<double>(1);
+            return new(1);
+        });
         core.MoonSharpState.Globals["add"] = (Func<double, double, double>)Add;
         core.NLuaState.RegisterFunction("add", typeof(AddBenchmark).GetMethod(nameof(Add), BindingFlags.Static | BindingFlags.Public));
         core.NeoLuaEnvironment.SetValue("add", (Func<double, double, double>)Add);
