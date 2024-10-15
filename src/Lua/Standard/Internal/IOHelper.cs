@@ -25,7 +25,7 @@ internal static class IOHelper
         try
         {
             var stream = File.Open(fileName, fileMode, fileAccess);
-            buffer.Span[0] = new FileHandle(stream);
+            buffer.Span[0] = new FileHandle(stream).AsLuaValue();
             return 1;
         }
         catch (IOException ex)
@@ -76,7 +76,7 @@ internal static class IOHelper
             return 3;
         }
 
-        buffer.Span[0] = file;
+        buffer.Span[0] = file.AsLuaValue();
         return 1;
     }
 

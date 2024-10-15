@@ -167,7 +167,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     break;
                 }
             case LuaValueType.UserData:
-                if (t == typeof(LuaUserData) || t.IsSubclassOf(typeof(LuaUserData)))
+                if (t == typeof(ILuaUserData) || typeof(ILuaUserData).IsAssignableFrom(t))
                 {
                     var v = referenceValue!;
                     result = Unsafe.As<object, T>(ref v);
@@ -283,7 +283,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         referenceValue = value;
     }
 
-    public LuaValue(LuaUserData value)
+    public LuaValue(ILuaUserData value)
     {
         type = LuaValueType.UserData;
         referenceValue = value;
@@ -315,11 +315,6 @@ public readonly struct LuaValue : IEquatable<LuaValue>
     }
 
     public static implicit operator LuaValue(LuaThread value)
-    {
-        return new(value);
-    }
-
-    public static implicit operator LuaValue(LuaUserData value)
     {
         return new(value);
     }

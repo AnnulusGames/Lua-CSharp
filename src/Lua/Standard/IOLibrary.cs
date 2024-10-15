@@ -13,9 +13,9 @@ public static class IOLibrary
             io[func.Name] = func;
         }
 
-        io["stdio"] = new FileHandle(Console.OpenStandardInput());
-        io["stdout"] = new FileHandle(Console.OpenStandardOutput());
-        io["stderr"] = new FileHandle(Console.OpenStandardError());
+        io["stdio"] = new FileHandle(Console.OpenStandardInput()).AsLuaValue();
+        io["stdout"] = new FileHandle(Console.OpenStandardOutput()).AsLuaValue();
+        io["stderr"] = new FileHandle(Console.OpenStandardError()).AsLuaValue();
 
         state.Environment["io"] = io;
         state.LoadedModules["io"] = io;
@@ -86,16 +86,16 @@ public static class IOLibrary
         var arg = context.Arguments[0];
         if (arg.TryRead<FileHandle>(out var file))
         {
-            io["stdio"] = file;
-            buffer.Span[0] = file;
+            io["stdio"] = file.AsLuaValue();
+            buffer.Span[0] = file.AsLuaValue();
             return new(1);
         }
         else
         {
             var stream = File.Open(arg.ToString()!, FileMode.Open, FileAccess.ReadWrite);
             var handle = new FileHandle(stream);
-            io["stdio"] = handle;
-            buffer.Span[0] = handle;
+            io["stdio"] = handle.AsLuaValue();
+            buffer.Span[0] = handle.AsLuaValue();
             return new(1);
         }
     }
@@ -164,16 +164,16 @@ public static class IOLibrary
         var arg = context.Arguments[0];
         if (arg.TryRead<FileHandle>(out var file))
         {
-            io["stdout"] = file;
-            buffer.Span[0] = file;
+            io["stdout"] = file.AsLuaValue();
+            buffer.Span[0] = file.AsLuaValue();
             return new(1);
         }
         else
         {
             var stream = File.Open(arg.ToString()!, FileMode.Open, FileAccess.ReadWrite);
             var handle = new FileHandle(stream);
-            io["stdout"] = handle;
-            buffer.Span[0] = handle;
+            io["stdout"] = handle.AsLuaValue();
+            buffer.Span[0] = handle.AsLuaValue();
             return new(1);
         }
     }
