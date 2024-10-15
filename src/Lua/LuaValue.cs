@@ -203,7 +203,19 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         result = default!;
         return false;
     }
-
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryReadNumber(out double result)
+    {
+        if (type == LuaValueType.Number)
+        {
+            result = value;
+            return true;
+        }
+        result = default!;
+        return false;
+    }
+   
     public T Read<T>()
     {
         if (!TryRead<T>(out var result)) throw new InvalidOperationException($"Cannot convert LuaValueType.{Type} to {typeof(T).FullName}.");

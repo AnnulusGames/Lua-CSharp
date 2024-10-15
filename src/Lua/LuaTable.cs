@@ -267,7 +267,7 @@ public sealed class LuaTable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     static bool TryGetInteger(LuaValue value, out int integer)
     {
-        if (value.TryRead<double>(out var num) && MathEx.IsInteger(num))
+        if (value.TryReadNumber(out var num) && MathEx.IsInteger(num))
         {
             integer = (int)num;
             return true;
