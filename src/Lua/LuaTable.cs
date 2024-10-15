@@ -247,9 +247,8 @@ public sealed class LuaTable
         // Move some of the elements of the hash part to a newly allocated array
         foreach (var kv in dictionary)
         {
-            if (kv.Key.TryRead<double>(out var d) && MathEx.IsInteger(d))
+            if (TryGetInteger(kv.Key, out var index))
             {
-                var index = (int)d;
                 if (index > prevLength && index <= newLength)
                 {
                     indexList.Add((index, kv.Value));
