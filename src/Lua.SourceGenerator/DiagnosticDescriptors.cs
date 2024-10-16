@@ -37,4 +37,12 @@ public static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidMethodType = new(
+        id: "LUAC005",
+        title: "The arguments and return types must be LuaValue or types that can be converted to LuaValue.",
+        messageFormat: "The arguments and return types must be LuaValue or types that can be converted to LuaValue.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }

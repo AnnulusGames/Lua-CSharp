@@ -36,7 +36,7 @@ public partial class LuaObjectGenerator : IIncrementalGenerator
                 {
                     var typeMeta = new TypeMetadata((TypeDeclarationSyntax)x.TargetNode, (INamedTypeSymbol)x.TargetSymbol, references);
 
-                    if (TryEmit(typeMeta, builder, in sourceProductionContext))
+                    if (TryEmit(typeMeta, builder, references, compilation, in sourceProductionContext))
                     {
                         var fullType = typeMeta.FullTypeName
                             .Replace("global::", "")

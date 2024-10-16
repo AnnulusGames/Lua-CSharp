@@ -5,6 +5,7 @@ namespace Lua.SourceGenerator;
 public class PropertyMetadata
 {
     public ISymbol Symbol { get; }
+    public ITypeSymbol Type { get; }
     public string TypeFullName { get; }
     public bool IsStatic { get; }
     public bool IsReadOnly { get; }
@@ -18,16 +19,19 @@ public class PropertyMetadata
 
         if (symbol is IFieldSymbol field)
         {
+            Type = field.Type;
             TypeFullName = field.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             IsReadOnly = field.IsReadOnly;
         }
         else if (symbol is IPropertySymbol property)
         {
+            Type = property.Type;
             TypeFullName = property.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
             IsReadOnly = property.SetMethod == null;
         }
         else
         {
+            Type = default!;
             TypeFullName = "";
         }
 

@@ -1,10 +1,11 @@
 using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 
 namespace Lua.SourceGenerator;
 
 partial class LuaObjectGenerator
 {
-    static bool TryEmit(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
+    static bool TryEmit(TypeMetadata typeMetadata, CodeBuilder builder, SymbolReferences references, Compilation compilation, in SourceProductionContext context)
     {
         try
         {
@@ -37,6 +38,11 @@ partial class LuaObjectGenerator
                     DiagnosticDescriptors.AbstractNotAllowed,
                     typeMetadata.Syntax.Identifier.GetLocation(),
                     typeMetadata.TypeName));
+                error = true;
+            }
+
+            if (!ValidateMembers(typeMetadata, compilation, references, context))
+            {
                 error = true;
             }
 
@@ -131,6 +137,52 @@ $$"""
         {
             return false;
         }
+    }
+
+    static bool ValidateMembers(TypeMetadata typeMetadata, Compilation compilation, SymbolReferences references, in SourceProductionContext context)
+    {
+        var error = true;
+
+        foreach (var property in typeMetadata.Properties)
+        {
+            if (SymbolEqualityComparer.Default.Equals(property.Type, references.LuaValue)) continue;
+            if (SymbolEqualityComparer.Default.Equals(property.Type, typeMetadata.Symbol)) continue;
+
+            var conversion = compilation.ClassifyConversion(property.Type, references.LuaValue);
+            if (!conversion.Exists)
+            {
+                context.ReportDiagnostic(Diagnostic.Create(
+                    DiagnosticDescriptors.InvalidPropertyType,
+                    property.Symbol.Locations.FirstOrDefault(),
+                    property.Type.Name));
+
+                error = false;
+            }
+        }
+
+        foreach (var method in typeMetadata.Methods)
+        {
+            foreach (var typeSymbol in method.Symbol.Parameters
+                .Select(x => x.Type)
+                .Append(method.Symbol.ReturnType))
+            {
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol, references.LuaValue)) continue;
+                if (SymbolEqualityComparer.Default.Equals(typeSymbol, typeMetadata.Symbol)) continue;
+
+                var conversion = compilation.ClassifyConversion(typeSymbol, references.LuaValue);
+                if (!conversion.Exists)
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.InvalidMethodType,
+                        typeSymbol.Locations.FirstOrDefault(),
+                        typeSymbol.Name));
+
+                    error = false;
+                }
+            }
+        }
+
+        return error;
     }
 
     static bool TryEmitIndexMetamethod(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
