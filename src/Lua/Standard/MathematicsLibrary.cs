@@ -4,7 +4,7 @@ public static class MathematicsLibrary
 {
     public static void OpenMathLibrary(this LuaState state)
     {
-        state.Environment[RandomInstanceKey] = new RandomUserData(new Random()).AsLuaValue();
+        state.Environment[RandomInstanceKey] = new(new RandomUserData(new Random()));
 
         var math = new LuaTable(0, Functions.Length);
         foreach (var func in Functions)
@@ -258,7 +258,7 @@ public static class MathematicsLibrary
     public static ValueTask<int> RandomSeed(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<double>(0);
-        context.State.Environment[RandomInstanceKey] = new RandomUserData(new Random((int)BitConverter.DoubleToInt64Bits(arg0))).AsLuaValue();
+        context.State.Environment[RandomInstanceKey] = new(new RandomUserData(new Random((int)BitConverter.DoubleToInt64Bits(arg0))));
         return new(0);
     }
 

@@ -75,7 +75,7 @@ partial class LuaObjectGenerator
 
             // add ILuaUserData impl
             builder.Append(
-"""
+$$"""
         global::Lua.LuaTable? global::Lua.ILuaUserData.Metatable
         {
             get
@@ -93,6 +93,11 @@ partial class LuaObjectGenerator
             }
         }
         static global::Lua.LuaTable? __metatable;
+
+        public static implicit operator global::Lua.LuaValue({{typeMetadata.FullTypeName}} value)
+        {
+            return new(value);
+        }
 
 """, false);
 

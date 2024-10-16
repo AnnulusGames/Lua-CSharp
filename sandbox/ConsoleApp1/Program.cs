@@ -7,7 +7,7 @@ using Lua.Standard;
 var state = LuaState.Create();
 state.OpenStandardLibraries();
 
-state.Environment["vec3"] = new LVec3().AsLuaValue();
+state.Environment["vec3"] = new LVec3();
 
 try
 {
