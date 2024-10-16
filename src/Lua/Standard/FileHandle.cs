@@ -48,7 +48,7 @@ public class FileHandle : ILuaUserData
     static FileHandle()
     {
         fileHandleMetatable = new LuaTable();
-        fileHandleMetatable[Metamethods.Index] = IndexMetamethod;
+        fileHandleMetatable[MetamethodNames.Index] = IndexMetamethod;
     }
 
     public FileHandle(Stream stream)

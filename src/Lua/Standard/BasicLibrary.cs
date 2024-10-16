@@ -119,7 +119,7 @@ public static class BasicLibrary
             {
                 buffer.Span[0] = LuaValue.Nil;
             }
-            else if (table.Metatable.TryGetValue(Metamethods.Metatable, out var metatable))
+            else if (table.Metatable.TryGetValue(MetamethodNames.Metatable, out var metatable))
             {
                 buffer.Span[0] = metatable;
             }
@@ -141,7 +141,7 @@ public static class BasicLibrary
         var arg0 = context.GetArgument<LuaTable>(0);
 
         // If table has a metamethod __ipairs, calls it with table as argument and returns the first three results from the call.
-        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(Metamethods.IPairs, out var metamethod))
+        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(MetamethodNames.IPairs, out var metamethod))
         {
             if (!metamethod.TryRead<LuaFunction>(out var function))
             {
@@ -156,7 +156,7 @@ public static class BasicLibrary
         buffer.Span[2] = 0;
         return new(3);
     }
-    
+
     public static async ValueTask<int> LoadFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         // Lua-CSharp does not support binary chunks, the mode argument is ignored.
@@ -240,13 +240,13 @@ public static class BasicLibrary
             return new(1);
         }
     }
-    
+
     public static ValueTask<int> Pairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
 
         // If table has a metamethod __pairs, calls it with table as argument and returns the first three results from the call.
-        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(Metamethods.Pairs, out var metamethod))
+        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(MetamethodNames.Pairs, out var metamethod))
         {
             if (!metamethod.TryRead<LuaFunction>(out var function))
             {
@@ -352,7 +352,7 @@ public static class BasicLibrary
         arg0[arg1] = arg2;
         return new(0);
     }
-    
+
     public static ValueTask<int> Select(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
@@ -390,7 +390,7 @@ public static class BasicLibrary
             return default;
         }
     }
-    
+
     public static ValueTask<int> SetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
@@ -401,7 +401,7 @@ public static class BasicLibrary
             LuaRuntimeException.BadArgument(context.State.GetTraceback(), 2, "setmetatable", [LuaValueType.Nil, LuaValueType.Table]);
         }
 
-        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(Metamethods.Metatable, out _))
+        if (arg0.Metatable != null && arg0.Metatable.TryGetValue(MetamethodNames.Metatable, out _))
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "cannot change a protected metatable");
         }
@@ -559,7 +559,7 @@ public static class BasicLibrary
         var arg0 = context.GetArgument(0);
         return arg0.CallToStringAsync(context, buffer, cancellationToken);
     }
-    
+
     public static ValueTask<int> Type(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
