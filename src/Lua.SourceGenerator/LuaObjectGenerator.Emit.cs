@@ -96,6 +96,11 @@ partial class LuaObjectGenerator
 
 """, false);
 
+            if (!TryEmitMethods(typeMetadata, builder, context))
+            {
+                return false;
+            }
+
             if (!TryEmitIndexMetamethod(typeMetadata, builder, context))
             {
                 return false;
@@ -147,7 +152,12 @@ partial class LuaObjectGenerator
                     }
                 }
 
-                builder.AppendLine(@$"_ => throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""{typeMetadata.LuaTypeName}.{{key}} not found.""),");
+                foreach (var methodMetadata in typeMetadata.Methods)
+                {
+                    builder.AppendLine(@$"""{methodMetadata.LuaMemberName}"" => new global::Lua.LuaValue(__function_{methodMetadata.LuaMemberName}),");
+                }
+
+                builder.AppendLine(@$"_ => global::Lua.LuaValue.Nil,");
             }
             builder.AppendLine(";");
 
@@ -180,7 +190,7 @@ partial class LuaObjectGenerator
                     {
                         if (propertyMetadata.IsReadOnly)
                         {
-                            builder.AppendLine($@"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""{typeMetadata.LuaTypeName}.{{key}}cannot overwrite."");");
+                            builder.AppendLine($@"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""'{{key}}' cannot overwrite."");");
                         }
                         else if (propertyMetadata.IsStatic)
                         {
@@ -195,11 +205,21 @@ partial class LuaObjectGenerator
                     }
                 }
 
+                foreach (var methodMetadata in typeMetadata.Methods)
+                {
+                    builder.AppendLine(@$"case ""{methodMetadata.LuaMemberName}"":");
+
+                    using (builder.BeginIndentScope())
+                    {
+                        builder.AppendLine($@"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""'{{key}}' cannot overwrite."");");
+                    }
+                }
+
                 builder.AppendLine(@$"default:");
 
                 using (builder.BeginIndentScope())
                 {
-                    builder.AppendLine(@$"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""{typeMetadata.LuaTypeName}.{{key}} not found."");");
+                    builder.AppendLine(@$"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""'{{key}}'  not found."");");
                 }
             }
 
@@ -211,4 +231,45 @@ partial class LuaObjectGenerator
         return true;
     }
 
+    static bool TryEmitMethods(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
+    {
+        builder.AppendLine();
+
+        foreach (var methodMetadata in typeMetadata.Methods)
+        {
+            builder.AppendLine($"static readonly global::Lua.LuaFunction __function_{methodMetadata.LuaMemberName} = new global::Lua.LuaFunction((context, buffer, ct) =>");
+
+            using (builder.BeginBlockScope())
+            {
+                var index = 0;
+
+                foreach (var parameter in methodMetadata.Symbol.Parameters)
+                {
+                    builder.AppendLine($"var arg{index} = context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index});");
+                    index++;
+                }
+
+                if (methodMetadata.IsStatic)
+                {
+                    builder.Append($"var result = {typeMetadata.FullTypeName}.{methodMetadata.Symbol.Name}(");
+                    builder.Append(string.Join(",", Enumerable.Range(0, index).Select(x => $"arg{x}")));
+                    builder.AppendLine(");");
+                }
+                else
+                {
+
+                    builder.Append($"var result = userData.{methodMetadata.Symbol.Name}(");
+                    builder.Append(string.Join(",", Enumerable.Range(1, index).Select(x => $"arg{x}")));
+                    builder.AppendLine(");");
+                }
+
+                builder.AppendLine("buffer.Span[0] = new global::Lua.LuaValue(result);");
+                builder.AppendLine("return new(1);");
+            }
+
+            builder.AppendLine(");");
+        }
+
+        return true;
+    }
 }

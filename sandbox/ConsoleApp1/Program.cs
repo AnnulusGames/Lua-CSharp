@@ -7,6 +7,8 @@ using Lua.Standard;
 var state = LuaState.Create();
 state.OpenStandardLibraries();
 
+state.Environment["vec3"] = new LVec3().AsLuaValue();
+
 try
 {
     var source = File.ReadAllText("test.lua");

@@ -10,7 +10,6 @@ internal record class TypeMetadata
     public INamedTypeSymbol Symbol { get; }
     public string TypeName { get; }
     public string FullTypeName { get; }
-    public string LuaTypeName { get; }
     public PropertyMetadata[] Properties { get; }
     public MethodMetadata[] Methods { get; }
 
@@ -21,12 +20,6 @@ internal record class TypeMetadata
 
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
-
-        var objectAttribute = symbol.GetAttributes().FindAttributeShortName("LuaObjectAttribute")!;
-
-        LuaTypeName = objectAttribute.ConstructorArguments.Length > 0
-            ? (string)objectAttribute.ConstructorArguments[0].Value!
-            : symbol.Name;
 
         Properties = Symbol.GetAllMembers()
             .Where(x => x is (IFieldSymbol or IPropertySymbol) and { IsImplicitlyDeclared: false })
