@@ -25,7 +25,7 @@ public static class StringLibrary
             state.SetMetatable(key, metatable);
         }
 
-        metatable[MetamethodNames.Index] = new LuaFunction("index", (context, buffer, cancellationToken) =>
+        metatable[Metamethods.Index] = new LuaFunction("index", (context, buffer, cancellationToken) =>
         {
             context.GetArgument<string>(0);
             var key = context.GetArgument(1);

@@ -89,8 +89,8 @@ $$"""
                 if (__metatable != null) return __metatable;
 
                 __metatable = new();
-                __metatable[global::Lua.MetamethodNames.Index] = __metamethod_index;
-                __metatable[global::Lua.MetamethodNames.NewIndex] = __metamethod_newindex;
+                __metatable[global::Lua.Runtime.Metamethods.Index] = __metamethod_index;
+                __metatable[global::Lua.Runtime.Metamethods.NewIndex] = __metamethod_newindex;
                 return __metatable;
             }
             set

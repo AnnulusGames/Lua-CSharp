@@ -1,9 +1,8 @@
-namespace Lua;
+namespace Lua.Runtime;
 
-public static class MetamethodNames
+public static class Metamethods
 {
     public const string Metatable = "__metatable";
-
     public const string Index = "__index";
     public const string NewIndex = "__newindex";
     public const string Add = "__add";
