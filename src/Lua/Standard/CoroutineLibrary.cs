@@ -10,6 +10,7 @@ public sealed class CoroutineLibrary
             new("create", Create),
             new("resume", Resume),
             new("running", Running),
+            new("status", Status),
             new("wrap", Wrap),
             new("yield", Yield),
         ];
