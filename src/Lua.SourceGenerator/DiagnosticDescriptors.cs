@@ -33,7 +33,7 @@ public static class DiagnosticDescriptors
     public static readonly DiagnosticDescriptor InvalidPropertyType = new(
         id: "LUAC004",
         title: "The type of the field or property must be LuaValue or a type that can be converted to LuaValue.",
-        messageFormat: "The type of the field or property must be LuaValue or a type that can be converted to LuaValue.",
+        messageFormat: "The type of '{0}' must be LuaValue or a type that can be converted to LuaValue.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
