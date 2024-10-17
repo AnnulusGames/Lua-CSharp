@@ -5,28 +5,23 @@ using Lua.Runtime;
 
 namespace Lua.Standard;
 
-public static class TableLibrary
+public sealed class TableLibrary
 {
-    public static void OpenTableLibrary(this LuaState state)
-    {
-        var table = new LuaTable(0, Functions.Length);
-        foreach (var func in Functions)
-        {
-            table[func.Name] = func;
-        }
+    public static readonly TableLibrary Instance = new();
 
-        state.Environment["table"] = table;
-        state.LoadedModules["table"] = table;
+    public TableLibrary()
+    {
+        Functions = [
+            new("concat", Concat),
+            new("insert", Insert),
+            new("pack", Pack),
+            new("remove", Remove),
+            new("sort", Sort),
+            new("unpack", Unpack),
+        ];
     }
 
-    static readonly LuaFunction[] Functions = [
-        new("concat", Concat),
-        new("insert", Insert),
-        new("pack", Pack),
-        new("remove", Remove),
-        new("sort", Sort),
-        new("unpack", Unpack),
-    ];
+    public readonly LuaFunction[] Functions;
 
     // TODO: optimize
     static readonly Chunk defaultComparer = new()
@@ -47,7 +42,7 @@ public static class TableLibrary
         UpValues = [],
     };
 
-    public static ValueTask<int> Concat(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Concat(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.HasArgument(1)
@@ -86,7 +81,7 @@ public static class TableLibrary
         return new(1);
     }
 
-    public static ValueTask<int> Insert(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Insert(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var table = context.GetArgument<LuaTable>(0);
 
@@ -111,7 +106,7 @@ public static class TableLibrary
         return new(0);
     }
 
-    public static ValueTask<int> Pack(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Pack(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var table = new LuaTable(context.ArgumentCount, 1);
 
@@ -126,7 +121,7 @@ public static class TableLibrary
         return new(1);
     }
 
-    public static ValueTask<int> Remove(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Remove(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var table = context.GetArgument<LuaTable>(0);
         var n_arg = context.HasArgument(1)
@@ -157,7 +152,7 @@ public static class TableLibrary
         return new(1);
     }
 
-    public static async ValueTask<int> Sort(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> Sort(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.HasArgument(1)
@@ -168,7 +163,7 @@ public static class TableLibrary
         return 0;
     }
 
-    static async ValueTask QuickSortAsync(LuaFunctionExecutionContext context, Memory<LuaValue> memory, int low, int high, LuaFunction comparer, CancellationToken cancellationToken)
+    async ValueTask QuickSortAsync(LuaFunctionExecutionContext context, Memory<LuaValue> memory, int low, int high, LuaFunction comparer, CancellationToken cancellationToken)
     {
         if (low < high)
         {
@@ -178,7 +173,7 @@ public static class TableLibrary
         }
     }
 
-    static async ValueTask<int> PartitionAsync(LuaFunctionExecutionContext context, Memory<LuaValue> memory, int low, int high, LuaFunction comparer, CancellationToken cancellationToken)
+    async ValueTask<int> PartitionAsync(LuaFunctionExecutionContext context, Memory<LuaValue> memory, int low, int high, LuaFunction comparer, CancellationToken cancellationToken)
     {
         using var methodBuffer = new PooledArray<LuaValue>(1);
 
@@ -207,12 +202,12 @@ public static class TableLibrary
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    static void Swap(Span<LuaValue> span, int i, int j)
+    void Swap(Span<LuaValue> span, int i, int j)
     {
         (span[i], span[j]) = (span[j], span[i]);
     }
 
-    public static ValueTask<int> Unpack(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Unpack(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.HasArgument(1)

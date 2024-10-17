@@ -4,66 +4,65 @@ using Lua.Runtime;
 
 namespace Lua.Standard;
 
-public static class BasicLibrary
+public sealed class BasicLibrary
 {
-    public static void OpenBasicLibrary(this LuaState state)
+    public static readonly BasicLibrary Instance = new();
+
+    public BasicLibrary()
     {
-        state.Environment["_G"] = state.Environment;
-        state.Environment["_VERSION"] = "Lua 5.2";
-        foreach (var func in Functions)
+        Functions = [
+            new("assert", Assert),
+            new("collectgarbage", CollectGarbage),
+            new("dofile", DoFile),
+            new("error", Error),
+            new("getmetatable", GetMetatable),
+            new("ipairs", IPairs),
+            new("loadfile", LoadFile),
+            new("load", Load),
+            new("next", Next),
+            new("pairs", Pairs),
+            new("pcall", PCall),
+            new("print", Print),
+            new("rawequal", RawEqual),
+            new("rawget", RawGet),
+            new("rawlen", RawLen),
+            new("rawset", RawSet),
+            new("select", Select),
+            new("setmetatable", SetMetatable),
+            new("tonumber", ToNumber),
+            new("tostring", ToString),
+            new("type", Type),
+            new("xpcall", XPCall),
+        ];
+
+        IPairsIterator = new("iterator", (context, buffer, cancellationToken) =>
         {
-            state.Environment[func.Name] = func;
-        }
+            var table = context.GetArgument<LuaTable>(0);
+            var i = context.GetArgument<double>(1);
+
+            i++;
+            if (table.TryGetValue(i, out var value))
+            {
+                buffer.Span[0] = i;
+                buffer.Span[1] = value;
+            }
+            else
+            {
+                buffer.Span[0] = LuaValue.Nil;
+                buffer.Span[1] = LuaValue.Nil;
+            }
+
+            return new(2);
+        });
+
+        PairsIterator = new("iterator", Next);
     }
 
-    static readonly LuaFunction[] Functions = [
-        new("assert", Assert),
-        new("collectgarbage", CollectGarbage),
-        new("dofile", DoFile),
-        new("error", Error),
-        new("getmetatable", GetMetatable),
-        new("ipairs", IPairs),
-        new("loadfile", LoadFile),
-        new("load", Load),
-        new("next", Next),
-        new("pairs", Pairs),
-        new("pcall", PCall),
-        new("print", Print),
-        new("rawequal", RawEqual),
-        new("rawget", RawGet),
-        new("rawlen", RawLen),
-        new("rawset", RawSet),
-        new("select", Select),
-        new("setmetatable", SetMetatable),
-        new("tonumber", ToNumber),
-        new("tostring", ToString),
-        new("type", Type),
-        new("xpcall", XPCall),
-    ];
+    public readonly LuaFunction[] Functions;
+    readonly LuaFunction IPairsIterator;
+    readonly LuaFunction PairsIterator;
 
-    static readonly LuaFunction IPairsIterator = new("iterator", (context, buffer, cancellationToken) =>
-    {
-        var table = context.GetArgument<LuaTable>(0);
-        var i = context.GetArgument<double>(1);
-
-        i++;
-        if (table.TryGetValue(i, out var value))
-        {
-            buffer.Span[0] = i;
-            buffer.Span[1] = value;
-        }
-        else
-        {
-            buffer.Span[0] = LuaValue.Nil;
-            buffer.Span[1] = LuaValue.Nil;
-        }
-
-        return new(2);
-    });
-
-    static readonly LuaFunction PairsIterator = new("iterator", Next);
-
-    public static ValueTask<int> Assert(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Assert(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
 
@@ -82,13 +81,13 @@ public static class BasicLibrary
         return new(context.ArgumentCount);
     }
 
-    public static ValueTask<int> CollectGarbage(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> CollectGarbage(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         GC.Collect();
         return new(0);
     }
 
-    public static async ValueTask<int> DoFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> DoFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<string>(0);
 
@@ -100,7 +99,7 @@ public static class BasicLibrary
         return await new Closure(context.State, chunk).InvokeAsync(context, buffer, cancellationToken);
     }
 
-    public static ValueTask<int> Error(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Error(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var obj = context.ArgumentCount == 0 || context.Arguments[0].Type is LuaValueType.Nil
             ? "(error object is a nil value)"
@@ -109,7 +108,7 @@ public static class BasicLibrary
         throw new LuaRuntimeException(context.State.GetTraceback(), obj!);
     }
 
-    public static ValueTask<int> GetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> GetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
 
@@ -136,7 +135,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static ValueTask<int> IPairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> IPairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
 
@@ -157,7 +156,7 @@ public static class BasicLibrary
         return new(3);
     }
     
-    public static async ValueTask<int> LoadFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> LoadFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         // Lua-CSharp does not support binary chunks, the mode argument is ignored.
         var arg0 = context.GetArgument<string>(0);
@@ -182,7 +181,7 @@ public static class BasicLibrary
         }
     }
 
-    public static ValueTask<int> Load(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Load(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         // Lua-CSharp does not support binary chunks, the mode argument is ignored.
         var arg0 = context.GetArgument(0);
@@ -223,7 +222,7 @@ public static class BasicLibrary
         }
     }
 
-    public static ValueTask<int> Next(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Next(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.HasArgument(1) ? context.Arguments[1] : LuaValue.Nil;
@@ -241,7 +240,7 @@ public static class BasicLibrary
         }
     }
     
-    public static ValueTask<int> Pairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Pairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
 
@@ -262,7 +261,7 @@ public static class BasicLibrary
         return new(3);
     }
 
-    public static async ValueTask<int> PCall(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> PCall(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaFunction>(0);
 
@@ -290,7 +289,7 @@ public static class BasicLibrary
         }
     }
 
-    public static async ValueTask<int> Print(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> Print(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         using var methodBuffer = new PooledArray<LuaValue>(1);
 
@@ -305,7 +304,7 @@ public static class BasicLibrary
         return 0;
     }
 
-    public static ValueTask<int> RawEqual(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> RawEqual(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
         var arg1 = context.GetArgument(1);
@@ -314,7 +313,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static ValueTask<int> RawGet(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> RawGet(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.GetArgument(1);
@@ -323,7 +322,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static ValueTask<int> RawLen(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> RawLen(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
 
@@ -343,7 +342,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static ValueTask<int> RawSet(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> RawSet(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.GetArgument(1);
@@ -353,7 +352,7 @@ public static class BasicLibrary
         return new(0);
     }
     
-    public static ValueTask<int> Select(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Select(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
 
@@ -391,7 +390,7 @@ public static class BasicLibrary
         }
     }
     
-    public static ValueTask<int> SetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> SetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
         var arg1 = context.GetArgument(1);
@@ -418,7 +417,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static ValueTask<int> ToNumber(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> ToNumber(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var e = context.GetArgument(0);
         int? toBase = context.HasArgument(1)
@@ -554,13 +553,13 @@ public static class BasicLibrary
         return value;
     }
 
-    public static ValueTask<int> ToString(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> ToString(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
         return arg0.CallToStringAsync(context, buffer, cancellationToken);
     }
     
-    public static ValueTask<int> Type(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public ValueTask<int> Type(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
 
@@ -580,7 +579,7 @@ public static class BasicLibrary
         return new(1);
     }
 
-    public static async ValueTask<int> XPCall(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public async ValueTask<int> XPCall(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaFunction>(0);
         var arg1 = context.GetArgument<LuaFunction>(1);

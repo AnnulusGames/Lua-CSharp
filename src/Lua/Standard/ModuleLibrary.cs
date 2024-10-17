@@ -4,17 +4,18 @@ using Lua.Runtime;
 
 namespace Lua.Standard;
 
-public static class ModuleLibrary
+public sealed class ModuleLibrary
 {
-    public static void OpenModuleLibrary(this LuaState state)
+    public static readonly ModuleLibrary Instance = new();
+
+    public ModuleLibrary()
     {
-        var package = new LuaTable();
-        package["loaded"] = state.LoadedModules;
-        state.Environment["package"] = package;
-        state.Environment["require"] = new LuaFunction("require", Require);
+        RequireFunction = new("require", Require);
     }
 
-    public static async ValueTask<int> Require(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    public readonly LuaFunction RequireFunction;
+
+    public async ValueTask<int> Require(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<string>(0);
         var loaded = context.State.LoadedModules;
