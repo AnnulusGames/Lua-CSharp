@@ -23,5 +23,5 @@ public sealed class SymbolReferences
     public INamedTypeSymbol LuaMemberAttribute { get; private set; } = default!;
     public INamedTypeSymbol LuaIgnoreMemberAttribute { get; private set; } = default!;
     public INamedTypeSymbol LuaMetamethodAttribute { get; private set; } = default!;
-    public INamedTypeSymbol LuaValue { get; private set; } = default!; 
+    public INamedTypeSymbol LuaValue { get; private set; } = default!;
 }

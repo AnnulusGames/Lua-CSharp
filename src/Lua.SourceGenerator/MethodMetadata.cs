@@ -6,6 +6,8 @@ internal class MethodMetadata
 {
     public IMethodSymbol Symbol { get; }
     public bool IsStatic { get; }
+    public bool IsAsync { get; }
+    public bool HasReturnValue { get; }
     public bool HasMemberAttribute { get; }
     public bool HasMetamethodAttribute { get; }
     public string LuaMemberName { get; }
@@ -15,6 +17,15 @@ internal class MethodMetadata
     {
         Symbol = symbol;
         IsStatic = symbol.IsStatic;
+
+        var returnType = symbol.ReturnType;
+        var fullName = (returnType.ContainingNamespace.IsGlobalNamespace ? "" : (returnType.ContainingNamespace + ".")) + returnType.Name;
+        IsAsync = fullName is "System.Threading.Tasks.Task"
+            or "System.Threading.Tasks.ValueTask"
+            or "Cysharp.Threading.Tasks.UniTask"
+            or "UnityEngine.Awaitable";
+
+        HasReturnValue = !symbol.ReturnsVoid && !(IsAsync && returnType is INamedTypeSymbol n && !n.IsGenericType);
 
         LuaMemberName = symbol.Name;
 

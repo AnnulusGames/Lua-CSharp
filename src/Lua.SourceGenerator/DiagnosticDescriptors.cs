@@ -38,16 +38,24 @@ public static class DiagnosticDescriptors
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
-    public static readonly DiagnosticDescriptor InvalidMethodType = new(
+    public static readonly DiagnosticDescriptor InvalidReturnType = new(
         id: "LUAC005",
-        title: "The arguments and return types must be LuaValue or types that can be converted to LuaValue.",
-        messageFormat: "The arguments and return types must be LuaValue or types that can be converted to LuaValue.",
+        title: "The return type must be LuaValue or types that can be converted to LuaValue.",
+        messageFormat: "The return type '{0}' must be LuaValue or types that can be converted to LuaValue.",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor InvalidParameterType = new(
+        id: "LUAC006",
+        title: "The parameters must be LuaValue or types that can be converted to LuaValue.",
+        messageFormat: "The parameter '{0}' must be LuaValue or types that can be converted to LuaValue.",
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
 
     public static readonly DiagnosticDescriptor DuplicateMetamethod = new(
-        id: "LUAC006",
+        id: "LUAC007",
         title: "The type already contains same metamethod.",
         messageFormat: "Type '{0}' already contains a '{1}' metamethod.,",
         category: Category,
