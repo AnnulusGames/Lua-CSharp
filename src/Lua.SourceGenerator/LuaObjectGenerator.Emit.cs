@@ -81,7 +81,7 @@ partial class LuaObjectGenerator
 
             var metamethodSet = new HashSet<LuaObjectMetamethod>();
 
-            if (!TryEmitMethods(typeMetadata, builder, metamethodSet, context))
+            if (!TryEmitMethods(typeMetadata, builder, references, metamethodSet, context))
             {
                 return false;
             }
@@ -303,7 +303,7 @@ partial class LuaObjectGenerator
         return true;
     }
 
-    static bool TryEmitMethods(TypeMetadata typeMetadata, CodeBuilder builder, HashSet<LuaObjectMetamethod> metamethodSet, in SourceProductionContext context)
+    static bool TryEmitMethods(TypeMetadata typeMetadata, CodeBuilder builder, SymbolReferences references, HashSet<LuaObjectMetamethod> metamethodSet, in SourceProductionContext context)
     {
         builder.AppendLine();
 
@@ -314,7 +314,7 @@ partial class LuaObjectGenerator
             if (methodMetadata.HasMemberAttribute)
             {
                 functionName = $"__function_{methodMetadata.LuaMemberName}";
-                EmitMethodFunction(functionName, typeMetadata, methodMetadata, builder);
+                EmitMethodFunction(functionName, typeMetadata, methodMetadata, builder, references);
             }
 
             if (methodMetadata.HasMetamethodAttribute)
@@ -333,7 +333,7 @@ partial class LuaObjectGenerator
 
                 if (functionName == null)
                 {
-                    EmitMethodFunction($"__metamethod_{methodMetadata.Metamethod}", typeMetadata, methodMetadata, builder);
+                    EmitMethodFunction($"__metamethod_{methodMetadata.Metamethod}", typeMetadata, methodMetadata, builder, references);
                 }
                 else
                 {
@@ -345,7 +345,7 @@ partial class LuaObjectGenerator
         return true;
     }
 
-    static void EmitMethodFunction(string functionName, TypeMetadata typeMetadata, MethodMetadata methodMetadata, CodeBuilder builder)
+    static void EmitMethodFunction(string functionName, TypeMetadata typeMetadata, MethodMetadata methodMetadata, CodeBuilder builder, SymbolReferences references)
     {
         builder.AppendLine($"static readonly global::Lua.LuaFunction {functionName} = new global::Lua.LuaFunction({(methodMetadata.IsAsync ? "async" : "")} (context, buffer, ct) =>");
 
@@ -390,7 +390,15 @@ partial class LuaObjectGenerator
 
             if (methodMetadata.HasReturnValue)
             {
-                builder.AppendLine("buffer.Span[0] = new global::Lua.LuaValue(result);");
+                if (SymbolEqualityComparer.Default.Equals(methodMetadata.Symbol.ReturnType, references.LuaValue))
+                {
+                    builder.AppendLine("buffer.Span[0] = result;");
+                }
+                else
+                {
+                    builder.AppendLine("buffer.Span[0] = new global::Lua.LuaValue(result);");
+                }
+                
                 builder.AppendLine($"return {(methodMetadata.IsAsync ? "1" : "new(1)")};");
             }
             else
