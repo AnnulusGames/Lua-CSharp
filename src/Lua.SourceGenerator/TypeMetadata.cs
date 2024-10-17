@@ -21,7 +21,7 @@ internal class TypeMetadata
         TypeName = symbol.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat);
         FullTypeName = symbol.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat);
 
-        Properties = Symbol.GetAllMembers()
+        Properties = Symbol.GetAllMembers(false)
             .Where(x => x is (IFieldSymbol or IPropertySymbol) and { IsImplicitlyDeclared: false })
             .Where(x =>
             {
@@ -39,7 +39,7 @@ internal class TypeMetadata
             .Select(x => new PropertyMetadata(x, references))
             .ToArray();
 
-        Methods = Symbol.GetAllMembers()
+        Methods = Symbol.GetAllMembers(false)
             .Where(x => x is IMethodSymbol and { IsImplicitlyDeclared: false })
             .Select(x => (IMethodSymbol)x)
             .Where(x =>
