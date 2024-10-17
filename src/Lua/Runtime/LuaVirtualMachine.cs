@@ -581,7 +581,7 @@ public static partial class LuaVirtualMachine
                             {
                                 compareResult = StringComparer.Ordinal.Compare(strB, strC) < 0;
                             }
-                            else if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
+                            else if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
                             {
                                 compareResult = valueB < valueC;
                             }
@@ -629,7 +629,7 @@ public static partial class LuaVirtualMachine
                             {
                                 compareResult = StringComparer.Ordinal.Compare(strB, strC) <= 0;
                             }
-                            else if (vb.TryRead<double>(out var valueB) && vc.TryRead<double>(out var valueC))
+                            else if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
                             {
                                 compareResult = valueB <= valueC;
                             }
