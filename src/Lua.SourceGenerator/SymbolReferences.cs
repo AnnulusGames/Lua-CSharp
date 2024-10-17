@@ -14,6 +14,7 @@ public sealed class SymbolReferences
             LuaObjectAttribute = luaObjectAttribute,
             LuaMemberAttribute = compilation.GetTypeByMetadataName("Lua.LuaMemberAttribute")!,
             LuaIgnoreMemberAttribute = compilation.GetTypeByMetadataName("Lua.LuaIgnoreMemberAttribute")!,
+            LuaMetamethodAttribute = compilation.GetTypeByMetadataName("Lua.LuaMetamethodAttribute")!,
             LuaValue = compilation.GetTypeByMetadataName("Lua.LuaValue")!,
         };
     }
@@ -21,5 +22,6 @@ public sealed class SymbolReferences
     public INamedTypeSymbol LuaObjectAttribute { get; private set; } = default!;
     public INamedTypeSymbol LuaMemberAttribute { get; private set; } = default!;
     public INamedTypeSymbol LuaIgnoreMemberAttribute { get; private set; } = default!;
+    public INamedTypeSymbol LuaMetamethodAttribute { get; private set; } = default!;
     public INamedTypeSymbol LuaValue { get; private set; } = default!; 
 }

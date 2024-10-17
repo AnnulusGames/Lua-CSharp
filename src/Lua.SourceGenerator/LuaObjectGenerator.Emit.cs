@@ -79,35 +79,9 @@ partial class LuaObjectGenerator
 
             using var _ = builder.BeginBlockScope($"partial {typeDeclarationKeyword} {typeMetadata.TypeName} : global::Lua.ILuaUserData");
 
-            // add ILuaUserData impl
-            builder.Append(
-$$"""
-        global::Lua.LuaTable? global::Lua.ILuaUserData.Metatable
-        {
-            get
-            {
-                if (__metatable != null) return __metatable;
+            var metamethodSet = new HashSet<LuaObjectMetamethod>();
 
-                __metatable = new();
-                __metatable[global::Lua.Runtime.Metamethods.Index] = __metamethod_index;
-                __metatable[global::Lua.Runtime.Metamethods.NewIndex] = __metamethod_newindex;
-                return __metatable;
-            }
-            set
-            {
-                __metatable = value;
-            }
-        }
-        static global::Lua.LuaTable? __metatable;
-
-        public static implicit operator global::Lua.LuaValue({{typeMetadata.FullTypeName}} value)
-        {
-            return new(value);
-        }
-
-""", false);
-
-            if (!TryEmitMethods(typeMetadata, builder, context))
+            if (!TryEmitMethods(typeMetadata, builder, metamethodSet, context))
             {
                 return false;
             }
@@ -120,6 +94,18 @@ $$"""
             if (!TryEmitNewIndexMetamethod(typeMetadata, builder, context))
             {
                 return false;
+            }
+
+            if (!TryEmitMetatable(builder, metamethodSet, context))
+            {
+                return false;
+            }
+
+            // implicit operator
+            builder.AppendLine($"public static implicit operator global::Lua.LuaValue({typeMetadata.FullTypeName} value)");
+            using (builder.BeginBlockScope())
+            {
+                builder.AppendLine("return new(value);");
             }
 
             if (!ns.IsGlobalNamespace) builder.EndBlock();
@@ -209,7 +195,8 @@ $$"""
                     }
                 }
 
-                foreach (var methodMetadata in typeMetadata.Methods)
+                foreach (var methodMetadata in typeMetadata.Methods
+                    .Where(x => x.HasMemberAttribute))
                 {
                     builder.AppendLine(@$"""{methodMetadata.LuaMemberName}"" => new global::Lua.LuaValue(__function_{methodMetadata.LuaMemberName}),");
                 }
@@ -262,7 +249,8 @@ $$"""
                     }
                 }
 
-                foreach (var methodMetadata in typeMetadata.Methods)
+                foreach (var methodMetadata in typeMetadata.Methods
+                    .Where(x => x.HasMemberAttribute))
                 {
                     builder.AppendLine(@$"case ""{methodMetadata.LuaMemberName}"":");
 
@@ -288,17 +276,21 @@ $$"""
         return true;
     }
 
-    static bool TryEmitMethods(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
+    static bool TryEmitMethods(TypeMetadata typeMetadata, CodeBuilder builder, HashSet<LuaObjectMetamethod> metamethodSet, in SourceProductionContext context)
     {
-        builder.AppendLine();
-
-        foreach (var methodMetadata in typeMetadata.Methods)
+        static void EmitMethodFunction(string functionName, TypeMetadata typeMetadata, MethodMetadata methodMetadata, CodeBuilder builder)
         {
-            builder.AppendLine($"static readonly global::Lua.LuaFunction __function_{methodMetadata.LuaMemberName} = new global::Lua.LuaFunction((context, buffer, ct) =>");
+            builder.AppendLine($"static readonly global::Lua.LuaFunction {functionName} = new global::Lua.LuaFunction((context, buffer, ct) =>");
 
             using (builder.BeginBlockScope())
             {
                 var index = 0;
+
+                if (!methodMetadata.IsStatic)
+                {
+                    builder.AppendLine($"var userData = context.GetArgument<{typeMetadata.FullTypeName}>(0);");
+                    index++;
+                }
 
                 foreach (var parameter in methodMetadata.Symbol.Parameters)
                 {
@@ -309,23 +301,93 @@ $$"""
                 if (methodMetadata.IsStatic)
                 {
                     builder.Append($"var result = {typeMetadata.FullTypeName}.{methodMetadata.Symbol.Name}(");
-                    builder.Append(string.Join(",", Enumerable.Range(0, index).Select(x => $"arg{x}")));
-                    builder.AppendLine(");");
+                    builder.Append(string.Join(",", Enumerable.Range(0, index).Select(x => $"arg{x}")), false);
+                    builder.AppendLine(");", false);
                 }
                 else
                 {
 
                     builder.Append($"var result = userData.{methodMetadata.Symbol.Name}(");
-                    builder.Append(string.Join(",", Enumerable.Range(1, index).Select(x => $"arg{x}")));
-                    builder.AppendLine(");");
+                    builder.Append(string.Join(",", Enumerable.Range(1, index - 1).Select(x => $"arg{x}")), false);
+                    builder.AppendLine(");", false);
                 }
 
                 builder.AppendLine("buffer.Span[0] = new global::Lua.LuaValue(result);");
                 builder.AppendLine("return new(1);");
             }
-
             builder.AppendLine(");");
+            builder.AppendLine();
         }
+
+        builder.AppendLine();
+
+        foreach (var methodMetadata in typeMetadata.Methods)
+        {
+            string? functionName = null;
+
+            if (methodMetadata.HasMemberAttribute)
+            {
+                functionName = $"__function_{methodMetadata.LuaMemberName}";
+                EmitMethodFunction(functionName, typeMetadata, methodMetadata, builder);
+            }
+
+            if (methodMetadata.HasMetamethodAttribute)
+            {
+                if (!metamethodSet.Add(methodMetadata.Metamethod))
+                {
+                    context.ReportDiagnostic(Diagnostic.Create(
+                        DiagnosticDescriptors.DuplicateMetamethod,
+                        methodMetadata.Symbol.Locations.FirstOrDefault(),
+                        typeMetadata.TypeName,
+                        methodMetadata.Metamethod
+                    ));
+
+                    continue;
+                }
+
+                if (functionName == null)
+                {
+                    EmitMethodFunction($"__metamethod_{methodMetadata.Metamethod}", typeMetadata, methodMetadata, builder);
+                }
+                else
+                {
+                    builder.AppendLine($"static global::Lua.LuaFunction __metamethod_{methodMetadata.Metamethod} => {functionName};");
+                }
+            }
+        }
+
+        return true;
+    }
+
+    static bool TryEmitMetatable(CodeBuilder builder, IEnumerable<LuaObjectMetamethod> metamethods, in SourceProductionContext context)
+    {
+        builder.AppendLine("global::Lua.LuaTable? global::Lua.ILuaUserData.Metatable");
+        using (builder.BeginBlockScope())
+        {
+            builder.AppendLine("get");
+            using (builder.BeginBlockScope())
+            {
+                builder.AppendLine("if (__metatable != null) return __metatable;");
+                builder.AppendLine();
+                builder.AppendLine("__metatable = new();");
+                builder.AppendLine("__metatable[global::Lua.Runtime.Metamethods.Index] = __metamethod_index;");
+                builder.AppendLine("__metatable[global::Lua.Runtime.Metamethods.NewIndex] = __metamethod_newindex;");
+                foreach (var metamethod in metamethods)
+                {
+                    builder.AppendLine($"__metatable[global::Lua.Runtime.Metamethods.{metamethod}] = __metamethod_{metamethod};");
+                }
+                builder.AppendLine("return __metatable;");
+            }
+
+            builder.AppendLine("set");
+            using (builder.BeginBlockScope())
+            {
+                builder.AppendLine("__metatable = value;");
+            }
+        }
+
+        builder.AppendLine("static global::Lua.LuaTable? __metatable;");
+        builder.AppendLine();
 
         return true;
     }

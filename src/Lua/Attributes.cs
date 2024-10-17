@@ -30,6 +30,12 @@ public sealed class LuaMemberAttribute : Attribute
     public string? Name { get; }
 }
 
+[AttributeUsage(AttributeTargets.Method)]
+public sealed class LuaMetamethodAttribute(LuaObjectMetamethod metamethod) : Attribute
+{
+    public LuaObjectMetamethod Metamethod { get; } = metamethod;
+}
+
 [AttributeUsage(AttributeTargets.Method | AttributeTargets.Field | AttributeTargets.Property)]
 public sealed class LuaIgnoreMemberAttribute : Attribute
 {

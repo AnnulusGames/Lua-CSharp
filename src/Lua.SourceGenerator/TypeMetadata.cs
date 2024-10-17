@@ -4,7 +4,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lua.SourceGenerator;
 
-internal record class TypeMetadata
+internal class TypeMetadata
 {
     public TypeDeclarationSyntax Syntax { get; }
     public INamedTypeSymbol Symbol { get; }
@@ -44,10 +44,8 @@ internal record class TypeMetadata
             .Select(x => (IMethodSymbol)x)
             .Where(x =>
             {
-                if (!x.ContainsAttribute(references.LuaMemberAttribute)) return false;
                 if (x.ContainsAttribute(references.LuaIgnoreMemberAttribute)) return false;
-
-                return true;
+                return x.ContainsAttribute(references.LuaMemberAttribute) || x.ContainsAttribute(references.LuaMetamethodAttribute);
             })
             .Select(x => new MethodMetadata(x, references))
             .ToArray();

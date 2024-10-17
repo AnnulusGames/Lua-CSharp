@@ -2,11 +2,14 @@ using Microsoft.CodeAnalysis;
 
 namespace Lua.SourceGenerator;
 
-public class MethodMetadata
+internal class MethodMetadata
 {
     public IMethodSymbol Symbol { get; }
     public bool IsStatic { get; }
+    public bool HasMemberAttribute { get; }
+    public bool HasMetamethodAttribute { get; }
     public string LuaMemberName { get; }
+    public LuaObjectMetamethod Metamethod { get; }
 
     public MethodMetadata(IMethodSymbol symbol, SymbolReferences references)
     {
@@ -16,6 +19,8 @@ public class MethodMetadata
         LuaMemberName = symbol.Name;
 
         var memberAttribute = symbol.GetAttribute(references.LuaMemberAttribute);
+        HasMemberAttribute = memberAttribute != null;
+
         if (memberAttribute != null)
         {
             if (memberAttribute.ConstructorArguments.Length > 0)
@@ -26,6 +31,14 @@ public class MethodMetadata
                     LuaMemberName = str;
                 }
             }
+        }
+
+        var metamethodAttribute = symbol.GetAttribute(references.LuaMetamethodAttribute);
+        HasMetamethodAttribute = metamethodAttribute != null;
+
+        if (metamethodAttribute != null)
+        {
+            Metamethod = (LuaObjectMetamethod)Enum.Parse(typeof(LuaObjectMetamethod), metamethodAttribute.ConstructorArguments[0].Value!.ToString());
         }
     }
 }

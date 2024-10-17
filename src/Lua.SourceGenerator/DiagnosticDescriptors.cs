@@ -45,4 +45,12 @@ public static class DiagnosticDescriptors
         category: Category,
         defaultSeverity: DiagnosticSeverity.Error,
         isEnabledByDefault: true);
+
+    public static readonly DiagnosticDescriptor DuplicateMetamethod = new(
+        id: "LUAC006",
+        title: "The type already contains same metamethod.",
+        messageFormat: "Type '{0}' already contains a '{1}' metamethod.,",
+        category: Category,
+        defaultSeverity: DiagnosticSeverity.Error,
+        isEnabledByDefault: true);
 }
