@@ -21,6 +21,7 @@ public partial class TestUserData
         await Task.CompletedTask;
     }
 
+    [LuaMember]
     public static double StaticMethodWithReturnValue(double a, double b)
     {
         return a + b;
