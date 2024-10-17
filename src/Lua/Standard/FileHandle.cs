@@ -5,7 +5,7 @@ namespace Lua.Standard;
 
 // TODO: optimize (remove StreamReader/Writer)
 
-public class FileHandle : LuaUserData
+public class FileHandle : ILuaUserData
 {
     public static readonly LuaFunction IndexMetamethod = new("index", (context, buffer, ct) =>
     {
@@ -41,7 +41,9 @@ public class FileHandle : LuaUserData
 
     public bool IsClosed => Volatile.Read(ref isClosed);
 
-    static readonly LuaTable fileHandleMetatable;
+    LuaTable? ILuaUserData.Metatable { get => fileHandleMetatable; set => fileHandleMetatable = value; }
+
+    static LuaTable? fileHandleMetatable;
 
     static FileHandle()
     {
@@ -54,7 +56,6 @@ public class FileHandle : LuaUserData
         this.stream = stream;
         if (stream.CanRead) reader = new StreamReader(stream);
         if (stream.CanWrite) writer = new StreamWriter(stream);
-        Metatable = fileHandleMetatable;
     }
 
     public string? ReadLine()

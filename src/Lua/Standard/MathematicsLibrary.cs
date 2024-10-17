@@ -4,7 +4,7 @@ public static class MathematicsLibrary
 {
     public static void OpenMathLibrary(this LuaState state)
     {
-        state.Environment[RandomInstanceKey] = new LuaUserData<Random>(new Random());
+        state.Environment[RandomInstanceKey] = new(new RandomUserData(new Random()));
 
         var math = new LuaTable(0, Functions.Length);
         foreach (var func in Functions)
@@ -50,6 +50,13 @@ public static class MathematicsLibrary
         new("tan", Tan),
         new("tanh", Tanh),
     ];
+
+    sealed class RandomUserData(Random random) : ILuaUserData
+    {
+        static LuaTable? SharedMetatable;
+        public LuaTable? Metatable { get => SharedMetatable; set => SharedMetatable = value; }
+        public Random Random { get; } = random;
+    }
 
     public static ValueTask<int> Abs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
@@ -227,7 +234,7 @@ public static class MathematicsLibrary
 
     public static ValueTask<int> Random(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
-        var rand = context.State.Environment[RandomInstanceKey].Read<LuaUserData<Random>>().Value;
+        var rand = context.State.Environment[RandomInstanceKey].Read<RandomUserData>().Random;
 
         if (context.ArgumentCount == 0)
         {
@@ -251,7 +258,7 @@ public static class MathematicsLibrary
     public static ValueTask<int> RandomSeed(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<double>(0);
-        context.State.Environment[RandomInstanceKey] = new LuaUserData<Random>(new Random((int)BitConverter.DoubleToInt64Bits(arg0)));
+        context.State.Environment[RandomInstanceKey] = new(new RandomUserData(new Random((int)BitConverter.DoubleToInt64Bits(arg0))));
         return new(0);
     }
 
