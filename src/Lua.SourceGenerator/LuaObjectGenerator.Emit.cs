@@ -200,7 +200,7 @@ partial class LuaObjectGenerator
 
     static bool TryEmitIndexMetamethod(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
     {
-        builder.AppendLine("static readonly global::Lua.LuaFunction __metamethod_index = new global::Lua.LuaFunction((context, buffer, ct) =>");
+        builder.AppendLine(@"static readonly global::Lua.LuaFunction __metamethod_index = new global::Lua.LuaFunction(""index"", (context, buffer, ct) =>");
 
         using (builder.BeginBlockScope())
         {
@@ -243,7 +243,7 @@ partial class LuaObjectGenerator
 
     static bool TryEmitNewIndexMetamethod(TypeMetadata typeMetadata, CodeBuilder builder, in SourceProductionContext context)
     {
-        builder.AppendLine("static readonly global::Lua.LuaFunction __metamethod_newindex = new global::Lua.LuaFunction((context, buffer, ct) =>");
+        builder.AppendLine(@"static readonly global::Lua.LuaFunction __metamethod_newindex = new global::Lua.LuaFunction(""newindex"", (context, buffer, ct) =>");
 
         using (builder.BeginBlockScope())
         {
@@ -291,7 +291,7 @@ partial class LuaObjectGenerator
 
                 using (builder.BeginIndentScope())
                 {
-                    builder.AppendLine(@$"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""'{{key}}'  not found."");");
+                    builder.AppendLine(@$"throw new global::Lua.LuaRuntimeException(context.State.GetTraceback(), $""'{{key}}' not found."");");
                 }
             }
 
@@ -314,7 +314,7 @@ partial class LuaObjectGenerator
             if (methodMetadata.HasMemberAttribute)
             {
                 functionName = $"__function_{methodMetadata.LuaMemberName}";
-                EmitMethodFunction(functionName, typeMetadata, methodMetadata, builder, references);
+                EmitMethodFunction(functionName, methodMetadata.LuaMemberName, typeMetadata, methodMetadata, builder, references);
             }
 
             if (methodMetadata.HasMetamethodAttribute)
@@ -333,7 +333,7 @@ partial class LuaObjectGenerator
 
                 if (functionName == null)
                 {
-                    EmitMethodFunction($"__metamethod_{methodMetadata.Metamethod}", typeMetadata, methodMetadata, builder, references);
+                    EmitMethodFunction($"__metamethod_{methodMetadata.Metamethod}", methodMetadata.Metamethod.ToString().ToLower(), typeMetadata, methodMetadata, builder, references);
                 }
                 else
                 {
@@ -345,9 +345,9 @@ partial class LuaObjectGenerator
         return true;
     }
 
-    static void EmitMethodFunction(string functionName, TypeMetadata typeMetadata, MethodMetadata methodMetadata, CodeBuilder builder, SymbolReferences references)
+    static void EmitMethodFunction(string functionName, string chunkName, TypeMetadata typeMetadata, MethodMetadata methodMetadata, CodeBuilder builder, SymbolReferences references)
     {
-        builder.AppendLine($"static readonly global::Lua.LuaFunction {functionName} = new global::Lua.LuaFunction({(methodMetadata.IsAsync ? "async" : "")} (context, buffer, ct) =>");
+        builder.AppendLine($@"static readonly global::Lua.LuaFunction {functionName} = new global::Lua.LuaFunction(""{chunkName}"", {(methodMetadata.IsAsync ? "async" : "")} (context, buffer, ct) =>");
 
         using (builder.BeginBlockScope())
         {
