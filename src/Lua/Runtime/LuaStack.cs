@@ -66,7 +66,7 @@ public class LuaStack(int initialSize = 256)
         }
         else
         {
-            array.AsSpan(newSize - 1).Clear();
+            array.AsSpan(newSize).Clear();
         }
         top = newSize;
     }
