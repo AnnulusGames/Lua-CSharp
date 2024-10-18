@@ -145,7 +145,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -156,7 +156,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -187,7 +187,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -198,7 +198,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -229,7 +229,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -240,7 +240,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -271,7 +271,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -282,7 +282,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -318,7 +318,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -329,7 +329,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -360,7 +360,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -371,7 +371,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -400,7 +400,7 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -411,7 +411,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -447,7 +447,7 @@ public static partial class LuaVirtualMachine
 
                                 stack.Push(vb);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -458,7 +458,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else if (vb.TryRead<LuaTable>(out var table))
                             {
@@ -507,7 +507,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -518,7 +518,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                stack.UnsafeGet(RA) = resultBuffer[0];
+                                stack.UnsafeGet(RA) = resultCount == 0 ? LuaValue.Nil : resultBuffer[0];
                             }
                             else
                             {
@@ -551,7 +551,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -562,7 +562,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                compareResult = resultBuffer[0].ToBoolean();
+                                compareResult = resultCount != 0 && resultBuffer[0].ToBoolean();
                             }
 
                             if (compareResult != (instruction.A == 1))
@@ -595,7 +595,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -606,7 +606,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                compareResult = resultBuffer[0].ToBoolean();
+                                compareResult = resultCount != 0 && resultBuffer[0].ToBoolean();
                             }
                             else
                             {
@@ -643,7 +643,7 @@ public static partial class LuaVirtualMachine
                                 stack.Push(vb);
                                 stack.Push(vc);
 
-                                await func.InvokeAsync(new()
+                                var resultCount = await func.InvokeAsync(new()
                                 {
                                     State = state,
                                     Thread = thread,
@@ -654,7 +654,7 @@ public static partial class LuaVirtualMachine
                                     RootChunkName = rootChunk.Name,
                                 }, resultBuffer.AsMemory(), cancellationToken);
 
-                                compareResult = resultBuffer[0].ToBoolean();
+                                compareResult = resultCount != 0 && resultBuffer[0].ToBoolean();
                             }
                             else
                             {
