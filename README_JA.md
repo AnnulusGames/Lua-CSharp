@@ -233,7 +233,12 @@ Console.WriteLine(results[i]);
 return add(1, 2)
 ```
 
-また、`LuaFunction`は非同期メソッドとして動作します。そのため、以下のような関数を定義することでLua側から処理の待機を行うことも可能です。
+> [!TIP]
+> `LuaFunction`による関数の定義はやや記述量が多いため、関数をまとめて追加する際には`[LuaObject]`属性によるSource Generatorの使用を推奨します。詳細は[LuaObject](#luaobject)の項目を参照してください。
+
+## async/awaitとの統合
+
+`LuaFunction`は非同期メソッドとして動作します。そのため、以下のような関数を定義することでLua側から処理の待機を行うことも可能です。
 
 ```cs
 // 与えられた秒数だけTask.Delayで待機する関数を定義
@@ -297,6 +302,146 @@ for (int i = 0; i < 10; i++)
     Console.WriteLine(resumeResults[1]);
 }
 ```
+
+## LuaObject
+
+`[LuaObject]`属性を用いることで、Lua上で動作する独自のクラスを作成することが可能になります。Luaで使いたいクラスにこの属性を付加することで、Source GeneratorがLua側から利用されるコードを自動生成します。
+
+以下のサンプルコードはLuaで動作する`System.Numerics.Vector3`のラッパークラスの実装例です。
+
+```cs
+using System.Numerics;
+using Lua;
+
+var state = LuaState.Create();
+
+// 定義したLuaObjectのインスタンスをグローバル変数として追加する
+// (LuaObjectを追加したクラスにはLuaValueへの暗黙的変換が自動で定義される)
+state.Environment["Vector3"] = new LuaVector3();
+
+await state.DoFileAsync("vector3_sample.lua");
+
+// LuaObject属性とpartialキーワードを追加
+[LuaObject]
+public partial class LuaVector3
+{
+    Vector3 vector;
+
+    // Lua側で使用されるメンバーにLuaMember属性を付加
+    // 引数にはLuaでの名前を指定 (省略した場合はメンバーの名前が使用される)
+    [LuaMember("x")]
+    public float X
+    {
+        get => vector.X;
+        set => vector = vector with { X = value };
+    }
+
+    [LuaMember("y")]
+    public float Y
+    {
+        get => vector.Y;
+        set => vector = vector with { Y = value };
+    }
+
+    [LuaMember("z")]
+    public float Z
+    {
+        get => vector.Z;
+        set => vector = vector with { Z = value };
+    }
+
+    // staticメソッドの場合は通常のLua関数として解釈される
+    [LuaMember("create")]
+    public static LuaVector3 Create(float x, float y, float z)
+    {
+        return new LuaVector3()
+        {
+            vector = new Vector3(x, y, z)
+        };
+    }
+
+    // インスタンスメソッドの場合は暗黙的に自身のインスタンス(this)が1番目の引数として追加される
+    // これはLuaではinstance:method()のような表記でアクセスできる
+    [LuaMember("normalized")]
+    public LuaVector3 Normalized()
+    {
+        return new LuaVector3()
+        {
+            vector = Vector3.Normalize(vector)
+        };
+    }
+}
+```
+
+```lua
+-- vector3_sample.lua
+
+local v1 = Vector3.create(1, 2, 3)
+-- 1  2  3
+print(v1.x, v1.y, v1.z)
+
+local v2 = v1:normalized()
+-- 0.26726123690605164  0.5345224738121033  0.8017836809158325
+print(v2.x, v2.y, v2.z)
+```
+
+`[LuaMember]`を付加するフィールド/プロパティの型、またはメソッドの引数や戻り値の型は`LuaValue`またはそれに変換が可能である必要があります。
+
+ただし、戻り値には`void`, `Task/Task<T>`, `ValueTask/ValueTask<T>`, `UniTask/UniTask<T>`, `Awaitable/Awaitable<T>`を利用することも可能です。
+
+利用可能でない型に対してはSource Generatorがコンパイルエラーを出力します。
+
+### LuaMetamethod
+
+`[LuaMetamethod]`属性を追加することで、C#のメソッドをLua側で使用されるメタメソッドとして設定することが可能です。
+
+例として、先ほどの`LuaVector3`クラスに`__add`, `__sub`, `__tostring`のメタメソッドを追加したコードを示します。
+
+```cs
+[LuaObject]
+public partial class LuaVector3
+{
+    // 上のコードで書かれた実装は省略
+
+    [LuaMetamethod(LuaObjectMetamethod.Add)]
+    public static LuaVector3 Add(LuaVector3 a, LuaVector3 b)
+    {
+        return new LuaVector3()
+        {
+            vector = a.vector + b.vector
+        };
+    }
+    
+    [LuaMetamethod(LuaObjectMetamethod.Sub)]
+    public static LuaVector3 Sub(LuaVector3 a, LuaVector3 b)
+    {
+        return new LuaVector3()
+        {
+            vector = a.vector - b.vector
+        };
+    }
+
+    [LuaMetamethod(LuaObjectMetamethod.ToString)]
+    public override string ToString()
+    {
+        return vector.ToString();
+    }
+}
+```
+
+```lua
+local v1 = Vector3.create(1, 1, 1)
+local v2 = Vector3.create(2, 2, 2)
+
+print(v1) -- <1, 1, 1>
+print(v2) -- <2, 2, 2>
+
+print(v1 + v2) -- <3, 3, 3>
+print(v1 - v2) -- <-1, -1, -1>
+```
+
+> [!NOTE]
+> `__index`, `__newindex`は`[LuaObject]`の生成コードに利用されるため、設定することはできません。
 
 ## モジュールの読み込み
 
