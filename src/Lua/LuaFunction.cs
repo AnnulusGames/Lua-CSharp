@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Lua.Runtime;
 
 namespace Lua;
@@ -32,5 +33,22 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
         {
             context.Thread.PopCallStackFrame();
         }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal  ValueTask<int> InvokeAsyncPushOnly(in LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    {
+        var frame = new CallStackFrame
+        {
+            Base = context.FrameBase,
+            CallPosition = context.SourcePosition,
+            ChunkName = context.ChunkName ?? LuaState.DefaultChunkName,
+            RootChunkName = context.RootChunkName ?? LuaState.DefaultChunkName,
+            VariableArgumentCount = this is Closure closure ? Math.Max(context.ArgumentCount - closure.Proto.ParameterCount, 0) : 0,
+            Function = this,
+        };
+
+        context.Thread.PushCallStackFrame(ref frame);
+        return  Func(context, buffer, cancellationToken);
     }
 }

@@ -101,6 +101,12 @@ public class LuaStack(int initialSize = 256)
     {
         return ref MemoryMarshalEx.UnsafeElementAt(array, index);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ref LuaValue Get(int index)
+    {
+        return ref array[index];
+    }
 
     static void ThrowEmptyStack()
     {

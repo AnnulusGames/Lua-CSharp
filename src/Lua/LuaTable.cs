@@ -41,18 +41,22 @@ public sealed class LuaTable
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set
         {
-            if (key.Type is LuaValueType.Number && double.IsNaN(key.UnsafeRead<double>()))
+            if (key.TryReadNumber(out var d))
             {
-                ThrowIndexIsNaN();
-            }
-
-            if (TryGetInteger(key, out var index))
-            {
-                if (0 < index && index <= Math.Max(array.Length * 2, 8))
+                if (double.IsNaN(d))
                 {
-                    EnsureArrayCapacity(index);
-                    MemoryMarshalEx.UnsafeElementAt(array, index - 1) = value;
-                    return;
+                    ThrowIndexIsNaN();
+                } 
+                if(MathEx.IsInteger(d))
+                {
+                    var index = (int)d;
+                    if (0 < index && index <= Math.Max(array.Length * 2, 8))
+                    {
+                        if(array.Length < index)
+                            EnsureArrayCapacity(index);
+                        array[index - 1] = value;
+                        return;
+                    }
                 }
             }
 

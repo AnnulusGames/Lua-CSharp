@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Lua.Internal;
 using Lua.Runtime;
 
@@ -35,7 +36,14 @@ public abstract class LuaThread
     {
         callStack.Push(frame);
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal void PushCallStackFrame(ref CallStackFrame frame)
+    {
+        callStack.Push(frame);
+    }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void PopCallStackFrame()
     {
         var frame = callStack.Pop();
