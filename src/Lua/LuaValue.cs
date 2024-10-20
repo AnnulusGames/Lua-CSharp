@@ -450,9 +450,16 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return new(value);
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public override int GetHashCode()
     {
-        return HashCode.Combine(type, value, referenceValue);
+        return type switch
+        {
+            LuaValueType.Nil => 0,
+            LuaValueType.Boolean or LuaValueType.Number => value.GetHashCode(),
+            LuaValueType.String => Unsafe.As<string>(referenceValue)!.GetHashCode(),
+            _ => referenceValue!.GetHashCode()
+        };
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -464,6 +471,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         {
             LuaValueType.Nil => true,
             LuaValueType.Boolean or LuaValueType.Number => other.value == value,
+            LuaValueType.String => Unsafe.As<string>(other.referenceValue)==Unsafe.As<string>(referenceValue),
             _ => other.referenceValue!.Equals(referenceValue)
         };
     }
