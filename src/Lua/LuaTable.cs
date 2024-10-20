@@ -16,7 +16,7 @@ public sealed class LuaTable
     }
 
     LuaValue[] array;
-    Dictionary<LuaValue, LuaValue> dictionary;
+    LuaValueDictionary dictionary;
     LuaTable? metatable;
 
     public LuaValue this[LuaValue key]
@@ -66,7 +66,7 @@ public sealed class LuaTable
 
     public int HashMapCount
     {
-        get => dictionary.Count(x => x.Value.Type is not LuaValueType.Nil);
+        get => dictionary.Count - dictionary.NilCount;
     }
 
     public int ArrayLength
@@ -87,6 +87,7 @@ public sealed class LuaTable
         set => metatable = value;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public bool TryGetValue(LuaValue key, out LuaValue value)
     {
         if (key.Type is LuaValueType.Nil)
@@ -99,7 +100,7 @@ public sealed class LuaTable
         {
             if (index > 0 && index <= array.Length)
             {
-                value = MemoryMarshalEx.UnsafeElementAt(array, index - 1);
+                value = array[index - 1];
                 return value.Type is not LuaValueType.Nil;
             }
         }
