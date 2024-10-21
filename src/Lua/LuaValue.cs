@@ -82,48 +82,9 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 else if (t == typeof(double))
                 {
                     var str = (string)referenceValue!;
-                    var span = str.AsSpan().Trim();
-
-                    if (span.Length == 0)
-                    {
-                        result = default!;
-                        return false;
-                    }
-
-                    var sign = 1;
-                    var first = span[0];
-                    if (first is '+')
-                    {
-                        sign = 1;
-                        span = span[1..];
-                    }
-                    else if (first is '-')
-                    {
-                        sign = -1;
-                        span = span[1..];
-                    }
-
-                    if (span.Length > 2 && span[0] is '0' && span[1] is 'x' or 'X')
-                    {
-                        // TODO: optimize
-                        try
-                        {
-                            var d = HexConverter.ToDouble(span) * sign;
-                            result = Unsafe.As<double, T>(ref d);
-                            return true;
-                        }
-                        catch (FormatException)
-                        {
-                            result = default!;
-                            return false;
-                        }
-                    }
-                    else
-                    {
-                        var tryResult = double.TryParse(str, out var d);
-                        result = tryResult ? Unsafe.As<double, T>(ref d) : default!;
-                        return tryResult;
-                    }
+                    var tryResult = TryParseToDouble(str, out var d);
+                    result = tryResult ? Unsafe.As<double, T>(ref d) : default!;
+                    return tryResult;
                 }
                 else if (t == typeof(object))
                 {
@@ -271,55 +232,55 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.String:
                 {
                     var str = (string)referenceValue!;
-                    return TryParseDouble(str, out result);
-                    
-                    static bool TryParseDouble(string str, out double result)
-                    {
-                        var span = str.AsSpan().Trim();
-                        if (span.Length == 0)
-                        {
-                            result = default!;
-                            return false;
-                        }
-
-                        var sign = 1;
-                        var first = span[0];
-                        if (first is '+')
-                        {
-                            sign = 1;
-                            span = span[1..];
-                        }
-                        else if (first is '-')
-                        {
-                            sign = -1;
-                            span = span[1..];
-                        }
-
-                        if (span.Length > 2 && span[0] is '0' && span[1] is 'x' or 'X')
-                        {
-                            // TODO: optimize
-                            try
-                            {
-                                var d = HexConverter.ToDouble(span) * sign;
-                                result = d;
-                                return true;
-                            }
-                            catch (FormatException)
-                            {
-                                result = default!;
-                                return false;
-                            }
-                        }
-                        else
-                        {
-                            return double.TryParse(str, out  result);
-                        }
-                    }
+                    return TryParseToDouble(str, out result);
                 }
         }
 
         result = default!;
         return false;
+    }
+    
+    private static bool TryParseToDouble(string str, out double result)
+    {
+        var span = str.AsSpan().Trim();
+        if (span.Length == 0)
+        {
+            result = default!;
+            return false;
+        }
+
+        var sign = 1;
+        var first = span[0];
+        if (first is '+')
+        {
+            sign = 1;
+            span = span[1..];
+        }
+        else if (first is '-')
+        {
+            sign = -1;
+            span = span[1..];
+        }
+
+        if (span.Length > 2 && span[0] is '0' && span[1] is 'x' or 'X')
+        {
+            // TODO: optimize
+            try
+            {
+                var d = HexConverter.ToDouble(span) * sign;
+                result = d;
+                return true;
+            }
+            catch (FormatException)
+            {
+                result = default!;
+                return false;
+            }
+        }
+        else
+        {
+            return double.TryParse(str, out  result);
+        }
     }
     
     public T Read<T>()
