@@ -240,7 +240,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         return false;
     }
     
-    private static bool TryParseToDouble(string str, out double result)
+    static bool TryParseToDouble(string str, out double result)
     {
         var span = str.AsSpan().Trim();
         if (span.Length == 0)
