@@ -54,7 +54,7 @@ namespace Lua.Internal
                 return default;
             }
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            set { Insert(key, value); }
+            set => Insert(key, value);
         }
 
 
@@ -430,23 +430,22 @@ namespace Lua.Internal
 
             public KeyValuePair<LuaValue, LuaValue> Current => _current;
         }
-    }
-
-    internal static class ThrowHelper
-    {
-        public static void ThrowInvalidOperationException_ConcurrentOperationsNotSupported()
+        static class ThrowHelper
         {
-            throw new InvalidOperationException("Concurrent operations are not supported");
-        }
+            public static void ThrowInvalidOperationException_ConcurrentOperationsNotSupported()
+            {
+                throw new InvalidOperationException("Concurrent operations are not supported");
+            }
 
-        public static void ThrowArgumentOutOfRangeException(string paramName)
-        {
-            throw new ArgumentOutOfRangeException(paramName);
-        }
+            public static void ThrowArgumentOutOfRangeException(string paramName)
+            {
+                throw new ArgumentOutOfRangeException(paramName);
+            }
 
-        public static void ThrowInvalidOperationException_InvalidOperation_EnumFailedVersion()
-        {
-            throw new InvalidOperationException("Collection was modified after the enumerator was instantiated.");
+            public static void ThrowInvalidOperationException_InvalidOperation_EnumFailedVersion()
+            {
+                throw new InvalidOperationException("Collection was modified after the enumerator was instantiated.");
+            }
         }
     }
 }
