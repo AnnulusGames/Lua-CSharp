@@ -1269,7 +1269,7 @@ public static partial class LuaVirtualMachine
                 VariableArgumentCount = func is Closure cl ? Math.Max(argumentCount - cl.Proto.ParameterCount, 0) : 0,
                 Function = func,
             };
-            thread.PushCallStackFrame(ref callStackFrame);
+            thread.PushCallStackFrame(in callStackFrame);
 
 
             context.Pushing = true;

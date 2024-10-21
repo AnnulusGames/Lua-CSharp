@@ -38,7 +38,7 @@ public abstract class LuaThread
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    internal void PushCallStackFrame(ref CallStackFrame frame)
+    internal void PushCallStackFrame(in CallStackFrame frame)
     {
         callStack.Push(frame);
     }
