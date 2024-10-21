@@ -592,7 +592,6 @@ public static partial class LuaVirtualMachine
             }
             else
             {
-                Console.WriteLine($"mul {instruction.B} {vb} {instruction.C} {vc}");
                 LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "mul", vb, vc);
             }
 
@@ -1255,8 +1254,7 @@ public static partial class LuaVirtualMachine
 
             var chunk = context.Chunk;
             var thread = context.Thread;
-            var resultBuffer = context.ResultsBuffer;
-            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, resultBuffer.AsSpan(), false);
+            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA,  false);
 
             var callPosition = chunk.SourcePositions[context.Pc];
             var chunkName = chunk.Name ?? LuaState.DefaultChunkName;
@@ -1284,7 +1282,7 @@ public static partial class LuaVirtualMachine
                 SourcePosition = callPosition,
                 ChunkName = chunkName,
                 RootChunkName = rootChunkName,
-            }, resultBuffer.AsMemory(), context.CancellationToken);
+            }, context.ResultsBuffer.AsMemory(), context.CancellationToken);
 
             return static (ref VirtualMachineExecutionContext context) =>
             {
@@ -1341,7 +1339,7 @@ public static partial class LuaVirtualMachine
                 }
             }
 
-            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, context.ResultsBuffer.AsSpan(), true);
+            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, true);
             var rootChunk = context.RootChunk;
 
             context.Pushing = true;
@@ -1648,7 +1646,7 @@ public static partial class LuaVirtualMachine
     }
     
     
-    static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaThread thread, LuaFunction function, Instruction instruction, int RA, Span<LuaValue> buffer, bool isTailCall)
+    static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaThread thread, LuaFunction function, Instruction instruction, int RA, bool isTailCall)
     {
         var stack = thread.Stack;
 
@@ -1683,11 +1681,9 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(newBase + argumentCount);
             stack.NotifyTop(newBase + argumentCount);
 
-            var stackBuffer = stack.GetBuffer();
-            stackBuffer.Slice(temp, argumentCount).CopyTo(buffer);
-            buffer.Slice(0, argumentCount).CopyTo(stackBuffer[newBase..]);
-
-            buffer.Slice(argumentCount - variableArgumentCount, variableArgumentCount).CopyTo(stackBuffer[temp..]);
+             var stackBuffer = stack.GetBuffer()[temp..];
+             stackBuffer[..argumentCount].CopyTo(stackBuffer[variableArgumentCount..]);
+             stackBuffer.Slice( argumentCount , variableArgumentCount).CopyTo(stackBuffer);
         }
 
         return (newBase, argumentCount);
