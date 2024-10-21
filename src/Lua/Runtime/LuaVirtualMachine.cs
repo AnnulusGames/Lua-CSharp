@@ -8,7 +8,7 @@ public static partial class LuaVirtualMachine
 {
     [StructLayout(LayoutKind.Auto)]
     [method: MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private struct VirtualMachineExecutionContext(LuaState state, LuaStack stack, LuaValue[] resultsBuffer, Memory<LuaValue> buffer, LuaThread thread, Chunk chunk, CallStackFrame frame, CancellationToken cancellationToken)
+    struct VirtualMachineExecutionContext(LuaState state, LuaStack stack, LuaValue[] resultsBuffer, Memory<LuaValue> buffer, LuaThread thread, Chunk chunk, CallStackFrame frame, CancellationToken cancellationToken)
     {
         public readonly LuaState State = state;
         public readonly LuaStack Stack = stack;
@@ -88,7 +88,7 @@ public static partial class LuaVirtualMachine
     }
 
 
-    private class Operator
+    class Operator
     {
         public void SetOperations()
         {
@@ -135,7 +135,7 @@ public static partial class LuaVirtualMachine
         }
 
 
-        private PostOperation? Move(ref VirtualMachineExecutionContext context)
+        PostOperation? Move(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var RA = instruction.A + context.Frame.Base;
@@ -148,7 +148,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private PostOperation? LoadK(ref VirtualMachineExecutionContext context)
+        PostOperation? LoadK(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var RA = instruction.A + context.Frame.Base;
@@ -159,9 +159,9 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private PostOperation? LoadKX(ref VirtualMachineExecutionContext _) => throw new NotImplementedException();
+        PostOperation? LoadKX(ref VirtualMachineExecutionContext _) => throw new NotImplementedException();
 
-        private  PostOperation? LoadBool(ref VirtualMachineExecutionContext context)
+        PostOperation? LoadBool(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -173,7 +173,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? LoadNil(ref VirtualMachineExecutionContext context)
+        PostOperation? LoadNil(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -185,7 +185,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? GetUpVal(ref VirtualMachineExecutionContext context)
+        PostOperation? GetUpVal(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -197,7 +197,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? GetTabUp(ref VirtualMachineExecutionContext context)
+        PostOperation? GetTabUp(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -242,7 +242,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? GetTable(ref VirtualMachineExecutionContext context)
+        PostOperation? GetTable(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -286,7 +286,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? SetTabUp(ref VirtualMachineExecutionContext context)
+        PostOperation? SetTabUp(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -321,7 +321,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? SetUpVal(ref VirtualMachineExecutionContext context)
+        PostOperation? SetUpVal(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -331,7 +331,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? SetTable(ref VirtualMachineExecutionContext context)
+        PostOperation? SetTable(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -365,7 +365,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? NewTable(ref VirtualMachineExecutionContext context)
+        PostOperation? NewTable(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -376,7 +376,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Self(ref VirtualMachineExecutionContext context)
+        PostOperation? Self(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -424,7 +424,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Add(ref VirtualMachineExecutionContext context)
+        PostOperation? Add(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -482,7 +482,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Sub(ref VirtualMachineExecutionContext context)
+        PostOperation? Sub(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -540,7 +540,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Mul(ref VirtualMachineExecutionContext context)
+        PostOperation? Mul(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -598,7 +598,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Div(ref VirtualMachineExecutionContext context)
+        PostOperation? Div(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -656,7 +656,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Mod(ref VirtualMachineExecutionContext context)
+        PostOperation? Mod(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -720,7 +720,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Pow(ref VirtualMachineExecutionContext context)
+        PostOperation? Pow(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -779,7 +779,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Unm(ref VirtualMachineExecutionContext context)
+        PostOperation? Unm(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -837,7 +837,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Not(ref VirtualMachineExecutionContext context)
+        PostOperation? Not(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -852,7 +852,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Len(ref VirtualMachineExecutionContext context)
+        PostOperation? Len(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -917,7 +917,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Concat(ref VirtualMachineExecutionContext context)
+        PostOperation? Concat(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -991,7 +991,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Jmp(ref VirtualMachineExecutionContext context)
+        PostOperation? Jmp(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             context.Pc += instruction.SBx;
@@ -1003,7 +1003,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Eq(ref VirtualMachineExecutionContext context)
+        PostOperation? Eq(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1060,7 +1060,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Lt(ref VirtualMachineExecutionContext context)
+        PostOperation? Lt(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1130,7 +1130,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Le(ref VirtualMachineExecutionContext context)
+        PostOperation? Le(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1200,7 +1200,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Test(ref VirtualMachineExecutionContext context)
+        PostOperation? Test(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1214,7 +1214,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? TestSet(ref VirtualMachineExecutionContext context)
+        PostOperation? TestSet(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1234,7 +1234,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Call(ref VirtualMachineExecutionContext context)
+        PostOperation? Call(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1319,7 +1319,7 @@ public static partial class LuaVirtualMachine
             };
         }
 
-        private  PostOperation? TailCall(ref VirtualMachineExecutionContext context)
+        PostOperation? TailCall(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1357,7 +1357,7 @@ public static partial class LuaVirtualMachine
             return static (ref VirtualMachineExecutionContext context) => { context.ResultCount = context.TaskResult; };
         }
 
-        private  PostOperation? Return(ref VirtualMachineExecutionContext context)
+        PostOperation? Return(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1383,7 +1383,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? ForLoop(ref VirtualMachineExecutionContext context)
+        PostOperation? ForLoop(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1425,7 +1425,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? ForPrep(ref VirtualMachineExecutionContext context)
+        PostOperation? ForPrep(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1449,7 +1449,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? TForCall(ref VirtualMachineExecutionContext context)
+        PostOperation? TForCall(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1498,7 +1498,7 @@ public static partial class LuaVirtualMachine
             });
         }
 
-        private  PostOperation? TForLoop(ref VirtualMachineExecutionContext context)
+        PostOperation? TForLoop(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1515,7 +1515,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? SetList(ref VirtualMachineExecutionContext context)
+        PostOperation? SetList(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1537,7 +1537,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? Closure(ref VirtualMachineExecutionContext context)
+        PostOperation? Closure(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1550,7 +1550,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? VarArg(ref VirtualMachineExecutionContext context)
+        PostOperation? VarArg(ref VirtualMachineExecutionContext context)
         {
             var instruction = context.Instruction;
             var stack = context.Stack;
@@ -1573,7 +1573,7 @@ public static partial class LuaVirtualMachine
             return null;
         }
 
-        private  PostOperation? ExtraArg(ref VirtualMachineExecutionContext _) => throw new NotImplementedException();
+        PostOperation? ExtraArg(ref VirtualMachineExecutionContext _) => throw new NotImplementedException();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
