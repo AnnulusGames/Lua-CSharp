@@ -48,7 +48,7 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
             Function = this,
         };
 
-        context.Thread.PushCallStackFrame(ref frame);
+        context.Thread.PushCallStackFrame(in frame);
         return  Func(context, buffer, cancellationToken);
     }
 }

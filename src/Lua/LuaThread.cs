@@ -31,11 +31,6 @@ public abstract class LuaThread
     {
         return callStack.AsSpan();
     }
-
-    internal void PushCallStackFrame(CallStackFrame frame)
-    {
-        callStack.Push(frame);
-    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void PushCallStackFrame(in CallStackFrame frame)
