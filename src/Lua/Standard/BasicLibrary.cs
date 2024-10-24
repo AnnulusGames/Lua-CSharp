@@ -1,3 +1,4 @@
+using System.Globalization;
 using Lua.CodeAnalysis.Compilation;
 using Lua.Internal;
 using Lua.Runtime;
@@ -445,7 +446,7 @@ public sealed class BasicLibrary
             }
             else if (toBase == 10)
             {
-                if (double.TryParse(str, out var result))
+                if (double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out var result))
                 {
                     value = result;
                 }
