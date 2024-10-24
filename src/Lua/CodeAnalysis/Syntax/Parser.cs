@@ -1010,7 +1010,7 @@ public ref struct Parser
         }
         else
         {
-            return double.Parse(text.ToString(), CultureInfo.InvariantCulture);
+            return double.Parse(text, NumberStyles.Float, CultureInfo.InvariantCulture);
         }
     }
 }
