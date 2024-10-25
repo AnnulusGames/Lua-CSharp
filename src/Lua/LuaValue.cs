@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Lua.Internal;
@@ -120,7 +121,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     }
                     else
                     {
-                        var tryResult = double.TryParse(str, out var d);
+                        var tryResult = double.TryParse(str, NumberStyles.Float, CultureInfo.InvariantCulture, out var d);
                         result = tryResult ? Unsafe.As<double, T>(ref d) : default!;
                         return tryResult;
                     }
