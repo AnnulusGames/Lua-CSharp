@@ -73,23 +73,22 @@ public static partial class LuaVirtualMachine
         public void MoveNext()
         {
             ref var context = ref Context;
-            if (state == State.Await)
-            {
-                context.TaskResult = awaiter.GetResult();
-                context.Thread.PopCallStackFrame();
-                context.Pushing = false;
-                postOperation!(ref context);
-                postOperation = null;
-                state = State.Running;
-            }
-            else  if(state==State.End)
-            {
-                Builder.SetResult(context.ResultCount ?? 0);
-                return;
-            }
-           
             try
             {
+                if (state == State.Await)
+                {
+                    context.TaskResult = awaiter.GetResult();
+                    context.Thread.PopCallStackFrame();
+                    context.Pushing = false;
+                    postOperation!(ref context);
+                    postOperation = null;
+                    state = State.Running;
+                }
+                else  if(state == State.End)
+                {
+                    Builder.SetResult(context.ResultCount ?? 0);
+                    return;
+                }
                 var instructions=  context.Chunk.Instructions;
                 while (context.ResultCount == null)
                 {
@@ -109,23 +108,23 @@ public static partial class LuaVirtualMachine
                     else
                     {
                         postOperation = action;
-                        Builder.AwaitOnCompleted(ref awaiter, ref this);
                         state = State.Await;
+                        Builder.AwaitOnCompleted(ref awaiter, ref this);
                         return;
                     }
                 }
-                Builder.SetResult(context.ResultCount.Value);
                 state = State.End;
                 ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
+                Builder.SetResult(context.ResultCount.Value);
             }
             catch (Exception e)
             {
                 if (context.Pushing) context.Thread.PopCallStackFrame();
                 context.State.CloseUpValues(context.Thread, context.Frame.Base);
                 ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
-                Builder.SetException(e);
                 state = State.End;
                 context = default;
+                Builder.SetException(e);
             }
         }
         
