@@ -198,6 +198,17 @@ public class FunctionCompilationContext : IDisposable
                 }
                 break;
             }
+            case OpCode.Unm:
+                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
+                {
+                    if (lastInstruction.A == instruction.B)
+                    {
+                        lastInstruction=Instruction.Unm(instruction.A, lastInstruction.B);
+                        incrementStackPosition = false;
+                        return;
+                    }
+                }
+                break;
         }
         
         instructions.Add(instruction);
