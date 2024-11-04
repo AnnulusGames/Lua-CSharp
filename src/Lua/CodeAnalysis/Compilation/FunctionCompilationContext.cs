@@ -114,7 +114,7 @@ public class FunctionCompilationContext : IDisposable
     /// Push or merge the new instruction.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushOrMergeInstruction(in Instruction instruction, in SourcePosition position,ref bool incrementStackPosition)
+    public void PushOrMergeInstruction(int lastLocal,in Instruction instruction, in SourcePosition position,ref bool incrementStackPosition)
     {
         if(instructions.Length==0)
         {
@@ -127,7 +127,7 @@ public class FunctionCompilationContext : IDisposable
         switch (opcode)
         {
             case OpCode.Move:
-               if (lastInstruction.A ==instruction.B)
+               if (lastInstruction.A!=lastLocal&&lastInstruction.A ==instruction.B)
                {
                     switch (lastInstruction.OpCode)
                     {
@@ -148,26 +148,42 @@ public class FunctionCompilationContext : IDisposable
                break;
             case OpCode.GetTable:
             {
-                if (lastInstruction.OpCode == OpCode.Move)
+                //Merge MOVE GetTable
+                if (lastInstruction.OpCode == OpCode.Move&&lastLocal != lastInstruction.A)
                 {
-                    var b = instruction.B;
-                    if (instruction.A==b&&lastInstruction.A == b)
-                    {
-                        lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
-                        incrementStackPosition = false;
-                        return;
-                    }
+                        var b = instruction.B;
+                        if (instruction.A==b&&lastInstruction.A == b)
+                        {
+                            lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
+                            incrementStackPosition = false;
+                            return;
+                        }
+                    
                 }
                 break;
             }
             case OpCode.SetTable:
             {
-                if (lastInstruction.OpCode == OpCode.Move)
+                //Merge MOVE SETTABLE
+                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
                 {
                     var lastB = lastInstruction.B;
                     var lastA = lastInstruction.A;
                     if (lastB<255 && lastA == instruction.A)
                     {
+                        //Merge MOVE MOVE SETTABLE
+                        if (instructions.Length > 2)
+                        {
+                            ref var last2Instruction = ref instructions.AsSpan()[^2];
+                            var last2A = last2Instruction.A;
+                            if(last2Instruction.OpCode == OpCode.Move && lastLocal != last2A && instruction.C == last2A)
+                            {
+                                last2Instruction=Instruction.SetTable((byte)(lastB), instruction.B, last2Instruction.B);
+                                instructions.RemoveAtSwapback(instructions.Length - 1);
+                                incrementStackPosition = false;
+                                return;
+                            }
+                        }
                         lastInstruction=Instruction.SetTable((byte)(lastB), instruction.B, instruction.C);
                         incrementStackPosition = false;
                         return;
@@ -175,7 +191,7 @@ public class FunctionCompilationContext : IDisposable
 
                     if (lastA == instruction.C)
                     {
-                        lastInstruction=Instruction.SetTable(instruction.A, instruction.B, instruction.C);
+                        lastInstruction=Instruction.SetTable(instruction.A, instruction.B, lastB);
                         incrementStackPosition = false;
                         return;
                     }

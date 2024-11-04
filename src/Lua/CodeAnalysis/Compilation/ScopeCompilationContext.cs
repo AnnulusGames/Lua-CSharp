@@ -74,14 +74,7 @@ public class ScopeCompilationContext : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushInstruction(in Instruction instruction, SourcePosition position, bool incrementStackPosition = false)
     {
-        if (lastLocalVariableIndex == StackPosition - 1)
-        {
-            Function.PushInstruction(instruction, position);
-        }
-        else
-        {
-            Function.PushOrMergeInstruction(instruction, position, ref incrementStackPosition);
-        }
+        Function.PushOrMergeInstruction(lastLocalVariableIndex,instruction, position, ref incrementStackPosition);
         if(incrementStackPosition)
         {
             StackPosition++;
@@ -101,11 +94,12 @@ public class ScopeCompilationContext : IDisposable
     /// Add new local variable.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddLocalVariable(ReadOnlyMemory<char> name, LocalVariableDescription description)
+    public void AddLocalVariable(ReadOnlyMemory<char> name, LocalVariableDescription description,bool markAsLastLocalVariable = true)
     {
         localVariables[name] = description;
         lastLocalVariableIndex = description.RegisterIndex;
     }
+    
 
     /// <summary>
     /// Gets the local variable in scope.
