@@ -138,6 +138,7 @@ public class FunctionCompilationContext : IDisposable
                         case OpCode.Div:
                         case OpCode.Mod:
                         case OpCode.Pow:
+                        case OpCode.Concat:
                         {
                             lastInstruction.A = instruction.A;
                             incrementStackPosition = false;
@@ -199,14 +200,13 @@ public class FunctionCompilationContext : IDisposable
                 break;
             }
             case OpCode.Unm:
-                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
+            case OpCode.Not:
+            case OpCode.Len:
+                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A && lastInstruction.A == instruction.B)
                 {
-                    if (lastInstruction.A == instruction.B)
-                    {
-                        lastInstruction=Instruction.Unm(instruction.A, lastInstruction.B);
-                        incrementStackPosition = false;
-                        return;
-                    }
+                    lastInstruction = instruction with { B = lastInstruction.B };;
+                    incrementStackPosition = false;
+                    return;
                 }
                 break;
         }
