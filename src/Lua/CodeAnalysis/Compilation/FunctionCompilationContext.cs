@@ -111,6 +111,84 @@ public class FunctionCompilationContext : IDisposable
     }
 
     /// <summary>
+    /// Push or merge the new instruction.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public void PushOrMergeInstruction(in Instruction instruction, in SourcePosition position,ref bool incrementStackPosition)
+    {
+        if(instructions.Length==0)
+        {
+            instructions.Add(instruction);
+            instructionPositions.Add(position);
+            return;
+        }
+        ref var lastInstruction = ref instructions.AsSpan()[^1];
+        var opcode = instruction.OpCode;
+        switch (opcode)
+        {
+            case OpCode.Move:
+               if (lastInstruction.A ==instruction.B)
+               {
+                    switch (lastInstruction.OpCode)
+                    {
+                        case OpCode.GetTable:
+                        case OpCode.Add:
+                        case OpCode.Sub:
+                        case OpCode.Mul:
+                        case OpCode.Div:
+                        case OpCode.Mod:
+                        case OpCode.Pow:
+                        {
+                            lastInstruction.A = instruction.A;
+                            incrementStackPosition = false;
+                            return;
+                        }
+                    }
+               }
+               break;
+            case OpCode.GetTable:
+            {
+                if (lastInstruction.OpCode == OpCode.Move)
+                {
+                    var b = instruction.B;
+                    if (instruction.A==b&&lastInstruction.A == b)
+                    {
+                        lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
+                        incrementStackPosition = false;
+                        return;
+                    }
+                }
+                break;
+            }
+            case OpCode.SetTable:
+            {
+                if (lastInstruction.OpCode == OpCode.Move)
+                {
+                    var lastB = lastInstruction.B;
+                    var lastA = lastInstruction.A;
+                    if (lastB<255 && lastA == instruction.A)
+                    {
+                        lastInstruction=Instruction.SetTable((byte)(lastB), instruction.B, instruction.C);
+                        incrementStackPosition = false;
+                        return;
+                    }
+
+                    if (lastA == instruction.C)
+                    {
+                        lastInstruction=Instruction.SetTable(instruction.A, instruction.B, instruction.C);
+                        incrementStackPosition = false;
+                        return;
+                    }
+                }
+                break;
+            }
+        }
+        
+        instructions.Add(instruction);
+        instructionPositions.Add(position);
+    }
+    
+    /// <summary>
     /// Gets the index of the constant from the value, or if the constant is not registered it is added and its index is returned.
     /// </summary>
     public uint GetConstantIndex(in LuaValue value)
