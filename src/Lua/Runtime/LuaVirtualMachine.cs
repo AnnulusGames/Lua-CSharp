@@ -20,7 +20,7 @@ public static partial class LuaVirtualMachine
         public readonly Chunk RootChunk = chunk.GetRoot();
         public readonly CallStackFrame Frame = frame;
         public readonly CancellationToken CancellationToken = cancellationToken;
-        public int Pc;
+        public int Pc = -1;
         public Instruction Instruction;
         public bool Pushing;
         public int? ResultCount;
@@ -36,7 +36,7 @@ public static partial class LuaVirtualMachine
 
     static readonly PostOperation nopOperation = static (ref VirtualMachineExecutionContext _) => { };
 
-    internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    internal static ValueTask<int> ExecuteClosureAsync(LuaState state, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = state.CurrentThread;
         var closure = (Closure)frame.Function;
@@ -44,41 +44,94 @@ public static partial class LuaVirtualMachine
         var resultBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
 
         var context = new VirtualMachineExecutionContext(state, thread.Stack, resultBuffer, buffer, thread, chunk, frame, cancellationToken);
-        try
-        {
-            var instructions = chunk.Instructions;
 
-            while (context.ResultCount == null)
+        var stateMachine = new AsyncStateMachine
+        {
+            Context = context,
+            Builder = new()
+        };
+        stateMachine.Builder.Start(ref stateMachine);
+        return stateMachine.Builder.Task;
+        
+    }
+
+    struct AsyncStateMachine:IAsyncStateMachine
+    {
+        enum State
+        {
+            Running = 0,
+            Await,
+            End
+        }
+       
+        public VirtualMachineExecutionContext Context;
+        public AsyncValueTaskMethodBuilder<int> Builder;
+        State state;
+        ValueTaskAwaiter<int> awaiter;
+        PostOperation? postOperation;
+        
+        public void MoveNext()
+        {
+            ref var context = ref Context;
+            if (state == State.Await)
             {
-                var instruction = instructions[context.Pc];
-                context.Instruction = instruction;
-                var operation = operations[(int)instruction.OpCode];
-                var action = operation(ref context);
-                if (action != null)
+                context.TaskResult = awaiter.GetResult();
+                context.Thread.PopCallStackFrame();
+                context.Pushing = false;
+                postOperation!(ref context);
+                postOperation = null;
+                state = State.Running;
+            }
+            else  if(state==State.End)
+            {
+                Builder.SetResult(context.ResultCount ?? 0);
+                return;
+            }
+           
+            try
+            {
+                var instructions=  context.Chunk.Instructions;
+                while (context.ResultCount == null)
                 {
-                    context.TaskResult = await context.Task;
-                    //if (context.Pushing) //Assuming context.Pushing is always true
+                    var instruction = instructions[++context.Pc];
+                    context.Instruction = instruction;
+                    var action = operations[(byte)instruction.OpCode](ref context);
+                    if (action == null) continue;
+                    awaiter = context.Task.GetAwaiter();
+                    if (awaiter.IsCompleted)
                     {
+                        context.TaskResult = awaiter.GetResult();
                         context.Thread.PopCallStackFrame();
                         context.Pushing = false;
+
+                        action(ref context);
                     }
-                    action(ref context);
+                    else
+                    {
+                        postOperation = action;
+                        Builder.AwaitOnCompleted(ref awaiter, ref this);
+                        state = State.Await;
+                        return;
+                    }
                 }
-
-                context.Pc++;
+                Builder.SetResult(context.ResultCount.Value);
+                state = State.End;
+                ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
             }
-
-            return context.ResultCount.Value;
+            catch (Exception e)
+            {
+                if (context.Pushing) context.Thread.PopCallStackFrame();
+                context.State.CloseUpValues(context.Thread, context.Frame.Base);
+                ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
+                Builder.SetException(e);
+                state = State.End;
+                context = default;
+            }
         }
-        catch (Exception)
+        
+        public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
-            if (context.Pushing) context.Thread.PopCallStackFrame();
-            context.State.CloseUpValues(context.Thread, context.Frame.Base);
-            throw;
-        }
-        finally
-        {
-            ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
+            Builder.SetStateMachine(stateMachine);
         }
     }
 
