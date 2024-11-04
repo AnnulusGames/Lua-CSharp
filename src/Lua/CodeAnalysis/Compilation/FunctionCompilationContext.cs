@@ -127,7 +127,12 @@ public class FunctionCompilationContext : IDisposable
         switch (opcode)
         {
             case OpCode.Move:
-               if (lastInstruction.A!=lastLocal&&lastInstruction.A ==instruction.B)
+                //last A is not local variable
+               if (lastInstruction.A!=lastLocal && 
+                   //available to merge
+                   lastInstruction.A == instruction.B &&
+                   //not already merged
+                   lastInstruction.A != lastInstruction.B)
                {
                     switch (lastInstruction.OpCode)
                     {
@@ -150,15 +155,14 @@ public class FunctionCompilationContext : IDisposable
             case OpCode.GetTable:
             {
                 //Merge MOVE GetTable
-                if (lastInstruction.OpCode == OpCode.Move&&lastLocal != lastInstruction.A)
+                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
                 {
-                        var b = instruction.B;
-                        if (instruction.A==b&&lastInstruction.A == b)
-                        {
-                            lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
-                            incrementStackPosition = false;
-                            return;
-                        }
+                    if (lastInstruction.A == instruction.B)
+                    {
+                        lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
+                        incrementStackPosition = false;
+                        return;
+                    }
                     
                 }
                 break;
@@ -181,6 +185,7 @@ public class FunctionCompilationContext : IDisposable
                             {
                                 last2Instruction=Instruction.SetTable((byte)(lastB), instruction.B, last2Instruction.B);
                                 instructions.RemoveAtSwapback(instructions.Length - 1);
+                                instructionPositions.RemoveAtSwapback(instructionPositions.Length - 1);
                                 incrementStackPosition = false;
                                 return;
                             }
@@ -197,6 +202,24 @@ public class FunctionCompilationContext : IDisposable
                         return;
                     }
                 }
+                else if (lastInstruction.OpCode == OpCode.GetTabUp&&instructions.Length >= 2)
+                {
+                    ref var last2Instruction = ref instructions[^2];
+                    var last2OpCode = last2Instruction.OpCode;
+                    if (last2OpCode is OpCode.LoadK or OpCode.Move)
+                    {
+                        
+                        var last2A = last2Instruction.A;
+                        if (last2A != lastLocal && instruction.C == last2A)
+                        {
+                            var c = last2OpCode==OpCode.LoadK?last2Instruction.Bx+256:last2Instruction.B;
+                            last2Instruction = lastInstruction;
+                            lastInstruction = instruction with { C = (ushort)c};
+                            incrementStackPosition = false;
+                            return;
+                        }
+                    }
+                }
                 break;
             }
             case OpCode.Unm:
@@ -205,6 +228,14 @@ public class FunctionCompilationContext : IDisposable
                 if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A && lastInstruction.A == instruction.B)
                 {
                     lastInstruction = instruction with { B = lastInstruction.B };;
+                    incrementStackPosition = false;
+                    return;
+                }
+                break;
+            case OpCode.Return:
+                if (lastInstruction.OpCode == OpCode.Move && instruction.B ==2 && lastInstruction.B < 256)
+                {
+                    lastInstruction = instruction with { A = (byte)lastInstruction.B };
                     incrementStackPosition = false;
                     return;
                 }
