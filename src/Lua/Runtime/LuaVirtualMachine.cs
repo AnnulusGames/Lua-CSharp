@@ -1,4 +1,5 @@
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
@@ -36,6 +37,7 @@ public static partial class LuaVirtualMachine
 
     static readonly PostOperation nopOperation = static (ref VirtualMachineExecutionContext _) => { };
 
+    [AsyncStateMachine(typeof(AsyncStateMachine))]
     internal static ValueTask<int> ExecuteClosureAsync(LuaState state, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = state.CurrentThread;
@@ -52,9 +54,9 @@ public static partial class LuaVirtualMachine
         };
         stateMachine.Builder.Start(ref stateMachine);
         return stateMachine.Builder.Task;
-        
     }
-
+    
+    [StructLayout(LayoutKind.Auto)]
     struct AsyncStateMachine:IAsyncStateMachine
     {
         enum State
@@ -128,6 +130,7 @@ public static partial class LuaVirtualMachine
             }
         }
         
+        [DebuggerHidden]
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
             Builder.SetStateMachine(stateMachine);
