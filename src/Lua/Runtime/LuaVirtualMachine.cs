@@ -547,9 +547,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -569,9 +568,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -591,9 +589,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -613,9 +610,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -635,9 +631,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -663,9 +658,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadDouble(out var valueB) && vc.TryReadDouble(out var valueC))
             {
@@ -684,8 +678,7 @@ public static partial class LuaVirtualMachine
             var RA = instruction.A + context.Frame.Base;
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
-            var frame = context.Frame;
-            var RB = instruction.B + frame.Base;
+            var RB = instruction.B + context.Frame.Base;
             var vb = Unsafe.Add(ref stackHead, RB);
 
             if (vb.TryReadDouble(out var valueB))
@@ -702,7 +695,6 @@ public static partial class LuaVirtualMachine
             var instruction = context.Instruction;
             var stack = context.Stack;
             var RA = instruction.A + context.Frame.Base;
-
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var RB = instruction.B + context.Frame.Base;
@@ -719,9 +711,7 @@ public static partial class LuaVirtualMachine
             var RA = instruction.A + context.Frame.Base;
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
-            var chunk = context.Chunk;
-            var frame = context.Frame;
-            var RB = instruction.B + frame.Base;
+            var RB = instruction.B + context.Frame.Base;
             var vb = Unsafe.Add(ref stackHead, RB);
 
             if (vb.TryReadString(out var str))
@@ -741,9 +731,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             var bIsValid = vb.TryReadString(out var strB);
             var cIsValid = vc.TryReadString(out var strC);
@@ -789,9 +778,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
             
             if (vb == vc)
             {
@@ -814,9 +802,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadString(out var strB) && vc.TryReadString(out var strC))
             {
@@ -851,9 +838,8 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(RA + 1);
             ref var stackHead = ref stack.Get(0);
             var chunk = context.Chunk;
-            var frame = context.Frame;
-            var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
-            var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
+            var vb = RK(ref stackHead, chunk, instruction.B, context.Frame.Base);
+            var vc = RK(ref stackHead, chunk, instruction.C, context.Frame.Base);
 
             if (vb.TryReadString(out var strB) && vc.TryReadString(out var strC))
             {
@@ -899,7 +885,6 @@ public static partial class LuaVirtualMachine
             var instruction = context.Instruction;
             var stack = context.Stack;
             var RA = instruction.A + context.Frame.Base;
-
             var RB = instruction.B + context.Frame.Base;
             if (stack.Get(RB).ToBoolean() != (instruction.C == 1))
             {
@@ -919,7 +904,6 @@ public static partial class LuaVirtualMachine
             var instruction = context.Instruction;
             var stack = context.Stack;
             var RA = instruction.A + context.Frame.Base;
-
             var va = stack.Get(RA);
             if (!va.TryReadFunction(out var func))
             {
@@ -1007,8 +991,7 @@ public static partial class LuaVirtualMachine
             var state = context.State;
             var thread = context.Thread;
 
-            var frame = context.Frame;
-            state.CloseUpValues(thread, frame.Base);
+            state.CloseUpValues(thread, context.Frame.Base);
 
             var va = stack.Get(RA);
             if (!va.TryReadFunction(out var func))
