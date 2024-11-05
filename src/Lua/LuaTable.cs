@@ -46,13 +46,13 @@ public sealed class LuaTable
                 if (double.IsNaN(d))
                 {
                     ThrowIndexIsNaN();
-                } 
-                if(MathEx.IsInteger(d))
+                }
+                if (MathEx.IsInteger(d))
                 {
                     var index = (int)d;
                     if (0 < index && index <= Math.Max(array.Length * 2, 8))
                     {
-                        if(array.Length < index)
+                        if (array.Length < index)
                             EnsureArrayCapacity(index);
                         array[index - 1] = value;
                         return;
@@ -138,7 +138,7 @@ public sealed class LuaTable
         {
             array.AsSpan(arrayIndex + 1).CopyTo(array.AsSpan(arrayIndex));
         }
-        
+
         MemoryMarshalEx.UnsafeElementAt(array, array.Length - 1) = default;
 
         return value;
@@ -158,7 +158,7 @@ public sealed class LuaTable
         {
             array.AsSpan(arrayIndex, array.Length - arrayIndex - 1).CopyTo(array.AsSpan(arrayIndex + 1));
         }
-        
+
         array[arrayIndex] = value;
     }
 

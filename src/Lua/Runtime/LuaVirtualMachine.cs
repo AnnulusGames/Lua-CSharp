@@ -55,9 +55,9 @@ public static partial class LuaVirtualMachine
         stateMachine.Builder.Start(ref stateMachine);
         return stateMachine.Builder.Task;
     }
-    
+
     [StructLayout(LayoutKind.Auto)]
-    struct AsyncStateMachine:IAsyncStateMachine
+    struct AsyncStateMachine : IAsyncStateMachine
     {
         enum State
         {
@@ -65,13 +65,13 @@ public static partial class LuaVirtualMachine
             Await,
             End
         }
-       
+
         public VirtualMachineExecutionContext Context;
         public AsyncValueTaskMethodBuilder<int> Builder;
         State state;
         ValueTaskAwaiter<int> awaiter;
         PostOperation? postOperation;
-        
+
         public void MoveNext()
         {
             ref var context = ref Context;
@@ -86,12 +86,12 @@ public static partial class LuaVirtualMachine
                     postOperation = null;
                     state = State.Running;
                 }
-                else  if(state == State.End)
+                else if (state == State.End)
                 {
                     Builder.SetResult(context.ResultCount ?? 0);
                     return;
                 }
-                var instructions=  context.Chunk.Instructions;
+                var instructions = context.Chunk.Instructions;
                 while (context.ResultCount == null)
                 {
                     var instruction = instructions[++context.Pc];
@@ -129,7 +129,7 @@ public static partial class LuaVirtualMachine
                 Builder.SetException(e);
             }
         }
-        
+
         [DebuggerHidden]
         public void SetStateMachine(IAsyncStateMachine stateMachine)
         {
@@ -1309,7 +1309,7 @@ public static partial class LuaVirtualMachine
 
             var chunk = context.Chunk;
             var thread = context.Thread;
-            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA,  false);
+            var (newBase, argumentCount) = PrepareForFunctionCall(thread, func, instruction, RA, false);
 
             var callPosition = chunk.SourcePositions[context.Pc];
             var chunkName = chunk.Name ?? LuaState.DefaultChunkName;
@@ -1699,8 +1699,8 @@ public static partial class LuaVirtualMachine
 
         return false;
     }
-    
-    
+
+
     static (int FrameBase, int ArgumentCount) PrepareForFunctionCall(LuaThread thread, LuaFunction function, Instruction instruction, int RA, bool isTailCall)
     {
         var stack = thread.Stack;
@@ -1718,7 +1718,7 @@ public static partial class LuaVirtualMachine
         if (isTailCall)
         {
             var currentBase = thread.GetCurrentFrame().Base;
-            
+
             var stackBuffer = stack.GetBuffer();
             stackBuffer.Slice(newBase, argumentCount).CopyTo(stackBuffer.Slice(currentBase, argumentCount));
             newBase = currentBase;
@@ -1736,9 +1736,9 @@ public static partial class LuaVirtualMachine
             stack.EnsureCapacity(newBase + argumentCount);
             stack.NotifyTop(newBase + argumentCount);
 
-             var stackBuffer = stack.GetBuffer()[temp..];
-             stackBuffer[..argumentCount].CopyTo(stackBuffer[variableArgumentCount..]);
-             stackBuffer.Slice( argumentCount , variableArgumentCount).CopyTo(stackBuffer);
+            var stackBuffer = stack.GetBuffer()[temp..];
+            stackBuffer[..argumentCount].CopyTo(stackBuffer[variableArgumentCount..]);
+            stackBuffer.Slice(argumentCount, variableArgumentCount).CopyTo(stackBuffer);
         }
 
         return (newBase, argumentCount);
@@ -1748,7 +1748,7 @@ public static partial class LuaVirtualMachine
     {
         return GetTracebacks(context.State, context.Chunk, context.Pc);
     }
-    
+
     static Traceback GetTracebacks(LuaState state, Chunk chunk, int pc)
     {
         var frame = state.CurrentThread.GetCurrentFrame();
