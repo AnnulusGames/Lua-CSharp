@@ -160,6 +160,7 @@ public class FunctionCompilationContext : IDisposable
                     if (lastInstruction.A == instruction.B)
                     {
                         lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
+                        instructionPositions[^1] = position;
                         incrementStackPosition = false;
                         return;
                     }
@@ -186,11 +187,13 @@ public class FunctionCompilationContext : IDisposable
                                 last2Instruction=Instruction.SetTable((byte)(lastB), instruction.B, last2Instruction.B);
                                 instructions.RemoveAtSwapback(instructions.Length - 1);
                                 instructionPositions.RemoveAtSwapback(instructionPositions.Length - 1);
+                                instructionPositions[^1] = position;
                                 incrementStackPosition = false;
                                 return;
                             }
                         }
                         lastInstruction=Instruction.SetTable((byte)(lastB), instruction.B, instruction.C);
+                        instructionPositions[^1] = position;
                         incrementStackPosition = false;
                         return;
                     }
@@ -198,6 +201,7 @@ public class FunctionCompilationContext : IDisposable
                     if (lastA == instruction.C)
                     {
                         lastInstruction=Instruction.SetTable(instruction.A, instruction.B, lastB);
+                        instructionPositions[^1] = position;
                         incrementStackPosition = false;
                         return;
                     }
@@ -215,6 +219,8 @@ public class FunctionCompilationContext : IDisposable
                             var c = last2OpCode==OpCode.LoadK?last2Instruction.Bx+256:last2Instruction.B;
                             last2Instruction = lastInstruction;
                             lastInstruction = instruction with { C = (ushort)c};
+                            instructionPositions[^2] = instructionPositions[^1];
+                            instructionPositions[^1] = position;
                             incrementStackPosition = false;
                             return;
                         }
@@ -228,6 +234,7 @@ public class FunctionCompilationContext : IDisposable
                 if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A && lastInstruction.A == instruction.B)
                 {
                     lastInstruction = instruction with { B = lastInstruction.B };;
+                    instructionPositions[^1] = position;
                     incrementStackPosition = false;
                     return;
                 }
@@ -236,6 +243,7 @@ public class FunctionCompilationContext : IDisposable
                 if (lastInstruction.OpCode == OpCode.Move && instruction.B ==2 && lastInstruction.B < 256)
                 {
                     lastInstruction = instruction with { A = (byte)lastInstruction.B };
+                    instructionPositions[^1] = position;
                     incrementStackPosition = false;
                     return;
                 }
