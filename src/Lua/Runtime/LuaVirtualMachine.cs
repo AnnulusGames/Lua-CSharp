@@ -874,50 +874,18 @@ public static partial class LuaVirtualMachine
             var frame = context.Frame;
             var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
             var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
-
-            var compareResult = vb == vc;
-            if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Eq, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Eq, out metamethod)))
+            
+            if (vb == vc)
             {
-                if (!metamethod.TryReadFunction(out var func))
+                if (instruction.A != 1)
                 {
-                    LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "call", metamethod);
+                    context.Pc++;
                 }
 
-                var rootChunk = context.RootChunk;
-                var state = context.State;
-                var thread = context.Thread;
-                var cancellationToken = context.CancellationToken;
-                stack.Push(vb);
-                stack.Push(vc);
-
-                context.Pushing = true;
-                context.Task = func.InvokeAsyncPushOnly(new()
-                {
-                    State = state,
-                    Thread = thread,
-                    ArgumentCount = 2,
-                    FrameBase = stack.Count - 2,
-                    SourcePosition = chunk.SourcePositions[context.Pc],
-                    ChunkName = chunk.Name,
-                    RootChunkName = rootChunk.Name,
-                }, context.ResultsBuffer.AsMemory(), cancellationToken);
-
-                return static (ref VirtualMachineExecutionContext context) =>
-                {
-                    var compareResult = context.ResultCount != 0 && context.ResultsBuffer[0].ToBoolean();
-                    if (compareResult != (context.Instruction.A == 1))
-                    {
-                        context.Pc++;
-                    }
-                };
+                return null;
             }
-
-            if (compareResult != (instruction.A == 1))
-            {
-                context.Pc++;
-            }
-
-            return null;
+            
+            return ExecuteCompareOperationMetaMethod(vb, vc, ref context,Metamethods.Eq,null);
         }
 
         PostOperation? Lt(ref VirtualMachineExecutionContext context)
@@ -932,62 +900,29 @@ public static partial class LuaVirtualMachine
             var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
             var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
 
-            var compareResult = false;
-
             if (vb.TryReadString(out var strB) && vc.TryReadString(out var strC))
             {
-                compareResult = StringComparer.Ordinal.Compare(strB, strC) < 0;
+               var compareResult = StringComparer.Ordinal.Compare(strB, strC) < 0;
+               if (compareResult != (instruction.A == 1))
+               {
+                   context.Pc++;
+               }
+
+               return null;
             }
-            else if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
+
+            if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
             {
-                compareResult = valueB < valueC;
+               var  compareResult = valueB < valueC;
+               if (compareResult != (instruction.A == 1))
+               {
+                   context.Pc++;
+               }
+
+               return null;
             }
-            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Lt, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Lt, out metamethod)))
-            {
-                if (!metamethod.TryReadFunction(out var func))
-                {
-                    LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "call", metamethod);
-                }
-
-                var rootChunk = context.RootChunk;
-                var state = context.State;
-                var thread = context.Thread;
-                var cancellationToken = context.CancellationToken;
-                stack.Push(vb);
-                stack.Push(vc);
-
-                context.Pushing = true;
-                context.Task = func.InvokeAsyncPushOnly(new()
-                {
-                    State = state,
-                    Thread = thread,
-                    ArgumentCount = 2,
-                    FrameBase = stack.Count - 2,
-                    SourcePosition = chunk.SourcePositions[context.Pc],
-                    ChunkName = chunk.Name,
-                    RootChunkName = rootChunk.Name,
-                }, context.ResultsBuffer.AsMemory(), cancellationToken);
-
-                return static (ref VirtualMachineExecutionContext context) =>
-                {
-                    var compareResult = context.ResultCount != 0 && context.ResultsBuffer[0].ToBoolean();
-                    if (compareResult != (context.Instruction.A == 1))
-                    {
-                        context.Pc++;
-                    }
-                };
-            }
-            else
-            {
-                LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "less than", vb, vc);
-            }
-
-            if (compareResult != (instruction.A == 1))
-            {
-                context.Pc++;
-            }
-
-            return null;
+            
+            return ExecuteCompareOperationMetaMethod(vb, vc, ref context,Metamethods.Lt,"less than");
         }
 
         PostOperation? Le(ref VirtualMachineExecutionContext context)
@@ -1002,62 +937,29 @@ public static partial class LuaVirtualMachine
             var vb = RK(ref stackHead, chunk, instruction.B, frame.Base);
             var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
 
-            var compareResult = false;
-
             if (vb.TryReadString(out var strB) && vc.TryReadString(out var strC))
             {
-                compareResult = StringComparer.Ordinal.Compare(strB, strC) <= 0;
-            }
-            else if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
-            {
-                compareResult = valueB <= valueC;
-            }
-            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Le, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Le, out metamethod)))
-            {
-                if (!metamethod.TryReadFunction(out var func))
+                var compareResult = StringComparer.Ordinal.Compare(strB, strC) <= 0; 
+                if (compareResult != (instruction.A == 1))
                 {
-                    LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "call", metamethod);
+                    context.Pc++;
                 }
 
-                var rootChunk = context.RootChunk;
-                var state = context.State;
-                var thread = context.Thread;
-                var cancellationToken = context.CancellationToken;
-                stack.Push(vb);
-                stack.Push(vc);
-
-                context.Pushing = true;
-                context.Task = func.InvokeAsyncPushOnly(new()
-                {
-                    State = state,
-                    Thread = thread,
-                    ArgumentCount = 2,
-                    FrameBase = stack.Count - 2,
-                    SourcePosition = chunk.SourcePositions[context.Pc],
-                    ChunkName = chunk.Name,
-                    RootChunkName = rootChunk.Name,
-                }, context.ResultsBuffer.AsMemory(), cancellationToken);
-
-                return static (ref VirtualMachineExecutionContext context) =>
-                {
-                    var compareResult = context.ResultCount != 0 && context.ResultsBuffer[0].ToBoolean();
-                    if (compareResult != (context.Instruction.A == 1))
-                    {
-                        context.Pc++;
-                    }
-                };
+                return null;
             }
-            else
+            
+            if (vb.TryReadNumber(out var valueB) && vc.TryReadNumber(out var valueC))
             {
-                LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "less than or equals", vb, vc);
-            }
+                var  compareResult = valueB <= valueC;
+                if (compareResult != (instruction.A == 1))
+                {
+                    context.Pc++;
+                }
 
-            if (compareResult != (instruction.A == 1))
-            {
-                context.Pc++;
+                return null;
             }
-
-            return null;
+            
+            return ExecuteCompareOperationMetaMethod(vb, vc, ref context,Metamethods.Le,"less than or equals");
         }
 
         PostOperation? Test(ref VirtualMachineExecutionContext context)
@@ -1546,7 +1448,7 @@ public static partial class LuaVirtualMachine
         return null;
     }
     
-    static PostOperation? ExecuteCompareMetaMethod(LuaValue vb,LuaValue vc,ref VirtualMachineExecutionContext context, string name,string description)
+    static PostOperation? ExecuteCompareOperationMetaMethod(LuaValue vb,LuaValue vc,ref VirtualMachineExecutionContext context, string name,string? description)
     {
         if (vb.TryGetMetamethod(context.State, name, out var metamethod) || vc.TryGetMetamethod(context.State, name, out metamethod))
         {
@@ -1576,14 +1478,25 @@ public static partial class LuaVirtualMachine
 
             return static (ref VirtualMachineExecutionContext context) =>
             {
-                var stack = context.Stack;
-                var RA = context.Instruction.A + context.Frame.Base;
-                stack.Get(RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
-                stack.NotifyTop(RA + 1);
+                var compareResult = context.ResultCount != 0 && context.ResultsBuffer[0].ToBoolean();
+                if (compareResult != (context.Instruction.A == 1))
+                {
+                    context.Pc++;
+                }
             };
         }
-            
-        LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), description, vb, vc);
+        
+        if(description!=null)
+        {
+            LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), description, vb, vc);
+        }
+        else
+        {
+            if (context.Instruction.A == 1)
+            {
+                context.Pc++;
+            }
+        }
         return null;
     }
 
