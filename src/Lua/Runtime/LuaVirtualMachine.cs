@@ -55,14 +55,65 @@ public static partial class LuaVirtualMachine
         stateMachine.Builder.Start(ref stateMachine);
         return stateMachine.Builder.Task;
     }
-
+    
+    
+    // //Asynchronous method implementation. 
+    // internal async static ValueTask<int> ExecuteClosureAsync(LuaState state, CallStackFrame frame, Memory<LuaValue> buffer, CancellationToken cancellationToken)
+    // {
+    //     var thread = state.CurrentThread;
+    //     var closure = (Closure)frame.Function;
+    //     var chunk = closure.Proto;
+    //     var resultBuffer = ArrayPool<LuaValue>.Shared.Rent(1024);
+    //
+    //     var context = new VirtualMachineExecutionContext(state, thread.Stack, resultBuffer, buffer, thread, chunk, frame, cancellationToken);
+    //     try
+    //     {
+    //         var instructions = chunk.Instructions;
+    //
+    //         while (context.ResultCount == null)
+    //         {
+    //             var instruction = instructions[++context.Pc];
+    //             context.Instruction = instruction;
+    //             var operation = operations[(int)instruction.OpCode];
+    //             var action = operation(ref context);
+    //             if (action != null)
+    //             {
+    //                 context.TaskResult = await context.Task;
+    //                 //if (context.Pushing) //Assuming context.Pushing is always true
+    //                 {
+    //                     context.Thread.PopCallStackFrame();
+    //                     context.Pushing = false;
+    //                 }
+    //                 action(ref context);
+    //             }
+    //         }
+    //
+    //         return context.ResultCount.Value;
+    //     }
+    //     catch (Exception)
+    //     {
+    //         if (context.Pushing) context.Thread.PopCallStackFrame();
+    //         context.State.CloseUpValues(context.Thread, context.Frame.Base);
+    //         throw;
+    //     }
+    //     finally
+    //     {
+    //         ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
+    //     }
+    // }
+    
+    /// <summary>
+    /// Manual implementation of the async state machine
+    /// </summary>
     [StructLayout(LayoutKind.Auto)]
     struct AsyncStateMachine : IAsyncStateMachine
     {
         enum State
         {
             Running = 0,
+            //Await is the state where the task is awaited
             Await,
+            //End is the state where the function is done
             End
         }
 
@@ -77,15 +128,19 @@ public static partial class LuaVirtualMachine
             ref var context = ref Context;
             try
             {
+                //If the state is await, task is done, so this executes the post operation and set the state to running
                 if (state == State.Await)
                 {
                     context.TaskResult = awaiter.GetResult();
+                    awaiter = default;
+                    //Pop the call stack frame because the function task is done
                     context.Thread.PopCallStackFrame();
                     context.Pushing = false;
                     postOperation!(ref context);
                     postOperation = null;
                     state = State.Running;
                 }
+                //If the state is end, the function is done, so set the result and return. I think this state is not reachable in this implementation
                 else if (state == State.End)
                 {
                     Builder.SetResult(context.ResultCount ?? 0);
@@ -97,16 +152,20 @@ public static partial class LuaVirtualMachine
                     var instruction = instructions[++context.Pc];
                     context.Instruction = instruction;
                     var action = operations[(byte)instruction.OpCode](ref context);
+                    //If the action is null, task is not returned so continue to the next instruction
                     if (action == null) continue;
                     awaiter = context.Task.GetAwaiter();
+                    //Directly execute the action if the awaiter is already completed
                     if (awaiter.IsCompleted)
                     {
                         context.TaskResult = awaiter.GetResult();
+                        awaiter = default;
                         context.Thread.PopCallStackFrame();
                         context.Pushing = false;
 
                         action(ref context);
                     }
+                    //Otherwise, set the state to await and return with setting this method as the task's continuation
                     else
                     {
                         postOperation = action;
@@ -115,6 +174,7 @@ public static partial class LuaVirtualMachine
                         return;
                     }
                 }
+                //If the result count is set, this function is done, so set the result and set the state to end
                 state = State.End;
                 ArrayPool<LuaValue>.Shared.Return(context.ResultsBuffer);
                 Builder.SetResult(context.ResultCount.Value);

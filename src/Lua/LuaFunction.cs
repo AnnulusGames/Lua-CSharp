@@ -35,6 +35,10 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
         }
     }
     
+    /// <summary>
+    ///   Invokes the function without popping the call stack frame.
+    ///   Pop the call stack frame  in Virtual Machine after the task is done.
+    /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal  ValueTask<int> InvokeAsyncPushOnly(in LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
