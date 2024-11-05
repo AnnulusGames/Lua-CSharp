@@ -614,7 +614,7 @@ public static partial class LuaVirtualMachine
                 Unsafe.Add(ref stackHead, RA) = valueB - valueC;
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Sub, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Sub, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Sub, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -672,7 +672,7 @@ public static partial class LuaVirtualMachine
                 Unsafe.Add(ref stackHead, RA) = valueB * valueC;
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Mul, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Mul, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Mul, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -730,7 +730,7 @@ public static partial class LuaVirtualMachine
                 Unsafe.Add(ref stackHead, RA) = valueB / valueC;
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Div, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Div, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Div, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -794,7 +794,7 @@ public static partial class LuaVirtualMachine
                 Unsafe.Add(ref stackHead, RA) = mod;
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Mod, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Mod, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Mod, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -852,7 +852,7 @@ public static partial class LuaVirtualMachine
                 Unsafe.Add(ref stackHead, RA) = Math.Pow(valueB, valueC);
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Pow, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Pow, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Pow, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -1064,7 +1064,7 @@ public static partial class LuaVirtualMachine
                 stack.Get(RA) = strB + strC;
                 stack.NotifyTop(RA + 1);
             }
-            else if (vb.TryGetMetamethod(context.State, Metamethods.Pow, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod))
+            else if (vb.TryGetMetamethod(context.State, Metamethods.Pow, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Pow, out metamethod))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -1131,7 +1131,7 @@ public static partial class LuaVirtualMachine
             var vc = RK(ref stackHead, chunk, instruction.C, frame.Base);
 
             var compareResult = vb == vc;
-            if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Eq, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod)))
+            if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Eq, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Eq, out metamethod)))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -1197,7 +1197,7 @@ public static partial class LuaVirtualMachine
             {
                 compareResult = valueB < valueC;
             }
-            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Lt, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod)))
+            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Lt, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Lt, out metamethod)))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
@@ -1267,7 +1267,7 @@ public static partial class LuaVirtualMachine
             {
                 compareResult = valueB <= valueC;
             }
-            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Le, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Add, out metamethod)))
+            else if (!compareResult && (vb.TryGetMetamethod(context.State, Metamethods.Le, out var metamethod) || vc.TryGetMetamethod(context.State, Metamethods.Le, out metamethod)))
             {
                 if (!metamethod.TryReadFunction(out var func))
                 {
