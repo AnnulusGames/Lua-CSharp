@@ -12,4 +12,5 @@ public record struct CallStackFrame
     public required LuaFunction Function;
     public required SourcePosition? CallPosition;
     public required int VariableArgumentCount;
+    public  int? CallerInstructionIndex;
 }
