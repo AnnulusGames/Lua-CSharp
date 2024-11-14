@@ -14,9 +14,12 @@ public sealed class Chunk
     public required Chunk[] Functions { get; init; }
     public required int ParameterCount { get; init; }
 
+    Chunk? rootCache;
+
     internal Chunk GetRoot()
     {
-        if (Parent == null) return this;
-        return Parent.GetRoot();
+        if (rootCache != null) return rootCache;
+        if (Parent == null) return rootCache = this;
+        return rootCache = Parent.GetRoot();
     }
 }
