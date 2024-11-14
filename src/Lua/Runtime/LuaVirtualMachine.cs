@@ -112,11 +112,11 @@ public static partial class LuaVirtualMachine
             {
                 targetCount = 1;
             }
-            
+
             var count = Math.Min(result.Length, targetCount);
             Stack.EnsureCapacity(target + targetCount);
-            
-            
+
+
             var stackBuffer = Stack.GetBuffer();
             if (count > 0)
             {
@@ -153,6 +153,30 @@ public static partial class LuaVirtualMachine
             }
 
             Thread.PopCallStackFrame();
+        }
+
+        public void ClearResultsBuffer()
+        {
+            if (TaskResult == 0) return;
+            if (TaskResult == 1)
+            {
+                ResultsBuffer[0] = LuaValue.Nil;
+                return;
+            }
+            
+            ResultsBuffer.AsSpan(0, TaskResult).Clear();
+        }
+
+        public void ClearResultsBuffer(int count)
+        {
+            if (count == 0) return;
+            if (count == 1)
+            {
+                ResultsBuffer[0] = LuaValue.Nil;
+                return;
+            }
+            
+            ResultsBuffer.AsSpan(0, count).Clear();
         }
     }
 
@@ -234,6 +258,7 @@ public static partial class LuaVirtualMachine
                             var RA = context.Instruction.A + context.FrameBase;
                             context.Stack.Get(RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                             context.Stack.NotifyTop(RA + 1);
+                            context.ClearResultsBuffer();
                             break;
                         case PostOperationType.TForCall:
                             TForCallPostOperation(ref context);
@@ -248,11 +273,13 @@ public static partial class LuaVirtualMachine
                                 context.ResultCount = context.TaskResult;
                                 resultsSpan.CopyTo(context.Buffer.Span);
                                 state = State.End;
+                                resultsSpan.Clear();
                                 LuaValueArrayPool.Return1024(context.ResultsBuffer);
                                 Builder.SetResult(context.TaskResult);
                                 return;
                             }
 
+                            resultsSpan.Clear();
                             break;
                         case PostOperationType.Self:
                             SelfPostOperation(ref context);
@@ -924,7 +951,7 @@ public static partial class LuaVirtualMachine
 
                 context.PopOnTopCallStackFrames();
                 context.State.CloseUpValues(context.Thread, context.FrameBase);
-                LuaValueArrayPool.Return1024(context.ResultsBuffer);
+                LuaValueArrayPool.Return1024(context.ResultsBuffer, true);
                 state = State.End;
                 context = default;
                 Builder.SetException(e);
@@ -958,9 +985,9 @@ public static partial class LuaVirtualMachine
         ref var stackHead = ref stack.Get(0);
         var table = Unsafe.Add(ref stackHead, RB);
         Unsafe.Add(ref stackHead, RA + 1) = table;
-        var value = context.ResultsBuffer[0];
-        Unsafe.Add(ref stackHead, RA) = value;
+        Unsafe.Add(ref stackHead, RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
         stack.NotifyTop(RA + 2);
+        context.ClearResultsBuffer();
     }
 
     static bool Concat(ref VirtualMachineExecutionContext context, out bool doRestart)
@@ -1068,7 +1095,7 @@ public static partial class LuaVirtualMachine
                     var RA = instruction.A + context.FrameBase;
                     stack.EnsureCapacity(RA + resultCount);
                     ref var stackHead = ref stack.Get(RA);
-                    var results = context.ResultsBuffer;
+                    var results = context.ResultsBuffer.AsSpan(0,rawResultCount);
                     for (int i = 0; i < resultCount; i++)
                     {
                         Unsafe.Add(ref stackHead, i) = i >= rawResultCount
@@ -1077,6 +1104,7 @@ public static partial class LuaVirtualMachine
                     }
 
                     stack.NotifyTop(RA + resultCount);
+                    results.Clear();
                 }
 
                 return true;
@@ -1106,7 +1134,7 @@ public static partial class LuaVirtualMachine
             var RA = instruction.A + context.FrameBase;
             stack.EnsureCapacity(RA + resultCount);
             ref var stackHead = ref stack.Get(RA);
-            var results = context.ResultsBuffer;
+            var results = context.ResultsBuffer.AsSpan(0,rawResultCount);
             for (int i = 0; i < resultCount; i++)
             {
                 Unsafe.Add(ref stackHead, i) = i >= rawResultCount
@@ -1115,6 +1143,7 @@ public static partial class LuaVirtualMachine
             }
 
             stack.NotifyTop(RA + resultCount);
+           results.Clear();
         }
     }
 
@@ -1173,6 +1202,7 @@ public static partial class LuaVirtualMachine
             resultsSpan.CopyTo(context.Buffer.Span);
         }
 
+        resultsSpan.Clear();
         return true;
     }
 
@@ -1235,6 +1265,7 @@ public static partial class LuaVirtualMachine
         }
 
         stack.NotifyTop(RA + instruction.C + 3);
+        context.ClearResultsBuffer(resultCount);
     }
 
     static void SetList(ref VirtualMachineExecutionContext context)
@@ -1264,6 +1295,8 @@ public static partial class LuaVirtualMachine
         {
             context.Pc++;
         }
+
+        context.ClearResultsBuffer();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1315,7 +1348,8 @@ public static partial class LuaVirtualMachine
             {
                 context.Thread.PopCallStackFrame();
                 var ra = context.Instruction.A + context.FrameBase;
-                context.Stack.Get(ra) = context.ResultsBuffer[0];
+                var resultCount = awaiter.GetResult();
+                context.Stack.Get(ra) = resultCount == 0 ? default : context.ResultsBuffer[0];
                 if (isSelf)
                 {
                     context.Stack.Get(ra + 1) = table;
@@ -1326,6 +1360,7 @@ public static partial class LuaVirtualMachine
                     context.Stack.NotifyTop(ra + 1);
                 }
 
+                context.ClearResultsBuffer(resultCount);
                 return true;
             }
 
@@ -1432,11 +1467,12 @@ public static partial class LuaVirtualMachine
 
             if (context.Awaiter.IsCompleted)
             {
-                var taskResult = context.Awaiter.GetResult();
+                var resultCount = context.Awaiter.GetResult();
                 context.Thread.PopCallStackFrame();
                 var RA = context.Instruction.A + context.FrameBase;
-                stack.Get(RA) = taskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
+                stack.Get(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                 stack.NotifyTop(RA + 1);
+                context.ClearResultsBuffer(resultCount);
                 return true;
             }
 
@@ -1479,9 +1515,10 @@ public static partial class LuaVirtualMachine
             {
                 context.Thread.PopCallStackFrame();
                 var RA = context.Instruction.A + context.FrameBase;
-                var taskResult = context.Awaiter.GetResult();
-                stack.Get(RA) = taskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
+                var resultCount = context.Awaiter.GetResult();
+                stack.Get(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                 stack.NotifyTop(RA + 1);
+                context.ClearResultsBuffer(resultCount);
                 return true;
             }
 
@@ -1532,11 +1569,14 @@ public static partial class LuaVirtualMachine
             if (context.Awaiter.IsCompleted)
             {
                 context.Thread.PopCallStackFrame();
-                var compareResult = context.Awaiter.GetResult() != 0 && context.ResultsBuffer[0].ToBoolean();
+                var resultCount = context.Awaiter.GetResult();
+                var compareResult = resultCount != 0 && context.ResultsBuffer[0].ToBoolean();
                 if (compareResult != (context.Instruction.A == 1))
                 {
                     context.Pc++;
                 }
+
+                context.ClearResultsBuffer(resultCount);
 
                 return true;
             }

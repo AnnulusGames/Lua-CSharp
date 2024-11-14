@@ -34,14 +34,17 @@ internal static class LuaValueArrayPool
         }
     }
 
-    public static void Return1024(LuaValue[] array)
+    public static void Return1024(LuaValue[] array,bool clear=false)
     {
         if (array.Length != 1024)
         {
             ThrowInvalidArraySize(array.Length, 1024);
         }
 
-        array.AsSpan().Clear();
+        if (clear)
+        {
+            array.AsSpan().Clear();
+        }
         lock (lockObject)
         {
             poolOf1024.Push(array);
