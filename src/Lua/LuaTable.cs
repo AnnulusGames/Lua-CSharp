@@ -16,7 +16,7 @@ public sealed class LuaTable
     }
 
     LuaValue[] array;
-    Dictionary<LuaValue, LuaValue> dictionary;
+    readonly LuaValueDictionary dictionary;
     LuaTable? metatable;
 
     public LuaValue this[LuaValue key]
@@ -62,7 +62,7 @@ public sealed class LuaTable
 
     public int HashMapCount
     {
-        get => dictionary.Count(x => x.Value.Type is not LuaValueType.Nil);
+        get => dictionary.Count - dictionary.NilCount;
     }
 
     public int ArrayLength
