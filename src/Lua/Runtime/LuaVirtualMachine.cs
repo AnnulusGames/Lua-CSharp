@@ -502,7 +502,7 @@ public static partial class LuaVirtualMachine
                             
                             if (vb.TryReadDouble(out numB) && vc.TryReadDouble(out var numC))
                             {
-                                Unsafe.Add(ref stackHead, iA) = numB - numC;
+                                Unsafe.Add(ref stackHead, iA) = numB + numC;
                                 stack.NotifyTop(ra1);
                                 continue;
                             }
@@ -947,11 +947,11 @@ public static partial class LuaVirtualMachine
                                 : instruction.B - 1;
                             var ra = ra1 - 1;
                             stack.EnsureCapacity(ra + count);
-                            stackHead = ref stack.Get(frameBase);
+                            stackHead = ref stack.Get(0);
                             for (int i = 0; i < count; i++)
                             {
-                                stack.Get(ra + i) = frameVariableArgumentCount > i
-                                    ? stack.Get(frameBase - (frameVariableArgumentCount - i))
+                                Unsafe.Add(ref stackHead,ra + i) = frameVariableArgumentCount > i
+                                    ? Unsafe.Add(ref stackHead,frameBase - (frameVariableArgumentCount - i))
                                     : default;
                             }
 
