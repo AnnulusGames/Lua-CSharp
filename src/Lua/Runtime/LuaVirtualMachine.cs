@@ -710,7 +710,7 @@ public static partial class LuaVirtualMachine
                             context.Pc += instruction.SBx;
                             if (iA != 0)
                             {
-                                context.State.CloseUpValues(context.Thread, iA - 1);
+                                context.State.CloseUpValues(context.Thread, frameBase + iA - 1);
                             }
 
                             continue;
