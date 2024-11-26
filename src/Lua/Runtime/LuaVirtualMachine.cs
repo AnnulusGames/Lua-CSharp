@@ -1031,7 +1031,7 @@ public static partial class LuaVirtualMachine
         var RA = instruction.A + context.FrameBase;
         stack.EnsureCapacity(RA + 1);
         ref var stackHead = ref stack.Get(context.FrameBase);
-        ref var constHead = ref context.Chunk.Constants[0];
+        ref var constHead = ref MemoryMarshalEx.UnsafeElementAt(context.Chunk.Constants, 0);
         var vb = RKB(ref stackHead, ref constHead, instruction);
         var vc = RKC(ref stackHead, ref constHead, instruction);
 
