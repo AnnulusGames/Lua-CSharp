@@ -98,3 +98,8 @@ public class LuaAssertionException(Traceback traceback, string message) : LuaRun
 }
 
 public class LuaModuleNotFoundException(string moduleName) : LuaException($"module '{moduleName}' not found");
+
+public class LuaRuntimeCSharpException(Traceback traceback, Exception exception) : LuaRuntimeException(traceback, exception.Message)
+{
+    public Exception Exception { get; } = exception;
+}

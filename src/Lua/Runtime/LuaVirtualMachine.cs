@@ -980,7 +980,7 @@ public static partial class LuaVirtualMachine
             {
                 if (e is not LuaRuntimeException)
                 {
-                    Console.WriteLine(GetTracebacks(ref context));
+                    e = new LuaRuntimeCSharpException(context.State.GetTraceback(), e);
                 }
 
                 context.PopOnTopCallStackFrames();
