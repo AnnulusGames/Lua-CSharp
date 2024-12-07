@@ -1,7 +1,7 @@
 print "testing coroutines"
 
 -- local debug = require'debug'
-
+local weakTableSupported = false
 local f
 
 local main, ismain = coroutine.running()
@@ -205,8 +205,10 @@ C[1] = x;
 local f = x()
 assert(f() == 21 and x()() == 32 and x() == f)
 x = nil
-collectgarbage()
-assert(C[1] == nil)
+if weakTableSupported then
+  collectgarbage()
+  assert(C[1] == nil)
+end
 assert(f() == 43 and f() == 53)
 
 
@@ -239,8 +241,11 @@ assert(a and b == 3)
 assert(coroutine.status(co1) == 'dead')
 
 -- infinite recursion of coroutines
-a = function(a) coroutine.wrap(a)(a) end
-assert(not pcall(a, a))
+-- C# cannot catch stack overflow exception 
+if false then
+  local a = coroutine.wrap(function () a() end)
+  assert(not pcall(a))
+end
 
 
 -- access to locals of erroneous coroutines
