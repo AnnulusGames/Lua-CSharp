@@ -88,13 +88,33 @@ public sealed class LuaState
 
     public Traceback GetTraceback()
     {
-        // TODO: optimize
+        if(threadStack.Count==0)
+        {
+            return new()
+            {
+                RootFunc = (Closure)MainThread.GetCallStackFrames()[0].Function,
+                StackFrames = MainThread.GetCallStackFrames()[1..]
+                    .ToArray()
+            };
+        }
+
+        using var list = new PooledList<CallStackFrame>(8);
+        foreach (var frame in MainThread.GetCallStackFrames()[1..])
+        {
+            list.Add(frame);
+        }
+        foreach (var thread in threadStack.AsSpan())
+        {
+            if(thread.CallStack.Count==0) continue;
+            foreach (var frame in thread.GetCallStackFrames()[1..])
+            {
+                list.Add(frame);
+            }
+        }
         return new()
         {
-            StackFrames = threadStack.AsSpan().ToArray()
-                .Append(MainThread)
-                .SelectMany(x => x.GetCallStackFrames()[1..].ToArray())
-                .ToArray()
+            RootFunc = (Closure)MainThread.GetCallStackFrames()[0].Function,
+            StackFrames = list.AsSpan().ToArray()
         };
     }
 

@@ -108,6 +108,13 @@ public sealed class LuaStack(int initialSize = 256)
     {
         return ref array[index];
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ref LuaValue GetWithNotifyTop(int index)
+    {
+        if (this.top <= index) this.top = index + 1;
+        return ref array[index];
+    }
 
     static void ThrowEmptyStack()
     {

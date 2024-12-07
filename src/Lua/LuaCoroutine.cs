@@ -63,11 +63,6 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                         Stack.EnsureCapacity(baseThread.Stack.Count);
                         baseThread.Stack.AsSpan().CopyTo(Stack.GetBuffer());
                         Stack.NotifyTop(baseThread.Stack.Count);
-
-                        // copy callstack value
-                        CallStack.EnsureCapacity(baseThread.CallStack.Count);
-                        baseThread.CallStack.AsSpan().CopyTo(CallStack.GetBuffer());
-                        CallStack.NotifyTop(baseThread.CallStack.Count);
                     }
                     else
                     {
