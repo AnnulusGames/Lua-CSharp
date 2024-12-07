@@ -615,10 +615,18 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
-
-        // assign global variable
-        context.PushInstruction(Instruction.SetTabUp(0, (ushort)(index + 256), (ushort)(context.StackPosition - 1)), node.Position);
-
+        
+        if(context.TryGetLocalVariableInThisScope(node.Name, out var variable))
+        {
+            // assign local variable
+            context.PushInstruction(Instruction.Move(variable.RegisterIndex, (ushort)(context.StackPosition - 1)), node.Position, true);
+        }
+        else
+        {
+            // assign global variable
+            context.PushInstruction(Instruction.SetTabUp(0, (ushort)(index + 256), (ushort)(context.StackPosition - 1)), node.Position);
+        }
+        
         return true;
     }
 
