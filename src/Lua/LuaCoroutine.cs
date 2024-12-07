@@ -73,6 +73,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                                 : context.Arguments[1..].ToArray()
                         });
                     }
+
                     break;
                 case LuaThreadStatus.Normal:
                 case LuaThreadStatus.Running:
@@ -149,9 +150,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                         State = context.State,
                         Thread = this,
                         ArgumentCount = context.ArgumentCount - 1,
-                        FrameBase = frameBase,
-                        ChunkName = Function.Name,
-                        RootChunkName = context.RootChunkName,
+                        FrameBase = frameBase
                     }, this.buffer, cancellationToken).Preserve();
 
                     Volatile.Write(ref isFirstCall, false);
@@ -192,7 +191,9 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
-                    buffer.Span[1] = ex.Message;
+                    buffer.Span[1] = ex is LuaRuntimeLuaValueException luaValueException
+                        ? luaValueException.Value
+                        : ex.Message;
                     return 2;
                 }
                 else
@@ -219,12 +220,12 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "cannot call yield on a coroutine that is not currently running");
         }
-        
+
         if (context.Thread.GetCallStackFrames()[^2].Function is not Closure)
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "attempt to yield across a C#-call boundary");
         }
-        
+
         resume.SetResult(new()
         {
             Results = context.Arguments.ToArray(),
@@ -242,7 +243,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
             }, this);
         }
 
-    RETRY:
+        RETRY:
         try
         {
             var result = await new ValueTask<YieldContext>(this, yield.Version);

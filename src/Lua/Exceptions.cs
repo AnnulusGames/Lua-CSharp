@@ -103,3 +103,8 @@ public class LuaRuntimeCSharpException(Traceback traceback, Exception exception)
 {
     public Exception Exception { get; } = exception;
 }
+
+public class LuaRuntimeLuaValueException(Traceback traceback, LuaValue value) : LuaRuntimeException(traceback, value.ToString())
+{
+    public LuaValue Value { get; } = value;
+}
