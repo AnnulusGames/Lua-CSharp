@@ -1,4 +1,5 @@
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Lua.Internal;
 
 namespace Lua.Runtime;
@@ -106,6 +107,15 @@ public sealed class LuaStack(int initialSize = 256)
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref LuaValue Get(int index)
     {
+        return ref array[index];
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ref LuaValue FastGet(int index)
+    {
+#if NET6_0_OR_GREATER
+        return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
+#endif
         return ref array[index];
     }
     
