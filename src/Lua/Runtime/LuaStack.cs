@@ -15,7 +15,7 @@ public sealed class LuaStack(int initialSize = 256)
     public void EnsureCapacity(int newSize)
     {
         if (array.Length >= newSize) return;
-        
+
         Resize(ref array, newSize);
         return;
 
@@ -29,7 +29,6 @@ public sealed class LuaStack(int initialSize = 256)
 
             Array.Resize(ref array, size);
         }
-        
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -68,8 +67,8 @@ public sealed class LuaStack(int initialSize = 256)
     public void PopUntil(int newSize)
     {
         if (newSize >= top) return;
-        
-        array.AsSpan(newSize,top-newSize).Clear();
+
+        array.AsSpan(newSize, top - newSize).Clear();
         top = newSize;
     }
 
@@ -103,27 +102,32 @@ public sealed class LuaStack(int initialSize = 256)
     {
         return ref MemoryMarshalEx.UnsafeElementAt(array, index);
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref LuaValue Get(int index)
     {
         return ref array[index];
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref LuaValue FastGet(int index)
     {
 #if NET6_0_OR_GREATER
         return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
-#endif
+#else
         return ref array[index];
+#endif
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref LuaValue GetWithNotifyTop(int index)
     {
         if (this.top <= index) this.top = index + 1;
+#if NET6_0_OR_GREATER
+        return ref Unsafe.Add(ref MemoryMarshal.GetArrayDataReference(array), index);
+#else
         return ref array[index];
+#endif
     }
 
     static void ThrowEmptyStack()
