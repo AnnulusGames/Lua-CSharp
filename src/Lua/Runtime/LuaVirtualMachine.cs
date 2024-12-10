@@ -108,7 +108,7 @@ public static partial class LuaVirtualMachine
                     break;
 
                 case OpCode.Self:
-                    Stack.FastGet(target) = result.Length == 0 ? LuaValue.Nil : result[0];
+                    Stack.Get(target) = result.Length == 0 ? LuaValue.Nil : result[0];
                     Thread.PopCallStackFrameUnsafe(target + 2);
                     return true;
                 case OpCode.SetTable or OpCode.SetTabUp:
@@ -268,7 +268,7 @@ public static partial class LuaVirtualMachine
                         case PostOperationType.Nop: break;
                         case PostOperationType.SetResult:
                             var RA = context.Instruction.A + context.FrameBase;
-                            context.Stack.FastGet(RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
+                            context.Stack.Get(RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                             context.Stack.NotifyTop(RA + 1);
                             context.ClearResultsBuffer();
                             break;
@@ -660,9 +660,9 @@ public static partial class LuaVirtualMachine
 
                             if (vb.TryReadDouble(out numB))
                             {
-                                //ra1 = iA + frameBase + 1;
+                                ra1 = iA + frameBase + 1;
                                 Unsafe.Add(ref stackHead, iA) = -numB;
-                                //stack.NotifyTop(ra1);
+                                stack.NotifyTop(ra1);
                                 continue;
                             }
 
@@ -678,10 +678,9 @@ public static partial class LuaVirtualMachine
                             instruction = instructionRef;
                             iA = instruction.A;
                             ra1 = iA + frameBase + 1;
-                            stack.EnsureCapacity(ra1);
                             stackHead = ref stack.FastGet(frameBase);
                             Unsafe.Add(ref stackHead, iA) = !Unsafe.Add(ref stackHead, instruction.UIntB).ToBoolean();
-                            //stack.NotifyTop(ra1);
+                            stack.NotifyTop(ra1);
                             continue;
 
                         case OpCode.Len:
@@ -693,9 +692,9 @@ public static partial class LuaVirtualMachine
                             if (vb.TryReadString(out var str))
                             {
                                 iA = instruction.A;
-                                // ra1 = iA + frameBase + 1;
+                                ra1 = iA + frameBase + 1;
                                 Unsafe.Add(ref stackHead, iA) = str.Length;
-                                //stack.NotifyTop(ra1);
+                                stack.NotifyTop(ra1);
                                 continue;
                             }
 
@@ -729,7 +728,7 @@ public static partial class LuaVirtualMachine
                         case OpCode.Eq:
                             instruction = instructionRef;
                             iA = instruction.A;
-                            stackHead = ref stack.FastGet(frameBase);
+                            stackHead = ref stack.Get(frameBase);
                             vb = ref RKB(ref stackHead, ref constHead, instruction);
                             vc = ref RKC(ref stackHead, ref constHead, instruction);
                             if (vb == vc)
@@ -753,7 +752,7 @@ public static partial class LuaVirtualMachine
                         case OpCode.Lt:
                             instruction = instructionRef;
                             iA = instruction.A;
-                            stackHead = ref stack.FastGet(frameBase);
+                            stackHead = ref stack.Get(frameBase);
                             vb = ref RKB(ref stackHead, ref constHead, instruction);
                             vc = ref RKC(ref stackHead, ref constHead, instruction);
 
@@ -792,7 +791,7 @@ public static partial class LuaVirtualMachine
                         case OpCode.Le:
                             instruction = instructionRef;
                             iA = instruction.A;
-                            stackHead = ref stack.FastGet(frameBase);
+                            stackHead = ref stack.Get(frameBase);
                             vb = ref RKB(ref stackHead, ref constHead, instruction);
                             vc = ref RKC(ref stackHead, ref constHead, instruction);
 
@@ -829,7 +828,7 @@ public static partial class LuaVirtualMachine
 
                         case OpCode.Test:
                             instruction = instructionRef;
-                            if (stack.FastGet(instruction.A + frameBase).ToBoolean() != (instruction.C == 1))
+                            if (stack.Get(instruction.A + frameBase).ToBoolean() != (instruction.C == 1))
                             {
                                 context.Pc++;
                             }
@@ -837,7 +836,7 @@ public static partial class LuaVirtualMachine
                             continue;
                         case OpCode.TestSet:
                             instruction = instructionRef;
-                            vb = ref stack.FastGet(instruction.B + frameBase);
+                            vb = ref stack.Get(instruction.B + frameBase);
                             if (vb.ToBoolean() != (instruction.C == 1))
                             {
                                 context.Pc++;
@@ -889,7 +888,7 @@ public static partial class LuaVirtualMachine
                             context.ResultCount = retCount;
                             goto End;
                         case OpCode.ForLoop:
-                            ref var indexRef = ref stack.FastGet(instructionRef.A + frameBase);
+                            ref var indexRef = ref stack.Get(instructionRef.A + frameBase);
                             var limit = Unsafe.Add(ref indexRef, 1).UnsafeReadDouble();
                             var step = Unsafe.Add(ref indexRef, 2).UnsafeReadDouble();
                             var index = indexRef.UnsafeReadDouble() + step;
@@ -906,7 +905,7 @@ public static partial class LuaVirtualMachine
                             stack.NotifyTop(instructionRef.A + frameBase + 1);
                             continue;
                         case OpCode.ForPrep:
-                            indexRef = ref stack.FastGet(instructionRef.A + frameBase);
+                            indexRef = ref stack.Get(instructionRef.A + frameBase);
 
                             if (!indexRef.TryReadDouble(out var init))
                             {
@@ -927,7 +926,7 @@ public static partial class LuaVirtualMachine
                             }
 
                             indexRef = init - step;
-                            //stack.NotifyTop(instructionRef.A + frameBase + 1);
+                            stack.NotifyTop(instructionRef.A + frameBase + 1);
                             context.Pc += instructionRef.SBx;
                             continue;
                         case OpCode.TForCall:
@@ -943,7 +942,7 @@ public static partial class LuaVirtualMachine
                             instruction = instructionRef;
                             iA = instruction.A;
                             ra1 = iA + frameBase + 1;
-                            ref var forState = ref stack.FastGet(ra1);
+                            ref var forState = ref stack.Get(ra1);
 
                             if (forState.Type is not LuaValueType.Nil)
                             {
@@ -960,7 +959,7 @@ public static partial class LuaVirtualMachine
                             iA = instruction.A;
                             ra1 = iA + frameBase + 1;
                             stack.EnsureCapacity(ra1);
-                            stack.FastGet(ra1 - 1) = new Closure(context.State, context.Chunk.Functions[instruction.SBx]);
+                            stack.Get(ra1 - 1) = new Closure(context.State, context.Chunk.Functions[instruction.SBx]);
                             stack.NotifyTop(ra1);
                             continue;
                         case OpCode.VarArg:
@@ -973,7 +972,7 @@ public static partial class LuaVirtualMachine
                                 : instruction.B - 1;
                             var ra = ra1 - 1;
                             stack.EnsureCapacity(ra + count);
-                            stackHead = ref stack.FastGet(0);
+                            stackHead = ref stack.Get(0);
                             for (int i = 0; i < count; i++)
                             {
                                 Unsafe.Add(ref stackHead, ra + i) = frameVariableArgumentCount > i
@@ -1042,7 +1041,7 @@ public static partial class LuaVirtualMachine
         var instruction = context.Instruction;
         var RA = instruction.A + context.FrameBase;
         var RB = instruction.B + context.FrameBase;
-        ref var stackHead = ref stack.FastGet(0);
+        ref var stackHead = ref stack.Get(0);
         var table = Unsafe.Add(ref stackHead, RB);
         Unsafe.Add(ref stackHead, RA + 1) = table;
         Unsafe.Add(ref stackHead, RA) = context.TaskResult == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
@@ -1056,7 +1055,7 @@ public static partial class LuaVirtualMachine
         var stack = context.Stack;
         var RA = instruction.A + context.FrameBase;
         stack.EnsureCapacity(RA + 1);
-        ref var stackHead = ref stack.FastGet(context.FrameBase);
+        ref var stackHead = ref stack.Get(context.FrameBase);
         ref var constHead = ref MemoryMarshalEx.UnsafeElementAt(context.Chunk.Constants, 0);
         var vb = RKB(ref stackHead, ref constHead, instruction);
         var vc = RKC(ref stackHead, ref constHead, instruction);
@@ -1078,7 +1077,7 @@ public static partial class LuaVirtualMachine
 
         if (bIsValid && cIsValid)
         {
-            stack.FastGet(RA) = strB + strC;
+            stack.Get(RA) = strB + strC;
             stack.NotifyTop(RA + 1);
             doRestart = false;
             return true;
@@ -1091,7 +1090,7 @@ public static partial class LuaVirtualMachine
     {
         var instruction = context.Instruction;
         var RA = instruction.A + context.FrameBase;
-        var va = context.Stack.FastGet(RA);
+        var va = context.Stack.Get(RA);
         if (!va.TryReadFunction(out var func))
         {
             if (va.TryGetMetamethod(context.State, Metamethods.Call, out var metamethod) &&
@@ -1154,7 +1153,7 @@ public static partial class LuaVirtualMachine
                     var stack = context.Stack;
                     var RA = instruction.A + context.FrameBase;
                     stack.EnsureCapacity(RA + resultCount);
-                    ref var stackHead = ref stack.FastGet(RA);
+                    ref var stackHead = ref stack.Get(RA);
                     var results = context.ResultsBuffer.AsSpan(0, rawResultCount);
                     for (int i = 0; i < resultCount; i++)
                     {
@@ -1193,7 +1192,7 @@ public static partial class LuaVirtualMachine
             var stack = context.Stack;
             var RA = instruction.A + context.FrameBase;
             stack.EnsureCapacity(RA + resultCount);
-            ref var stackHead = ref stack.FastGet(RA);
+            ref var stackHead = ref stack.Get(RA);
             var results = context.ResultsBuffer.AsSpan(0, rawResultCount);
             for (int i = 0; i < resultCount; i++)
             {
@@ -1217,7 +1216,7 @@ public static partial class LuaVirtualMachine
 
         state.CloseUpValues(thread, context.FrameBase);
 
-        var va = stack.FastGet(RA);
+        var va = stack.Get(RA);
         if (!va.TryReadFunction(out var func))
         {
             if (!va.TryGetMetamethod(state, Metamethods.Call, out var metamethod) &&
@@ -1273,15 +1272,15 @@ public static partial class LuaVirtualMachine
         var stack = context.Stack;
         var RA = instruction.A + context.FrameBase;
 
-        var iteratorRaw = stack.FastGet(RA);
+        var iteratorRaw = stack.Get(RA);
         if (!iteratorRaw.TryReadFunction(out var iterator))
         {
             LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "call", iteratorRaw);
         }
 
         var newBase = RA + 3 + instruction.C;
-        stack.FastGet(newBase) = stack.FastGet(RA + 1);
-        stack.FastGet(newBase + 1) = stack.FastGet(RA + 2);
+        stack.Get(newBase) = stack.Get(RA + 1);
+        stack.Get(newBase + 1) = stack.Get(RA + 2);
         stack.NotifyTop(newBase + 2);
         var newFrame = iterator.CreateNewFrame(ref context, newBase);
         context.Thread.PushCallStackFrame(newFrame);
@@ -1319,7 +1318,7 @@ public static partial class LuaVirtualMachine
         for (int i = 1; i <= instruction.C; i++)
         {
             var index = i - 1;
-            stack.FastGet(RA + 2 + i) = index >= resultCount
+            stack.Get(RA + 2 + i) = index >= resultCount
                 ? LuaValue.Nil
                 : resultBuffer[i - 1];
         }
@@ -1334,7 +1333,7 @@ public static partial class LuaVirtualMachine
         var stack = context.Stack;
         var RA = instruction.A + context.FrameBase;
 
-        if (!stack.FastGet(RA).TryReadTable(out var table))
+        if (!stack.Get(RA).TryReadTable(out var table))
         {
             throw new LuaException("internal error");
         }
@@ -1409,10 +1408,10 @@ public static partial class LuaVirtualMachine
                 context.Thread.PopCallStackFrame();
                 var ra = context.Instruction.A + context.FrameBase;
                 var resultCount = awaiter.GetResult();
-                context.Stack.FastGet(ra) = resultCount == 0 ? default : context.ResultsBuffer[0];
+                context.Stack.Get(ra) = resultCount == 0 ? default : context.ResultsBuffer[0];
                 if (isSelf)
                 {
-                    context.Stack.FastGet(ra + 1) = table;
+                    context.Stack.Get(ra + 1) = table;
                     context.Stack.NotifyTop(ra + 2);
                 }
                 else
@@ -1431,10 +1430,10 @@ public static partial class LuaVirtualMachine
         if (table.Type == LuaValueType.Table)
         {
             var ra = context.Instruction.A + context.FrameBase;
-            context.Stack.FastGet(ra) = default;
+            context.Stack.Get(ra) = default;
             if (isSelf)
             {
-                context.Stack.FastGet(ra + 1) = table;
+                context.Stack.Get(ra + 1) = table;
                 context.Stack.NotifyTop(ra + 2);
             }
             else
@@ -1531,7 +1530,7 @@ public static partial class LuaVirtualMachine
                 var resultCount = context.Awaiter.GetResult();
                 context.Thread.PopCallStackFrame();
                 var RA = context.Instruction.A + context.FrameBase;
-                stack.FastGet(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
+                stack.Get(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                 context.ClearResultsBuffer(resultCount);
                 return true;
             }
@@ -1577,7 +1576,7 @@ public static partial class LuaVirtualMachine
                 context.Thread.PopCallStackFrame();
                 var RA = context.Instruction.A + context.FrameBase;
                 var resultCount = context.Awaiter.GetResult();
-                stack.FastGet(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
+                stack.Get(RA) = resultCount == 0 ? LuaValue.Nil : context.ResultsBuffer[0];
                 context.ClearResultsBuffer(resultCount);
                 return true;
             }
@@ -1588,7 +1587,7 @@ public static partial class LuaVirtualMachine
         if (isLen && vb.TryReadTable(out var table))
         {
             var RA = context.Instruction.A + context.FrameBase;
-            stack.FastGet(RA) = table.ArrayLength;
+            stack.Get(RA) = table.ArrayLength;
             return true;
         }
 
