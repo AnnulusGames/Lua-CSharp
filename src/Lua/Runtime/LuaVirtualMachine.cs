@@ -240,9 +240,6 @@ public static partial class LuaVirtualMachine
         State state;
         PostOperationType postOperation;
 
-#if NET6_0_OR_GREATER
-        [MethodImpl(MethodImplOptions.AggressiveOptimization)]
-#endif
         public void MoveNext()
         {
             // If the state is end, the function is done, so set the result and return. I think this state is not reachable in this implementation
