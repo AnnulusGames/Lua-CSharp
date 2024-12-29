@@ -114,9 +114,9 @@ public class FunctionCompilationContext : IDisposable
     /// Push or merge the new instruction.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void PushOrMergeInstruction(int lastLocal,in Instruction instruction, in SourcePosition position,ref bool incrementStackPosition)
+    public void PushOrMergeInstruction(int lastLocal, in Instruction instruction, in SourcePosition position, ref bool incrementStackPosition)
     {
-        if(instructions.Length==0)
+        if (instructions.Length == 0)
         {
             instructions.Add(instruction);
             instructionPositions.Add(position);
@@ -127,13 +127,13 @@ public class FunctionCompilationContext : IDisposable
         switch (opcode)
         {
             case OpCode.Move:
-                //last A is not local variable
-               if (lastInstruction.A!=lastLocal && 
-                   //available to merge
-                   lastInstruction.A == instruction.B &&
-                   //not already merged
-                   lastInstruction.A != lastInstruction.B)
-               {
+                // last A is not local variable
+                if (lastInstruction.A != lastLocal &&
+                    // available to merge
+                    lastInstruction.A == instruction.B &&
+                    // not already merged
+                    lastInstruction.A != lastInstruction.B)
+                {
                     switch (lastInstruction.OpCode)
                     {
                         case OpCode.GetTable:
@@ -144,103 +144,103 @@ public class FunctionCompilationContext : IDisposable
                         case OpCode.Mod:
                         case OpCode.Pow:
                         case OpCode.Concat:
-                        {
-                            lastInstruction.A = instruction.A;
-                            incrementStackPosition = false;
-                            return;
-                        }
-                    }
-               }
-               break;
-            case OpCode.GetTable:
-            {
-                //Merge MOVE GetTable
-                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
-                {
-                    if (lastInstruction.A == instruction.B)
-                    {
-                        lastInstruction=Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
-                        instructionPositions[^1] = position;
-                        incrementStackPosition = false;
-                        return;
-                    }
-                    
-                }
-                break;
-            }
-            case OpCode.SetTable:
-            {
-                //Merge MOVE SETTABLE
-                if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
-                {
-                    var lastB = lastInstruction.B;
-                    var lastA = lastInstruction.A;
-                    if (lastB<255 && lastA == instruction.A)
-                    {
-                        //Merge MOVE MOVE SETTABLE
-                        if (instructions.Length > 2)
-                        {
-                            ref var last2Instruction = ref instructions.AsSpan()[^2];
-                            var last2A = last2Instruction.A;
-                            if(last2Instruction.OpCode == OpCode.Move && lastLocal != last2A && instruction.C == last2A)
                             {
-                                last2Instruction=Instruction.SetTable((byte)(lastB), instruction.B, last2Instruction.B);
-                                instructions.RemoveAtSwapback(instructions.Length - 1);
-                                instructionPositions.RemoveAtSwapback(instructionPositions.Length - 1);
-                                instructionPositions[^1] = position;
+                                lastInstruction.A = instruction.A;
                                 incrementStackPosition = false;
                                 return;
                             }
-                        }
-                        lastInstruction=Instruction.SetTable((byte)(lastB), instruction.B, instruction.C);
-                        instructionPositions[^1] = position;
-                        incrementStackPosition = false;
-                        return;
-                    }
-
-                    if (lastA == instruction.C)
-                    {
-                        lastInstruction=Instruction.SetTable(instruction.A, instruction.B, lastB);
-                        instructionPositions[^1] = position;
-                        incrementStackPosition = false;
-                        return;
                     }
                 }
-                else if (lastInstruction.OpCode == OpCode.GetTabUp&&instructions.Length >= 2)
+                break;
+            case OpCode.GetTable:
                 {
-                    ref var last2Instruction = ref instructions[^2];
-                    var last2OpCode = last2Instruction.OpCode;
-                    if (last2OpCode is OpCode.LoadK or OpCode.Move)
+                    // Merge MOVE GetTable
+                    if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
                     {
-                        
-                        var last2A = last2Instruction.A;
-                        if (last2A != lastLocal && instruction.C == last2A)
+                        if (lastInstruction.A == instruction.B)
                         {
-                            var c = last2OpCode==OpCode.LoadK?last2Instruction.Bx+256:last2Instruction.B;
-                            last2Instruction = lastInstruction;
-                            lastInstruction = instruction with { C = (ushort)c};
-                            instructionPositions[^2] = instructionPositions[^1];
+                            lastInstruction = Instruction.GetTable(instruction.A, lastInstruction.B, instruction.C);
+                            instructionPositions[^1] = position;
+                            incrementStackPosition = false;
+                            return;
+                        }
+
+                    }
+                    break;
+                }
+            case OpCode.SetTable:
+                {
+                    // Merge MOVE SETTABLE
+                    if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A)
+                    {
+                        var lastB = lastInstruction.B;
+                        var lastA = lastInstruction.A;
+                        if (lastB < 255 && lastA == instruction.A)
+                        {
+                            // Merge MOVE MOVE SETTABLE
+                            if (instructions.Length > 2)
+                            {
+                                ref var last2Instruction = ref instructions.AsSpan()[^2];
+                                var last2A = last2Instruction.A;
+                                if (last2Instruction.OpCode == OpCode.Move && lastLocal != last2A && instruction.C == last2A)
+                                {
+                                    last2Instruction = Instruction.SetTable((byte)(lastB), instruction.B, last2Instruction.B);
+                                    instructions.RemoveAtSwapback(instructions.Length - 1);
+                                    instructionPositions.RemoveAtSwapback(instructionPositions.Length - 1);
+                                    instructionPositions[^1] = position;
+                                    incrementStackPosition = false;
+                                    return;
+                                }
+                            }
+                            lastInstruction = Instruction.SetTable((byte)(lastB), instruction.B, instruction.C);
+                            instructionPositions[^1] = position;
+                            incrementStackPosition = false;
+                            return;
+                        }
+
+                        if (lastA == instruction.C)
+                        {
+                            lastInstruction = Instruction.SetTable(instruction.A, instruction.B, lastB);
                             instructionPositions[^1] = position;
                             incrementStackPosition = false;
                             return;
                         }
                     }
+                    else if (lastInstruction.OpCode == OpCode.GetTabUp && instructions.Length >= 2)
+                    {
+                        ref var last2Instruction = ref instructions[^2];
+                        var last2OpCode = last2Instruction.OpCode;
+                        if (last2OpCode is OpCode.LoadK or OpCode.Move)
+                        {
+
+                            var last2A = last2Instruction.A;
+                            if (last2A != lastLocal && instruction.C == last2A)
+                            {
+                                var c = last2OpCode == OpCode.LoadK ? last2Instruction.Bx + 256 : last2Instruction.B;
+                                last2Instruction = lastInstruction;
+                                lastInstruction = instruction with { C = (ushort)c };
+                                instructionPositions[^2] = instructionPositions[^1];
+                                instructionPositions[^1] = position;
+                                incrementStackPosition = false;
+                                return;
+                            }
+                        }
+                    }
+                    break;
                 }
-                break;
-            }
             case OpCode.Unm:
             case OpCode.Not:
             case OpCode.Len:
                 if (lastInstruction.OpCode == OpCode.Move && lastLocal != lastInstruction.A && lastInstruction.A == instruction.B)
                 {
-                    lastInstruction = instruction with { B = lastInstruction.B };;
+                    lastInstruction = instruction with { B = lastInstruction.B }; ;
                     instructionPositions[^1] = position;
                     incrementStackPosition = false;
                     return;
                 }
                 break;
             case OpCode.Return:
-                if (lastInstruction.OpCode == OpCode.Move && instruction.B ==2 && lastInstruction.B < 256)
+                if (lastInstruction.OpCode == OpCode.Move && instruction.B == 2 && lastInstruction.B < 256)
                 {
                     lastInstruction = instruction with { A = (byte)lastInstruction.B };
                     instructionPositions[^1] = position;
@@ -249,11 +249,11 @@ public class FunctionCompilationContext : IDisposable
                 }
                 break;
         }
-        
+
         instructions.Add(instruction);
         instructionPositions.Add(position);
     }
-    
+
     /// <summary>
     /// Gets the index of the constant from the value, or if the constant is not registered it is added and its index is returned.
     /// </summary>
