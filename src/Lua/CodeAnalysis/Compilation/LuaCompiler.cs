@@ -615,8 +615,8 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
 
         // push closure instruction
         context.PushInstruction(Instruction.Closure(context.StackPosition, funcIndex), node.Position, true);
-        
-        if(context.TryGetLocalVariableInThisScope(node.Name, out var variable))
+
+        if (context.TryGetLocalVariableInThisScope(node.Name, out var variable))
         {
             // assign local variable
             context.PushInstruction(Instruction.Move(variable.RegisterIndex, (ushort)(context.StackPosition - 1)), node.Position, true);
@@ -626,7 +626,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
             // assign global variable
             context.PushInstruction(Instruction.SetTabUp(0, (ushort)(index + 256), (ushort)(context.StackPosition - 1)), node.Position);
         }
-        
+
         return true;
     }
 
@@ -643,7 +643,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         // assign global variable
         var first = node.MemberPath[0];
         var tableIndex = GetOrLoadIdentifier(first.Name, context, first.Position, true);
-        
+
         for (int i = 1; i < node.MemberPath.Length - 1; i++)
         {
             var member = node.MemberPath[i];

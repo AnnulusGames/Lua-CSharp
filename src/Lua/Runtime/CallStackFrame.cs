@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Lua.CodeAnalysis;
 
 namespace Lua.Runtime;
 

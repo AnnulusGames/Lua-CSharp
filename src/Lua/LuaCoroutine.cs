@@ -243,7 +243,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
             }, this);
         }
 
-        RETRY:
+    RETRY:
         try
         {
             var result = await new ValueTask<YieldContext>(this, yield.Version);

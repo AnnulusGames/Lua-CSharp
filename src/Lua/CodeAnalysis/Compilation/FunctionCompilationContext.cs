@@ -64,7 +64,7 @@ public class FunctionCompilationContext : IDisposable
     // loop
     FastListCore<BreakDescription> breakQueue;
     FastListCore<GotoDescription> gotoQueue;
-    
+
     /// <summary>
     /// Maximum local stack size
     /// </summary>

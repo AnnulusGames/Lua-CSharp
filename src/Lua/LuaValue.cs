@@ -329,24 +329,24 @@ public readonly struct LuaValue : IEquatable<LuaValue>
         switch (Type)
         {
             case LuaValueType.Boolean:
-            {
-                var v = value != 0;
-                return Unsafe.As<bool, T>(ref v);
-            }
+                {
+                    var v = value != 0;
+                    return Unsafe.As<bool, T>(ref v);
+                }
             case LuaValueType.Number:
-            {
-                var v = value;
-                return Unsafe.As<double, T>(ref v);
-            }
+                {
+                    var v = value;
+                    return Unsafe.As<double, T>(ref v);
+                }
             case LuaValueType.String:
             case LuaValueType.Thread:
             case LuaValueType.Function:
             case LuaValueType.Table:
             case LuaValueType.UserData:
-            {
-                var v = referenceValue!;
-                return Unsafe.As<object, T>(ref v);
-            }
+                {
+                    var v = referenceValue!;
+                    return Unsafe.As<object, T>(ref v);
+                }
         }
 
         return default!;

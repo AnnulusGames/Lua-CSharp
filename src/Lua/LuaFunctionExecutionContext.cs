@@ -14,7 +14,7 @@ public readonly record struct LuaFunctionExecutionContext
     public SourcePosition? SourcePosition { get; init; }
     public string? RootChunkName { get; init; }
     public string? ChunkName { get; init; }
-    public  int? CallerInstructionIndex { get; init; }
+    public int? CallerInstructionIndex { get; init; }
     public object? AdditionalContext { get; init; }
 
     public ReadOnlySpan<LuaValue> Arguments

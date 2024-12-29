@@ -4,7 +4,6 @@ namespace Lua;
 
 public static class LuaFunctionExtensions
 {
-
     public static async ValueTask<LuaValue[]> InvokeAsync(this LuaFunction function, LuaState state, LuaValue[] arguments, CancellationToken cancellationToken = default)
     {
         using var buffer = new PooledArray<LuaValue>(1024);

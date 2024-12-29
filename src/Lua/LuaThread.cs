@@ -38,7 +38,6 @@ public abstract class LuaThread
         callStack.Push(frame);
     }
 
-
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void PopCallStackFrame()
     {

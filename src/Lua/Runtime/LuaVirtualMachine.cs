@@ -54,7 +54,7 @@ public static partial class LuaVirtualMachine
         public bool PopFromBuffer(Span<LuaValue> result)
         {
             ref var callStack = ref Thread.CallStack;
-            Re:
+        Re:
             var frames = callStack.AsSpan();
             if (frames.Length == BaseCallStackCount) return false;
             ref readonly var frame = ref frames[^1];
@@ -93,15 +93,15 @@ public static partial class LuaVirtualMachine
             switch (opCode)
             {
                 case OpCode.Call:
-                {
-                    var c = callInstruction.C;
-                    if (c != 0)
                     {
-                        targetCount = c - 1;
-                    }
+                        var c = callInstruction.C;
+                        if (c != 0)
+                        {
+                            targetCount = c - 1;
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case OpCode.TForCall:
                     target += 3;
                     targetCount = callInstruction.C;
@@ -201,10 +201,8 @@ public static partial class LuaVirtualMachine
         Compare,
     }
 
-
     [AsyncStateMachine(typeof(AsyncStateMachine))]
-    internal static ValueTask<int> ExecuteClosureAsync(LuaState luaState, Memory<LuaValue> buffer,
-        CancellationToken cancellationToken)
+    internal static ValueTask<int> ExecuteClosureAsync(LuaState luaState, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var thread = luaState.CurrentThread;
         ref readonly var frame = ref thread.GetCallStackFrames()[^1];
@@ -230,10 +228,10 @@ public static partial class LuaVirtualMachine
         {
             Running = 0,
 
-            //Await is the state where the task is awaited
+            // Await is the state where the task is awaited
             Await,
 
-            //End is the state where the function is done
+            // End is the state where the function is done
             End
         }
 
@@ -247,7 +245,7 @@ public static partial class LuaVirtualMachine
 #endif
         public void MoveNext()
         {
-            //If the state is end, the function is done, so set the result and return. I think this state is not reachable in this implementation
+            // If the state is end, the function is done, so set the result and return. I think this state is not reachable in this implementation
             if (state == State.End)
             {
                 Builder.SetResult(Context.ResultCount);
@@ -305,8 +303,8 @@ public static partial class LuaVirtualMachine
                     state = State.Running;
                 }
 
-                //This is a label to restart the execution when new function is called or restarted
-                Restart:
+            // This is a label to restart the execution when new function is called or restarted
+            Restart:
 
                 ref var instructionsHead = ref context.Chunk.Instructions[0];
                 var frameBase = context.FrameBase;
@@ -989,14 +987,13 @@ public static partial class LuaVirtualMachine
                     }
                 }
 
-                Await:
-                //Set the state to await and return with setting this method as the task's continuation
+            Await:
+                // Set the state to await and return with setting this method as the task's continuation
                 state = State.Await;
                 Builder.AwaitOnCompleted(ref context.Awaiter, ref this);
                 return;
 
-
-                End:
+            End:
                 state = State.End;
                 LuaValueArrayPool.Return1024(context.ResultsBuffer);
                 Builder.SetResult(context.ResultCount);
@@ -1033,7 +1030,6 @@ public static partial class LuaVirtualMachine
             throw new LuaRuntimeException(context.State.GetTraceback(), $"OpCode {opcode} is not implemented");
         }
     }
-
 
     static void SelfPostOperation(ref VirtualMachineExecutionContext context)
     {
@@ -1102,7 +1098,6 @@ public static partial class LuaVirtualMachine
                 LuaRuntimeException.AttemptInvalidOperation(GetTracebacks(ref context), "call", va);
             }
         }
-
 
         var thread = context.Thread;
         var (newBase, argumentCount, variableArgumentCount) = PrepareForFunctionCall(thread, func, instruction, RA);
@@ -1595,14 +1590,13 @@ public static partial class LuaVirtualMachine
         return true;
     }
 
-
     [MethodImpl(MethodImplOptions.NoInlining)]
     static bool ExecuteCompareOperationMetaMethod(LuaValue vb, LuaValue vc,
         ref VirtualMachineExecutionContext context, string name, string? description, out bool doRestart)
     {
         doRestart = false;
         bool reverseLe = false;
-        ReCheck:
+    ReCheck:
         if (vb.TryGetMetamethod(context.State, name, out var metamethod) ||
             vc.TryGetMetamethod(context.State, name, out metamethod))
         {

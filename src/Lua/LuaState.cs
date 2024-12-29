@@ -88,7 +88,7 @@ public sealed class LuaState
 
     public Traceback GetTraceback()
     {
-        if(threadStack.Count==0)
+        if (threadStack.Count == 0)
         {
             return new()
             {
@@ -105,7 +105,7 @@ public sealed class LuaState
         }
         foreach (var thread in threadStack.AsSpan())
         {
-            if(thread.CallStack.Count==0) continue;
+            if (thread.CallStack.Count == 0) continue;
             foreach (var frame in thread.GetCallStackFrames()[1..])
             {
                 list.Add(frame);

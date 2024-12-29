@@ -82,7 +82,7 @@ namespace Lua.Internal
         public bool ContainsValue(LuaValue value)
         {
             Entry[]? entries = _entries;
-            
+
             for (int i = 0; i < _count; i++)
             {
                 if (entries![i].next >= -1 && entries[i].value.Equals(value))
@@ -139,13 +139,13 @@ namespace Lua.Internal
 
             goto ReturnNotFound;
 
-            ConcurrentOperation:
+        ConcurrentOperation:
             ThrowHelper.ThrowInvalidOperationException_ConcurrentOperationsNotSupported();
-            ReturnFound:
+        ReturnFound:
             ref LuaValue value = ref entry.value;
-            Return:
+        Return:
             return ref value;
-            ReturnNotFound:
+        ReturnNotFound:
             value = ref Unsafe.NullRef<LuaValue>();
             goto Return;
         }
@@ -174,8 +174,8 @@ namespace Lua.Internal
             {
                 _nilCount++;
             }
-            
-            if(_buckets == null)
+
+            if (_buckets == null)
             {
                 Initialize(0);
             }
@@ -191,7 +191,7 @@ namespace Lua.Internal
             uint collisionCount = 0;
             ref int bucket = ref GetBucket(hashCode);
             int i = bucket - 1; // Value in _buckets is 1-based
-            
+
             {
                 ref Entry entry = ref Unsafe.NullRef<Entry>();
                 while ((uint)i < (uint)entries.Length)

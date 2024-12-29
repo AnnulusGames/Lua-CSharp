@@ -23,7 +23,7 @@ public struct Instruction : IEquatable<Instruction>
     public byte A
     {
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get => (byte)((_value >> 6) ); // 8 bits
+        get => (byte)((_value >> 6)); // 8 bits
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0xFFFFC03F) | (((uint)value & 0xFF) << 6);
     }
