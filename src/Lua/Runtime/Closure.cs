@@ -45,19 +45,17 @@ public sealed class Closure : LuaFunction
         {
             return state.GetOrAddUpValue(thread, thread.GetCallStackFrames()[^1].Base + description.Index);
         }
-
+        
         if (description.Index == -1) // -1 is global environment
         {
             return envUpValue;
         }
-
+        
+        if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
         {
-            if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
-            {
-                return parentClosure.UpValues[description.Index];
-            }
-
-            throw new InvalidOperationException("invalid upvalue description.");
+             return parentClosure.UpValues[description.Index];
         }
+        
+        throw new Exception();
     }
 }
