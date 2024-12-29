@@ -33,6 +33,8 @@ public class ScopeCompilationContext : IDisposable
     readonly Dictionary<ReadOnlyMemory<char>, LocalVariableDescription> localVariables = new(256, Utf16StringMemoryComparer.Default);
     readonly Dictionary<ReadOnlyMemory<char>, LabelDescription> labels = new(32, Utf16StringMemoryComparer.Default);
 
+    byte lastLocalVariableIndex;
+
     public byte StackStartPosition { get; private set; }
     public byte StackPosition { get; set; }
 
@@ -72,8 +74,11 @@ public class ScopeCompilationContext : IDisposable
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void PushInstruction(in Instruction instruction, SourcePosition position, bool incrementStackPosition = false)
     {
-        Function.PushInstruction(instruction, position);
-        if (incrementStackPosition) StackPosition++;
+        Function.PushOrMergeInstruction(lastLocalVariableIndex, instruction, position, ref incrementStackPosition);
+        if (incrementStackPosition)
+        {
+            StackPosition++;
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -89,10 +94,12 @@ public class ScopeCompilationContext : IDisposable
     /// Add new local variable.
     /// </summary>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public void AddLocalVariable(ReadOnlyMemory<char> name, LocalVariableDescription description)
+    public void AddLocalVariable(ReadOnlyMemory<char> name, LocalVariableDescription description, bool markAsLastLocalVariable = true)
     {
         localVariables[name] = description;
+        lastLocalVariableIndex = description.RegisterIndex;
     }
+
 
     /// <summary>
     /// Gets the local variable in scope.
@@ -157,6 +164,7 @@ public class ScopeCompilationContext : IDisposable
         HasCapturedLocalVariables = false;
         localVariables.Clear();
         labels.Clear();
+        lastLocalVariableIndex = 0;
     }
 
     /// <summary>
