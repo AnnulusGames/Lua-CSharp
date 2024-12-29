@@ -274,7 +274,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                                     break;
                             }
 
-                            context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)(isFixedItems ? context.StackTopPosition - tableRegisterIndex: 0), arrayBlock), listItem.Position);
+                            context.PushInstruction(Instruction.SetList(tableRegisterIndex, (ushort)(isFixedItems ? context.StackTopPosition - tableRegisterIndex : 0), arrayBlock), listItem.Position);
                             currentArrayChunkSize = 0;
                         }
                         else
@@ -638,7 +638,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         // assign global variable
         var first = node.MemberPath[0];
         var tableIndex = GetOrLoadIdentifier(first.Name, context, first.Position, true);
-        
+
         for (int i = 1; i < node.MemberPath.Length - 1; i++)
         {
             var member = node.MemberPath[i];
@@ -753,7 +753,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 childNode.Accept(this, scopeContext);
             }
 
-            stackPositionToClose =scopeContext.HasCapturedLocalVariables ? stackPositionToClose: (byte)0;
+            stackPositionToClose = scopeContext.HasCapturedLocalVariables ? stackPositionToClose : (byte)0;
             if (hasElse)
             {
                 endJumpIndexList.Add(scopeContext.Function.Instructions.Length);
@@ -782,7 +782,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
                 childNode.Accept(this, scopeContext);
             }
 
-            stackPositionToClose =scopeContext.HasCapturedLocalVariables ? stackPositionToClose: (byte)0;
+            stackPositionToClose = scopeContext.HasCapturedLocalVariables ? stackPositionToClose : (byte)0;
             // skip if node doesn't have else statements
             if (hasElse)
             {
@@ -813,7 +813,7 @@ public sealed class LuaCompiler : ISyntaxNodeVisitor<ScopeCompilationContext, bo
         {
             context.Function.Instructions[index].SBx = context.Function.Instructions.Length - 1 - index;
         }
-        
+
         return true;
     }
 

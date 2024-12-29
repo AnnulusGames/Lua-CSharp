@@ -17,11 +17,11 @@ public sealed class Closure : LuaFunction
         for (int i = 0; i < proto.UpValues.Length; i++)
         {
             var description = proto.UpValues[i];
-            var upValue = GetUpValueFromDescription(state, state.CurrentThread,environment == null ? state.EnvUpValue : UpValue.Closed(environment), description);
+            var upValue = GetUpValueFromDescription(state, state.CurrentThread, environment == null ? state.EnvUpValue : UpValue.Closed(environment), description);
             upValues.Add(upValue);
         }
     }
-    
+
     public Chunk Proto => proto;
     public ReadOnlySpan<UpValue> UpValues => upValues.AsSpan();
 
@@ -37,25 +37,21 @@ public sealed class Closure : LuaFunction
         upValues[index].SetValue(value);
     }
 
-    static UpValue GetUpValueFromDescription(LuaState state, LuaThread thread,UpValue envUpValue,  UpValueInfo description)
+    static UpValue GetUpValueFromDescription(LuaState state, LuaThread thread, UpValue envUpValue, UpValueInfo description)
     {
-        
         if (description.IsInRegister)
         {
-            return state.GetOrAddUpValue(thread, thread.GetCallStackFrames()[^1].Base+ description.Index);
-            
+            return state.GetOrAddUpValue(thread, thread.GetCallStackFrames()[^1].Base + description.Index);
         }
         if (description.Index == -1) // -1 is global environment
         {
             return envUpValue;
         }
+        if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
         {
-            if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
-            {
-                return parentClosure.UpValues[description.Index];
-            }
-
-            throw new Exception();
+            return parentClosure.UpValues[description.Index];
         }
+
+        throw new Exception();
     }
 }
