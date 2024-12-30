@@ -252,7 +252,7 @@ public static partial class LuaVirtualMachine
             ref var context = ref Context;
             try
             {
-                //If the state is State.Await, it means the task is awaited, so get the result and continue
+                // If the state is State.Await, it means the task is awaited, so get the result and continue
                 if (state == State.Await)
                 {
                     context.TaskResult = context.Awaiter.GetResult();
@@ -1114,52 +1114,50 @@ public static partial class LuaVirtualMachine
 
         static bool FuncCall(ref VirtualMachineExecutionContext context, in CallStackFrame newFrame, LuaFunction func, int newBase, int argumentCount)
         {
+            var task = func.Invoke(ref context, newFrame, argumentCount);
+
+            var awaiter = task.GetAwaiter();
+            if (!awaiter.IsCompleted)
             {
-                var task = func.Invoke(ref context, newFrame, argumentCount);
-
-                var awaiter = task.GetAwaiter();
-                if (!awaiter.IsCompleted)
-                {
-                    context.Awaiter = awaiter;
-                    return false;
-                }
-
-                context.Thread.PopCallStackFrameUnsafe(newBase);
-                context.TaskResult = awaiter.GetResult();
-                var instruction = context.Instruction;
-                var rawResultCount = context.TaskResult;
-                var resultCount = rawResultCount;
-                var ic = instruction.C;
-
-                if (ic != 0)
-                {
-                    resultCount = ic - 1;
-                }
-
-                if (resultCount == 0)
-                {
-                    context.Stack.Pop();
-                }
-                else
-                {
-                    var stack = context.Stack;
-                    var RA = instruction.A + context.FrameBase;
-                    stack.EnsureCapacity(RA + resultCount);
-                    ref var stackHead = ref stack.Get(RA);
-                    var results = context.ResultsBuffer.AsSpan(0, rawResultCount);
-                    for (int i = 0; i < resultCount; i++)
-                    {
-                        Unsafe.Add(ref stackHead, i) = i >= rawResultCount
-                            ? default
-                            : results[i];
-                    }
-
-                    stack.NotifyTop(RA + resultCount);
-                    results.Clear();
-                }
-
-                return true;
+                context.Awaiter = awaiter;
+                return false;
             }
+
+            context.Thread.PopCallStackFrameUnsafe(newBase);
+            context.TaskResult = awaiter.GetResult();
+            var instruction = context.Instruction;
+            var rawResultCount = context.TaskResult;
+            var resultCount = rawResultCount;
+            var ic = instruction.C;
+
+            if (ic != 0)
+            {
+                resultCount = ic - 1;
+            }
+
+            if (resultCount == 0)
+            {
+                context.Stack.Pop();
+            }
+            else
+            {
+                var stack = context.Stack;
+                var RA = instruction.A + context.FrameBase;
+                stack.EnsureCapacity(RA + resultCount);
+                ref var stackHead = ref stack.Get(RA);
+                var results = context.ResultsBuffer.AsSpan(0, rawResultCount);
+                for (int i = 0; i < resultCount; i++)
+                {
+                    Unsafe.Add(ref stackHead, i) = i >= rawResultCount
+                        ? default
+                        : results[i];
+                }
+
+                stack.NotifyTop(RA + resultCount);
+                results.Clear();
+            }
+
+            return true;
         }
     }
 
