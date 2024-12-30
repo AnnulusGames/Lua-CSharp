@@ -984,7 +984,7 @@ public static partial class LuaVirtualMachine
                     }
                 }
 
-            Await:
+                Await:
                 // Set the state to await and return with setting this method as the task's continuation
                 state = State.Await;
                 Builder.AwaitOnCompleted(ref context.Awaiter, ref this);
@@ -1102,7 +1102,7 @@ public static partial class LuaVirtualMachine
         var newFrame = func.CreateNewFrame(ref context, newBase, variableArgumentCount);
 
         thread.PushCallStackFrame(newFrame);
-        if (func.IsClosure)
+        if (func is Closure)
         {
             context.Push(newFrame);
             doRestart = true;
@@ -1274,7 +1274,7 @@ public static partial class LuaVirtualMachine
         stack.NotifyTop(newBase + 2);
         var newFrame = iterator.CreateNewFrame(ref context, newBase);
         context.Thread.PushCallStackFrame(newFrame);
-        if (iterator.IsClosure)
+        if (iterator is Closure)
         {
             context.Push(newFrame);
             doRestart = true;
@@ -1384,7 +1384,7 @@ public static partial class LuaVirtualMachine
 
             context.Thread.PushCallStackFrame(newFrame);
 
-            if (indexTable.IsClosure)
+            if (indexTable is Closure)
             {
                 context.Push(newFrame);
                 doRestart = true;
@@ -1460,7 +1460,7 @@ public static partial class LuaVirtualMachine
 
             context.Thread.PushCallStackFrame(newFrame);
 
-            if (indexTable.IsClosure)
+            if (indexTable is Closure)
             {
                 context.Push(newFrame);
                 doRestart = true;
@@ -1504,7 +1504,7 @@ public static partial class LuaVirtualMachine
 
             context.Thread.PushCallStackFrame(newFrame);
 
-            if (func.IsClosure)
+            if (func is Closure)
             {
                 context.Push(newFrame);
                 doRestart = true;
@@ -1550,7 +1550,7 @@ public static partial class LuaVirtualMachine
 
             context.Thread.PushCallStackFrame(newFrame);
 
-            if (func.IsClosure)
+            if (func is Closure)
             {
                 context.Push(newFrame);
                 doRestart = true;
@@ -1607,7 +1607,7 @@ public static partial class LuaVirtualMachine
             if (reverseLe) newFrame.Flags |= CallStackFrameFlags.ReversedLe;
             context.Thread.PushCallStackFrame(newFrame);
 
-            if (func.IsClosure)
+            if (func is Closure)
             {
                 context.Push(newFrame);
                 doRestart = true;

@@ -8,12 +8,6 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
     public string Name { get; } = name;
     internal Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> Func { get; } = func;
 
-    internal bool IsClosure
-    {
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        get; private protected init;
-    } = false;
-
     public LuaFunction(Func<LuaFunctionExecutionContext, Memory<LuaValue>, CancellationToken, ValueTask<int>> func) : this("anonymous", func)
     {
     }
