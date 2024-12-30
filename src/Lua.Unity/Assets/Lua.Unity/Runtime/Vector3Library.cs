@@ -29,11 +29,9 @@ namespace Lua.Unity
                 new("dot", Dot),
                 new("lerp", Lerp),
                 new("lerp_unclamped", LerpUnclamped),
-                new("magnitude", Magnitude),
                 new("max", Max),
                 new("min", Min),
                 new("move_towards", MoveTowards),
-                new("normalize", Normalize),
                 new("project", Project),
                 new("project_on_plane", ProjectOnPlane),
                 new("reflect", Reflect),
@@ -42,7 +40,6 @@ namespace Lua.Unity
                 new("signed_angle", SignedAngle),
                 new("slerp", Slerp),
                 new("slerp_unclamped", SlerpUnclamped),
-                new("sqrmagnitude", SqrMagnitude),
             };
         }
 
@@ -144,13 +141,6 @@ namespace Lua.Unity
             return new(1);
         }
 
-        public ValueTask<int> Magnitude(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            var a = context.GetArgument<LuaVector3>(0);
-            buffer.Span[0] = Vector3.Magnitude(a);
-            return new(1);
-        }
-
         public ValueTask<int> Max(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
         {
             var a = context.GetArgument<LuaVector3>(0);
@@ -173,13 +163,6 @@ namespace Lua.Unity
             var b = context.GetArgument<LuaVector3>(1);
             var t = context.GetArgument<float>(2);
             buffer.Span[0] = new LuaVector3(Vector3.MoveTowards(a, b, t));
-            return new(1);
-        }
-
-        public ValueTask<int> Normalize(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            var a = context.GetArgument<LuaVector3>(0);
-            buffer.Span[0] = new LuaVector3(Vector3.Normalize(a));
             return new(1);
         }
 
@@ -249,13 +232,6 @@ namespace Lua.Unity
             var b = context.GetArgument<LuaVector3>(1);
             var t = context.GetArgument<float>(2);
             buffer.Span[0] = new LuaVector3(Vector3.SlerpUnclamped(a, b, t));
-            return new(1);
-        }
-
-        public ValueTask<int> SqrMagnitude(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            var a = context.GetArgument<LuaVector3>(0);
-            buffer.Span[0] = Vector3.SqrMagnitude(a);
             return new(1);
         }
     }
