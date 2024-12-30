@@ -53,7 +53,7 @@ public static partial class LuaVirtualMachine
         public bool PopFromBuffer(Span<LuaValue> result)
         {
             ref var callStack = ref Thread.CallStack;
-            Re:
+        Re:
             var frames = callStack.AsSpan();
             if (frames.Length == BaseCallStackCount) return false;
             ref readonly var frame = ref frames[^1];
@@ -193,6 +193,7 @@ public static partial class LuaVirtualMachine
             {
                 TaskResult = await Task;
                 Task = default;
+
                 Thread.PopCallStackFrame();
                 switch (postOperation)
                 {
@@ -266,7 +267,7 @@ public static partial class LuaVirtualMachine
         try
         {
             // This is a label to restart the execution when new function is called or restarted
-            Restart:
+        Restart:
             ref var instructionsHead = ref context.Chunk.Instructions[0];
             var frameBase = context.FrameBase;
             var stack = context.Stack;
@@ -947,7 +948,7 @@ public static partial class LuaVirtualMachine
                 }
             }
 
-            End:
+        End:
             postOperation = PostOperationType.None;
             LuaValueArrayPool.Return1024(context.ResultsBuffer);
             return false;
@@ -1542,7 +1543,7 @@ public static partial class LuaVirtualMachine
     {
         doRestart = false;
         bool reverseLe = false;
-        ReCheck:
+    ReCheck:
         if (vb.TryGetMetamethod(context.State, name, out var metamethod) ||
             vc.TryGetMetamethod(context.State, name, out metamethod))
         {
