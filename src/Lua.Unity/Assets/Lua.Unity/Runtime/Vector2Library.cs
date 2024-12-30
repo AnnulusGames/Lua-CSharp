@@ -165,40 +165,40 @@ namespace Lua.Unity
     [LuaObject]
     public sealed partial class LuaVector2
     {
-        Vector2 vector;
+        Vector2 value;
 
         [LuaMember("x")]
         public float X
         {
-            get => vector.x;
-            set => vector.x = value;
+            get => value.x;
+            set => this.value.x = value;
         }
 
         [LuaMember("y")]
         public float Y
         {
-            get => vector.y;
-            set => vector.y = value;
+            get => value.y;
+            set => this.value.y = value;
         }
 
         public LuaVector2(float x, float y)
         {
-            vector = new Vector2(x, y);
+            value = new Vector2(x, y);
         }
 
         public LuaVector2(Vector2 vector2)
         {
-            vector = vector2;
+            value = vector2;
         }
 
         [LuaMember("normalized")]
-        public LuaVector2 Normalized() => new(vector.normalized);
+        public LuaVector2 Normalized() => new(value.normalized);
 
         [LuaMember("magnitude")]
-        public float Magnitude() => vector.magnitude;
+        public float Magnitude() => value.magnitude;
 
         [LuaMember("sqrmagnitude")]
-        public float SqrMagnitude() => vector.sqrMagnitude;
+        public float SqrMagnitude() => value.sqrMagnitude;
 
         [LuaMetamethod(LuaObjectMetamethod.Add)]
         public static LuaVector2 Add(LuaVector2 a, LuaVector2 b)
@@ -227,7 +227,7 @@ namespace Lua.Unity
         [LuaMetamethod(LuaObjectMetamethod.ToString)]
         public override string ToString()
         {
-            return vector.ToString();
+            return value.ToString();
         }
 
         public static implicit operator Vector2(LuaVector2 luaVector2)

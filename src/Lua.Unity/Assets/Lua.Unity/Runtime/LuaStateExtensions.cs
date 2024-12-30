@@ -2,7 +2,7 @@ namespace Lua.Unity
 {
     public static class LuaStateExtensions
     {
-        public static void OpenUnityLibrary(this LuaState state)
+        public static void OpenUnityLibraries(this LuaState state)
         {
             var vector2 = new LuaTable(0, Vector2Library.Instance.Functions.Length);
             foreach (var func in Vector2Library.Instance.Functions)

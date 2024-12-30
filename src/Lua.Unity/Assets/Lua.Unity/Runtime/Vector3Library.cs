@@ -239,47 +239,47 @@ namespace Lua.Unity
     [LuaObject]
     public sealed partial class LuaVector3
     {
-        Vector3 vector;
+        Vector3 value;
 
         [LuaMember("x")]
         public float X
         {
-            get => vector.x;
-            set => vector.x = value;
+            get => value.x;
+            set => this.value.x = value;
         }
 
         [LuaMember("y")]
         public float Y
         {
-            get => vector.y;
-            set => vector.y = value;
+            get => value.y;
+            set => this.value.y = value;
         }
 
         [LuaMember("z")]
         public float Z
         {
-            get => vector.z;
-            set => vector.z = value;
+            get => value.z;
+            set => this.value.z = value;
         }
 
         public LuaVector3(float x, float y, float z)
         {
-            vector = new Vector3(x, y, z);
+            value = new Vector3(x, y, z);
         }
 
         public LuaVector3(Vector3 vector3)
         {
-            vector = vector3;
+            value = vector3;
         }
 
         [LuaMember("normalized")]
-        public LuaVector3 Normalized() => new(vector.normalized);
+        public LuaVector3 Normalized() => new(value.normalized);
 
         [LuaMember("magnitude")]
-        public float Magnitude() => vector.magnitude;
+        public float Magnitude() => value.magnitude;
 
         [LuaMember("sqrmagnitude")]
-        public float SqrMagnitude() => vector.sqrMagnitude;
+        public float SqrMagnitude() => value.sqrMagnitude;
 
         [LuaMetamethod(LuaObjectMetamethod.Add)]
         public static LuaVector3 Add(LuaVector3 a, LuaVector3 b)
@@ -308,7 +308,7 @@ namespace Lua.Unity
         [LuaMetamethod(LuaObjectMetamethod.ToString)]
         public override string ToString()
         {
-            return vector.ToString();
+            return value.ToString();
         }
 
         public static implicit operator Vector3(LuaVector3 luaVector3)
