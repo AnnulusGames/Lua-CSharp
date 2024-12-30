@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Lua.Unity.Editor
 {
     [ScriptedImporter(1, "lua")]
-    public class LuaImporter : ScriptedImporter
+    public sealed class LuaImporter : ScriptedImporter
     {
         public override void OnImportAsset(AssetImportContext ctx)
         {
