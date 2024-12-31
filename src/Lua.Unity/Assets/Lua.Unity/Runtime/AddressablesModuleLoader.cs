@@ -1,3 +1,4 @@
+#if LUA_UNITY_ADDRESSABLES
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -80,3 +81,4 @@ namespace Lua.Unity
         }
     }
 }
+#endif
