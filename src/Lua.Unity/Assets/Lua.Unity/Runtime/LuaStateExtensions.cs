@@ -27,6 +27,12 @@ namespace Lua.Unity
             }
             color.Metatable = ColorLibrary.Instance.Metatable;
             state.Environment["color"] = color;
+
+            var time = new LuaTable
+            {
+                Metatable = TimeLibrary.Instance.Metatable
+            };
+            state.Environment["time"] = time;
         }
     }
 }
