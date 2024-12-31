@@ -48,16 +48,7 @@ Install-Package LuaCSharp
 
 ### Unity
 
-Lua-CSharpをUnityで利用することも可能です。(Mono/IL2CPPの両方で動作します)
-
-### 要件
-
-* Unity 2021.3 以上
-
-### インストール
-
-1. [NugetForUnity](https://github.com/GlitchEnzo/NuGetForUnity)をインストールします。
-2. `NuGet > Manage NuGet Packages`からNuGetウィンドウを開き、`LuaCSharp`パッケージを検索してインストールします。
+Lua-CSharpをUnityで利用することも可能です。詳細は[Lua.Unity](#luaunity)の項目を参照してください。
 
 ## クイックスタート
 
@@ -485,6 +476,51 @@ catch (LuaRuntimeException)
 {
     // 実行時例外が発生した際の処理
 }
+```
+
+## Lua.Unity
+
+Lua-CSharpはUnityで利用することも可能です。(Mono/IL2CPPの両方で動作します)
+また、Lua-CSharpをUnityと統合するための`Lua.Unity`拡張パッケージも提供されています。
+
+### 要件
+
+* Unity 2021.3 以上
+
+### インストール
+
+1. [NugetForUnity](https://github.com/GlitchEnzo/NuGetForUnity)をインストールします。
+
+2. `NuGet > Manage NuGet Packages`からNuGetウィンドウを開き、`LuaCSharp`パッケージを検索してインストールします。
+
+3. `Window > Package Manager`からPackage Managerウィンドウを開き、`[+] > Add package from git URL`から以下のURLを入力します。
+    ```
+    https://github.com/AnnulusGames/Lua-CSharp.git?path=src/Lua.Unity/Assets/Lua.Unity
+    ```
+
+### LuaImporter / LuaAsset
+
+Lua.Unityを導入することで、`.lua`拡張子のファイルを`LuaAsset`として扱えるようになります。
+
+![img](docs/img-lua-importer.png)
+
+これは通常の`TextAsset`のように利用することが可能です。
+
+```cs
+var asset = Resources.Load<LuaAsset>("example");
+await state.DoStringAsync(asset.Text, ct);
+```
+
+### Resources(Addressables)ModuleLoader
+
+また、内部でResourcesまたはAddressablesを利用する`ILuaModuleLoader`の実装が用意されています。
+
+```cs
+// モジュールの読み込みにResourcesを利用する
+state.ModuleLoader = new ResourcesModuleLoader();
+
+// モジュールの読み込みにAddressablesを利用する (Addressablesパッケージが必要)
+state.ModuleLoader = new AddressablesModuleLoader();
 ```
 
 ## 互換性
