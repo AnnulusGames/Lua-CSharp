@@ -2,7 +2,7 @@
     "name": "Lua.Unity.Editor",
     "rootNamespace": "",
     "references": [
-        "GUID:1e0c3844aaa6d4b64b4b0bb8be06318a"
+        "GUID:a3eac051004cc4c6b92cb1b018e08311"
     ],
     "includePlatforms": [
         "Editor"
