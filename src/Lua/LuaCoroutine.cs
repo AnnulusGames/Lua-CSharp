@@ -191,9 +191,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
-                    buffer.Span[1] = ex is LuaRuntimeLuaValueException luaValueException
-                        ? luaValueException.Value
-                        : ex.Message;
+                    buffer.Span[1] = ex is LuaRuntimeException { ErrorObject: not null } luaEx ? luaEx.ErrorObject.Value: ex.Message;
                     return 2;
                 }
                 else

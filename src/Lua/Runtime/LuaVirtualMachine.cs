@@ -960,7 +960,7 @@ public static partial class LuaVirtualMachine
             LuaValueArrayPool.Return1024(context.ResultsBuffer, true);
             if (e is not LuaRuntimeException)
             {
-                var newException = new LuaRuntimeCSharpException(GetTracebacks(ref context), e);
+                var newException = new LuaRuntimeException(GetTracebacks(ref context), e);
                 context = default;
                 throw newException;
             }

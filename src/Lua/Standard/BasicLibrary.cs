@@ -106,7 +106,7 @@ public sealed class BasicLibrary
             ? "(error object is a nil value)"
             : context.Arguments[0];
 
-        throw new LuaRuntimeLuaValueException(context.State.GetTraceback(), value);
+        throw new LuaRuntimeException(context.State.GetTraceback(), value);
     }
 
     public ValueTask<int> GetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
@@ -156,7 +156,7 @@ public sealed class BasicLibrary
         buffer.Span[2] = 0;
         return new(3);
     }
-    
+
     public async ValueTask<int> LoadFile(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         // Lua-CSharp does not support binary chunks, the mode argument is ignored.
@@ -240,7 +240,7 @@ public sealed class BasicLibrary
             return new(1);
         }
     }
-    
+
     public ValueTask<int> Pairs(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
@@ -285,9 +285,9 @@ public sealed class BasicLibrary
         catch (Exception ex)
         {
             buffer.Span[0] = false;
-            if(ex is LuaRuntimeLuaValueException luaEx)
+            if (ex is LuaRuntimeException { ErrorObject: not null } luaEx)
             {
-                buffer.Span[1] = luaEx.Value;
+                buffer.Span[1] = luaEx.ErrorObject.Value;
             }
             else
             {
@@ -360,7 +360,7 @@ public sealed class BasicLibrary
         arg0[arg1] = arg2;
         return new(0);
     }
-    
+
     public ValueTask<int> Select(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
@@ -398,7 +398,7 @@ public sealed class BasicLibrary
             return default;
         }
     }
-    
+
     public ValueTask<int> SetMetatable(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument<LuaTable>(0);
@@ -567,7 +567,7 @@ public sealed class BasicLibrary
         var arg0 = context.GetArgument(0);
         return arg0.CallToStringAsync(context, buffer, cancellationToken);
     }
-    
+
     public ValueTask<int> Type(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var arg0 = context.GetArgument(0);
@@ -613,8 +613,8 @@ public sealed class BasicLibrary
         catch (Exception ex)
         {
             methodBuffer.AsSpan().Clear();
-            var error = (ex is LuaRuntimeLuaValueException luaEx) ? luaEx.Value : ex.Message;
-            
+            var error = ex is LuaRuntimeException { ErrorObject: not null } luaEx ? luaEx.ErrorObject.Value : ex.Message;
+
             context.State.Push(error);
 
             // invoke error handler
@@ -627,7 +627,7 @@ public sealed class BasicLibrary
 
             buffer.Span[0] = false;
             buffer.Span[1] = methodBuffer[0];
-            
+
 
             return 2;
         }
