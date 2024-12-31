@@ -9,6 +9,7 @@ namespace Lua.Unity
             {
                 vector2[func.Name] = func;
             }
+            vector2.Metatable = Vector2Library.Instance.Metatable;
             state.Environment["vector2"] = vector2;
 
             var vector3 = new LuaTable(0, Vector3Library.Instance.Functions.Length);
@@ -16,6 +17,7 @@ namespace Lua.Unity
             {
                 vector3[func.Name] = func;
             }
+            vector3.Metatable = Vector3Library.Instance.Metatable;
             state.Environment["vector3"] = vector3;
 
             var color = new LuaTable(0, ColorLibrary.Instance.Functions.Length);
@@ -23,6 +25,7 @@ namespace Lua.Unity
             {
                 color[func.Name] = func;
             }
+            color.Metatable = ColorLibrary.Instance.Metatable;
             state.Environment["color"] = color;
         }
     }

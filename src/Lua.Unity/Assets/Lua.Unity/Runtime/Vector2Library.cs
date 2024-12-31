@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Lua.Runtime;
 using UnityEngine;
 
 namespace Lua.Unity
@@ -10,17 +11,12 @@ namespace Lua.Unity
         public static readonly Vector2Library Instance = new();
 
         public readonly LuaFunction[] Functions;
+        public readonly LuaTable Metatable = new();
 
         public Vector2Library()
         {
             Functions = new LuaFunction[]
             {
-                new("zero", Zero),
-                new("one", One),
-                new("right", Right),
-                new("left", Left),
-                new("up", Up),
-                new("down", Down),
                 new("angle", Angle),
                 new("distance", Distance),
                 new("dot", Dot),
@@ -33,42 +29,22 @@ namespace Lua.Unity
                 new("scale", Scale),
                 new("signed_angle", SignedAngle),
             };
-        }
 
-        public ValueTask<int> Zero(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.zero);
-            return new(1);
-        }
-
-        public ValueTask<int> One(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.one);
-            return new(1);
-        }
-
-        public ValueTask<int> Right(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.right);
-            return new(1);
-        }
-
-        public ValueTask<int> Left(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.left);
-            return new(1);
-        }
-
-        public ValueTask<int> Up(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.up);
-            return new(1);
-        }
-
-        public ValueTask<int> Down(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaVector2(Vector2.down);
-            return new(1);
+            Metatable[Metamethods.Index] = new LuaFunction((context, buffer, ct) =>
+            {
+                var name = context.GetArgument<string>(1);
+                buffer.Span[0] = name switch
+                {
+                    "zero" => new LuaVector2(Vector2.zero),
+                    "one" => new LuaVector2(Vector2.one),
+                    "right" => new LuaVector2(Vector2.right),
+                    "left" => new LuaVector2(Vector2.left),
+                    "up" => new LuaVector2(Vector2.up),
+                    "down" => new LuaVector2(Vector2.down),
+                    _ => LuaValue.Nil,
+                };
+                return new(1);
+            });
         }
 
         public ValueTask<int> Angle(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)

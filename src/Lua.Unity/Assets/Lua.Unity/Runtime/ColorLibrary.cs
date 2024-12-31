@@ -1,6 +1,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Lua.Runtime;
 using UnityEngine;
 
 namespace Lua.Unity
@@ -10,84 +11,35 @@ namespace Lua.Unity
         public static readonly ColorLibrary Instance = new();
 
         public readonly LuaFunction[] Functions;
+        public readonly LuaTable Metatable = new();
 
         public ColorLibrary()
         {
             Functions = new LuaFunction[]
             {
-                new("black", Black),
-                new("blue", Blue),
-                new("clear", Clear),
-                new("cyan", Cyan),
-                new("gray", Gray),
-                new("green", Green),
-                new("magenta", Magenta),
-                new("red", Red),
-                new("white", White),
-                new("yellow", Yellow),
                 new("hsv_to_rgb", HSVToRGB),
                 new("rgb_to_hsv", RGBToHSV),
             };
-        }
 
-        public static ValueTask<int> Black(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.black);
-            return new(1);
-        }
-
-        public static ValueTask<int> Blue(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.blue);
-            return new(1);
-        }
-
-        public static ValueTask<int> Clear(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.clear);
-            return new(1);
-        }
-
-        public static ValueTask<int> Cyan(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.cyan);
-            return new(1);
-        }
-
-        public static ValueTask<int> Gray(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.gray);
-            return new(1);
-        }
-
-        public static ValueTask<int> Green(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.green);
-            return new(1);
-        }
-
-        public static ValueTask<int> Magenta(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.magenta);
-            return new(1);
-        }
-
-        public static ValueTask<int> Red(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.red);
-            return new(1);
-        }
-
-        public static ValueTask<int> White(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.white);
-            return new(1);
-        }
-
-        public static ValueTask<int> Yellow(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-        {
-            buffer.Span[0] = new LuaColor(Color.yellow);
-            return new(1);
+            Metatable[Metamethods.Index] = new LuaFunction((context, buffer, ct) =>
+            {
+                var name = context.GetArgument<string>(1);
+                buffer.Span[0] = name switch
+                {
+                    "black" => new LuaColor(Color.black),
+                    "blue" => new LuaColor(Color.blue),
+                    "clear" => new LuaColor(Color.clear),
+                    "cyan" => new LuaColor(Color.cyan),
+                    "gray" => new LuaColor(Color.gray),
+                    "green" => new LuaColor(Color.green),
+                    "magenta" => new LuaColor(Color.magenta),
+                    "red" => new LuaColor(Color.red),
+                    "white" => new LuaColor(Color.white),
+                    "yellow" => new LuaColor(Color.yellow),
+                    _ => LuaValue.Nil,
+                };
+                return new(1);
+            });
         }
 
         public static ValueTask<int> HSVToRGB(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
