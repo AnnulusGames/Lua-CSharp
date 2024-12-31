@@ -17,6 +17,13 @@ namespace Lua.Unity
                 vector3[func.Name] = func;
             }
             state.Environment["vector3"] = vector3;
+
+            var color = new LuaTable(0, ColorLibrary.Instance.Functions.Length);
+            foreach (var func in ColorLibrary.Instance.Functions)
+            {
+                color[func.Name] = func;
+            }
+            state.Environment["color"] = color;
         }
     }
 }
