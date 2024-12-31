@@ -13,10 +13,6 @@ public class LuaException : Exception
     public LuaException(string message) : base(message)
     {
     }
-
-    internal LuaException()
-    {
-    }
 }
 
 public class LuaParseException(string? chunkName, SourcePosition position, string message) : LuaException(message)
@@ -69,7 +65,7 @@ public class LuaRuntimeException : LuaException
         LuaTraceback = traceback;
     }
 
-    public LuaRuntimeException(Traceback traceback, LuaValue errorObject)
+    public LuaRuntimeException(Traceback traceback, LuaValue errorObject): base(errorObject.ToString())
     {
         LuaTraceback = traceback;
         ErrorObject = errorObject;
