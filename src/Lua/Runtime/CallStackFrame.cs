@@ -1,5 +1,4 @@
 using System.Runtime.InteropServices;
-using Lua.CodeAnalysis;
 
 namespace Lua.Runtime;
 
@@ -7,9 +6,14 @@ namespace Lua.Runtime;
 public record struct CallStackFrame
 {
     public required int Base;
-    public required string ChunkName;
-    public required string RootChunkName;
     public required LuaFunction Function;
-    public required SourcePosition? CallPosition;
     public required int VariableArgumentCount;
+    public int CallerInstructionIndex;
+    internal CallStackFrameFlags Flags;
+}
+
+[Flags]
+public enum CallStackFrameFlags
+{
+    ReversedLe = 1,
 }

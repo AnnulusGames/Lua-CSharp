@@ -63,11 +63,6 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                         Stack.EnsureCapacity(baseThread.Stack.Count);
                         baseThread.Stack.AsSpan().CopyTo(Stack.GetBuffer());
                         Stack.NotifyTop(baseThread.Stack.Count);
-
-                        // copy callstack value
-                        CallStack.EnsureCapacity(baseThread.CallStack.Count);
-                        baseThread.CallStack.AsSpan().CopyTo(CallStack.GetBuffer());
-                        CallStack.NotifyTop(baseThread.CallStack.Count);
                     }
                     else
                     {
@@ -78,6 +73,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                                 : context.Arguments[1..].ToArray()
                         });
                     }
+
                     break;
                 case LuaThreadStatus.Normal:
                 case LuaThreadStatus.Running:
@@ -154,9 +150,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                         State = context.State,
                         Thread = this,
                         ArgumentCount = context.ArgumentCount - 1,
-                        FrameBase = frameBase,
-                        ChunkName = Function.Name,
-                        RootChunkName = context.RootChunkName,
+                        FrameBase = frameBase
                     }, this.buffer, cancellationToken).Preserve();
 
                     Volatile.Write(ref isFirstCall, false);
@@ -197,7 +191,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
-                    buffer.Span[1] = ex.Message;
+                    buffer.Span[1] = ex is LuaRuntimeException { ErrorObject: not null } luaEx ? luaEx.ErrorObject.Value: ex.Message;
                     return 2;
                 }
                 else
@@ -223,6 +217,11 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
         if (Volatile.Read(ref status) != (byte)LuaThreadStatus.Running)
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), "cannot call yield on a coroutine that is not currently running");
+        }
+
+        if (context.Thread.GetCallStackFrames()[^2].Function is not Closure)
+        {
+            throw new LuaRuntimeException(context.State.GetTraceback(), "attempt to yield across a C#-call boundary");
         }
 
         resume.SetResult(new()

@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+
 namespace Lua.Runtime;
 
 public struct Instruction : IEquatable<Instruction>
@@ -12,43 +14,69 @@ public struct Instruction : IEquatable<Instruction>
 
     public OpCode OpCode
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (OpCode)(byte)(_value & 0x3F); // 6 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0xFFFFFFC0) | ((uint)value & 0x3F);
     }
 
     public byte A
     {
-        get => (byte)((_value >> 6) & 0xFF); // 8 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (byte)((_value >> 6)); // 8 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0xFFFFC03F) | (((uint)value & 0xFF) << 6);
     }
 
     public ushort B
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (ushort)((_value >> 23) & 0x1FF); // 9 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0xC07FFFFF) | (((uint)value & 0x1FF) << 23);
+    }
+
+    internal uint UIntB
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_value >> 23) & 0x1FF; // 9 bits
     }
 
     public ushort C
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (ushort)((_value >> 14) & 0x1FF); // 9 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0xFF803FFF) | (((uint)value & 0x1FF) << 14);
+    }
+
+    internal uint UIntC
+    {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        get => (_value >> 14) & 0x1FF; // 9 bits
     }
 
     public uint Bx
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (_value >> 14) & 0x3FFFF; // 18 bits (14-31)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0x00003FFF) | ((value & 0x3FFFF) << 14);
     }
 
     public int SBx
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (int)(Bx - 131071); // signed 18 bits
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => Bx = (uint)(value + 131071);
     }
 
     public uint Ax
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         get => (_value >> 6) & 0x3FFFFFF; // 26 bits (6-31)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         set => _value = (_value & 0x0000003F) | ((value & 0x3FFFFFF) << 6);
     }
 

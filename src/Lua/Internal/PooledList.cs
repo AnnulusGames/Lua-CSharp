@@ -36,6 +36,32 @@ internal ref struct PooledList<T>
         tail++;
     }
 
+    public void AddRange(scoped ReadOnlySpan<T> items)
+    {
+        ThrowIfDisposed();
+
+        if (buffer == null)
+        {
+            buffer = ArrayPool<T>.Shared.Rent(items.Length);
+        }
+        else if (buffer.Length < tail + items.Length)
+        {
+            var newSize = buffer.Length * 2;
+            while (newSize < tail + items.Length)
+            {
+                newSize *= 2;
+            }
+            
+            var newArray = ArrayPool<T>.Shared.Rent(newSize);
+            buffer.AsSpan().CopyTo(newArray);
+            ArrayPool<T>.Shared.Return(buffer);
+            buffer = newArray;
+        }
+
+        items.CopyTo(buffer.AsSpan()[tail..]);
+        tail += items.Length;
+    }
+    
     public void Clear()
     {
         ThrowIfDisposed();
@@ -78,6 +104,12 @@ internal ref struct PooledList<T>
 
     void ThrowIfDisposed()
     {
-        if (tail == -1) throw new ObjectDisposedException(nameof(PooledList<T>));
+        if (tail == -1) ThrowDisposedException();
     }
+    
+    void ThrowDisposedException()
+    {
+        throw new ObjectDisposedException(nameof(PooledList<T>));
+    }
+    
 }

@@ -16,7 +16,7 @@ public struct FastStackCore<T>
     public readonly ReadOnlySpan<T> AsSpan()
     {
         if (array == null) return [];
-        return array.AsSpan(0, tail);
+        return array.AsSpan(0, tail)!;
     }
 
     public readonly Span<T?> GetBuffer()
@@ -33,15 +33,14 @@ public struct FastStackCore<T>
         }
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void Push(in T item)
     {
         array ??= new T[InitialCapacity];
 
         if (tail == array.Length)
         {
-            var newArray = new T[tail * 2];
-            Array.Copy(array, newArray, tail);
-            array = newArray;
+            Array.Resize(ref array, tail * 2);
         }
 
         array[tail] = item;
@@ -64,9 +63,21 @@ public struct FastStackCore<T>
         return true;
     }
 
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal bool TryPop()
+    {
+        if (tail == 0)
+        {
+            return false;
+        }
+        array[--tail] = default;
+
+        return true;
+    }
+
     public T Pop()
     {
-        if (!TryPop(out var result)) throw new InvalidOperationException("Empty stack");
+        if (!TryPop(out var result)) ThrowForEmptyStack();
         return result;
     }
 
@@ -85,7 +96,7 @@ public struct FastStackCore<T>
 
     public T Peek()
     {
-        if (!TryPeek(out var result)) throw new InvalidOperationException();
+        if (!TryPeek(out var result)) ThrowForEmptyStack();
         return result;
     }
 
@@ -118,5 +129,10 @@ public struct FastStackCore<T>
     {
         array.AsSpan(0, tail).Clear();
         tail = 0;
+    }
+    
+    void ThrowForEmptyStack()
+    {
+        throw new InvalidOperationException("Empty stack");
     }
 }

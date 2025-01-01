@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using Lua.Runtime;
 
 namespace Lua;
@@ -16,9 +17,6 @@ public class LuaFunction(string name, Func<LuaFunctionExecutionContext, Memory<L
         var frame = new CallStackFrame
         {
             Base = context.FrameBase,
-            CallPosition = context.SourcePosition,
-            ChunkName = context.ChunkName ?? LuaState.DefaultChunkName,
-            RootChunkName = context.RootChunkName ?? LuaState.DefaultChunkName,
             VariableArgumentCount = this is Closure closure ? Math.Max(context.ArgumentCount - closure.Proto.ParameterCount, 0) : 0,
             Function = this,
         };

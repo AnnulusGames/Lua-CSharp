@@ -64,15 +64,29 @@ public sealed class CoroutineLibrary
 
             stack.Push(thread);
             stack.PushRange(context.Arguments);
-
-            var resultCount = await thread.ResumeAsync(context with
+            context.Thread.PushCallStackFrame(new()
             {
-                ArgumentCount = context.ArgumentCount + 1,
-                FrameBase = frameBase,
-            }, buffer, cancellationToken);
+                Base = frameBase,
+                VariableArgumentCount = 0,
+                Function = arg0,
+            });
+            try
+            {
+                var resultCount = await thread.ResumeAsync(context with
+                {
+                    ArgumentCount = context.ArgumentCount + 1,
+                    FrameBase = frameBase,
+                }, buffer, cancellationToken);
 
-            buffer.Span[1..].CopyTo(buffer.Span[0..]);
-            return resultCount - 1;
+                buffer.Span[1..].CopyTo(buffer.Span[0..]);
+                return resultCount - 1;
+            }
+            finally
+            {
+                context.Thread.PopCallStackFrame();
+            }
+
+           
         });
 
         return new(1);

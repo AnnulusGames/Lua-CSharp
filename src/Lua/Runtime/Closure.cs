@@ -9,7 +9,7 @@ public sealed class Closure : LuaFunction
     FastListCore<UpValue> upValues;
 
     public Closure(LuaState state, Chunk proto, LuaTable? environment = null)
-        : base(proto.Name, (context, buffer, ct) => LuaVirtualMachine.ExecuteClosureAsync(context.State, context.Thread.GetCurrentFrame(), buffer, ct))
+        : base(proto.Name, (context, buffer, ct) => LuaVirtualMachine.ExecuteClosureAsync(context.State, buffer, ct))
     {
         this.proto = proto;
 
@@ -43,15 +43,17 @@ public sealed class Closure : LuaFunction
         {
             return state.GetOrAddUpValue(thread, thread.GetCallStackFrames()[^1].Base + description.Index);
         }
+        
         if (description.Index == -1) // -1 is global environment
         {
             return envUpValue;
         }
+        
         if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
         {
-            return parentClosure.UpValues[description.Index];
+             return parentClosure.UpValues[description.Index];
         }
-
+        
         throw new Exception();
     }
 }

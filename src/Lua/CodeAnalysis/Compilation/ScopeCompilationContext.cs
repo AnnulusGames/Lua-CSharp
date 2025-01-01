@@ -79,6 +79,7 @@ public class ScopeCompilationContext : IDisposable
         {
             StackPosition++;
         }
+        Function.MaxStackPosition = Math.Max(Function.MaxStackPosition, StackPosition);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -8,6 +8,7 @@ namespace Lua.Standard;
 public sealed class TableLibrary
 {
     public static readonly TableLibrary Instance = new();
+    
 
     public TableLibrary()
     {
@@ -40,6 +41,7 @@ public sealed class TableLibrary
         ],
         ParameterCount = 2,
         UpValues = [],
+        MaxStackPosition = 2,
     };
 
     public ValueTask<int> Concat(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
@@ -158,9 +160,22 @@ public sealed class TableLibrary
         var arg1 = context.HasArgument(1)
             ? context.GetArgument<LuaFunction>(1)
             : new Closure(context.State, defaultComparer);
-
-        await QuickSortAsync(context, arg0.GetArrayMemory(), 0, arg0.ArrayLength - 1, arg1, cancellationToken);
-        return 0;
+        
+        context.Thread.PushCallStackFrame(new ()
+        {
+            Base = context.FrameBase,
+            VariableArgumentCount = 0,
+            Function = arg1
+        });
+        try
+        {
+            await QuickSortAsync(context, arg0.GetArrayMemory(), 0, arg0.ArrayLength - 1, arg1, cancellationToken);
+            return 0;
+        }
+        finally
+        {
+            context.Thread.PopCallStackFrameUnsafe(context.FrameBase);
+        }
     }
 
     async ValueTask QuickSortAsync(LuaFunctionExecutionContext context, Memory<LuaValue> memory, int low, int high, LuaFunction comparer, CancellationToken cancellationToken)

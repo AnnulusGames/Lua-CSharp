@@ -66,6 +66,11 @@ public class FunctionCompilationContext : IDisposable
     FastListCore<GotoDescription> gotoQueue;
 
     /// <summary>
+    /// Maximum local stack size
+    /// </summary>
+    public byte MaxStackPosition { get; set; }
+
+    /// <summary>
     /// Chunk name (for debug)
     /// </summary>
     public string? ChunkName { get; set; }
@@ -415,6 +420,7 @@ public class FunctionCompilationContext : IDisposable
             UpValues = upvalues.AsSpan().ToArray(),
             Functions = functions.AsSpan().ToArray(),
             ParameterCount = ParameterCount,
+            MaxStackPosition = MaxStackPosition,
         };
 
         foreach (var function in functions.AsSpan())
@@ -444,6 +450,7 @@ public class FunctionCompilationContext : IDisposable
         LoopLevel = 0;
         ParameterCount = 0;
         HasVariableArguments = false;
+        MaxStackPosition = 0;
     }
 
     /// <summary>
