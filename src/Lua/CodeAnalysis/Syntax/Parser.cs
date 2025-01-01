@@ -599,10 +599,11 @@ public ref struct Parser
         // binary expression
         while (true)
         {
-            var opPrecedence = GetPrecedence(enumerator.GetNext().Type);
+            var opPrecedence = GetPrecedence(enumerator.GetNext(true).Type);
             if (precedence >= opPrecedence) break;
 
             MoveNextWithValidation(ref enumerator);
+            enumerator.SkipEoL();
             result = ParseBinaryExpression(ref enumerator, opPrecedence, result);
 
             enumerator.SkipEoL();
@@ -615,7 +616,7 @@ public ref struct Parser
     {
         if (!TryParseExpression(ref enumerator, precedence, out var result))
         {
-            throw new LuaParseException(ChunkName, enumerator.Current.Position, "Unexpected token <{enumerator.Current.Type}>");
+            throw new LuaParseException(ChunkName, enumerator.Current.Position, $"Unexpected token <{enumerator.Current.Type}>");
         }
 
         return result;
