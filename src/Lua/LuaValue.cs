@@ -139,7 +139,7 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.UserData:
                 if (t == typeof(ILuaUserData) || typeof(ILuaUserData).IsAssignableFrom(t))
                 {
-                    if(referenceValue is T tValue)
+                    if (referenceValue is T tValue)
                     {
                         result = tValue;
                         return true;
