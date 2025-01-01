@@ -14,6 +14,7 @@ public class CoroutineBenchmark
     {
         core.Setup("coroutine.lua");
         core.LuaCSharpState.OpenBasicLibrary();
+        core.LuaCSharpState.OpenCoroutineLibrary();
     }
 
     [Benchmark(Description = "MoonSharp (RunString)")]
