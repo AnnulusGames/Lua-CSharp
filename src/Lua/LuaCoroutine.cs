@@ -60,9 +60,10 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     if (isFirstCall)
                     {
                         // copy stack value
-                        Stack.EnsureCapacity(baseThread.Stack.Count);
-                        baseThread.Stack.AsSpan().CopyTo(Stack.GetBuffer());
-                        Stack.NotifyTop(baseThread.Stack.Count);
+                        var argCount = context.ArgumentCount;
+                        Stack.EnsureCapacity(argCount);
+                        baseThread.Stack.AsSpan()[^argCount..].CopyTo(Stack.GetBuffer());
+                        Stack.NotifyTop(argCount);
                     }
                     else
                     {
