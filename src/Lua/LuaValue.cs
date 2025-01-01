@@ -139,9 +139,13 @@ public readonly struct LuaValue : IEquatable<LuaValue>
             case LuaValueType.UserData:
                 if (t == typeof(ILuaUserData) || typeof(ILuaUserData).IsAssignableFrom(t))
                 {
-                    var v = referenceValue!;
-                    result = Unsafe.As<object, T>(ref v);
-                    return true;
+                    if(referenceValue is T tValue)
+                    {
+                        result = tValue;
+                        return true;
+                    }
+                    result = default!;
+                    return false;
                 }
                 else if (t == typeof(object))
                 {
