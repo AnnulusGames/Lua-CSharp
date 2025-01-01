@@ -123,27 +123,19 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     if (variableArgumentCount > 0)
                     {
                         var fixedArgumentCount = context.ArgumentCount - 1 - variableArgumentCount;
+                        var args = context.Arguments;
 
-                        for (int i = 0; i < variableArgumentCount; i++)
-                        {
-                            Stack.Push(context.GetArgument(i + fixedArgumentCount + 1));
-                        }
+                        Stack.PushRange(args.Slice(1 + fixedArgumentCount, variableArgumentCount));
 
                         frameBase = Stack.Count;
 
-                        for (int i = 0; i < fixedArgumentCount; i++)
-                        {
-                            Stack.Push(context.GetArgument(i + 1));
-                        }
+                        Stack.PushRange(args.Slice(1, fixedArgumentCount));
                     }
                     else
                     {
                         frameBase = Stack.Count;
 
-                        for (int i = 0; i < context.ArgumentCount - 1; i++)
-                        {
-                            Stack.Push(context.GetArgument(i + 1));
-                        }
+                        Stack.PushRange(context.Arguments[1..]);
                     }
 
                     functionTask = Function.InvokeAsync(new()
