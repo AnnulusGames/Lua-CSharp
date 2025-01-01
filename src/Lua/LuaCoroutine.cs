@@ -157,17 +157,15 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     Volatile.Write(ref isFirstCall, false);
                 }
 
-                (var index, var result0, var result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
+                var (index, result0, result1) = await ValueTaskEx.WhenAny(resumeTask, functionTask!);
 
+                var bufferSpan = buffer.Span;
                 if (index == 0)
                 {
                     var results = result0.Results;
 
-                    buffer.Span[0] = true;
-                    for (int i = 0; i < results.Length; i++)
-                    {
-                        buffer.Span[i + 1] = results[i];
-                    }
+                    bufferSpan[0] = true;
+                    results.CopyTo(bufferSpan[1..]);
 
                     return results.Length + 1;
                 }
@@ -176,8 +174,8 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
                     var resultCount = functionTask!.Result;
 
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
-                    buffer.Span[0] = true;
-                    this.buffer[0..resultCount].CopyTo(buffer.Span[1..]);
+                    bufferSpan[0] = true;
+                    this.buffer.AsSpan()[..resultCount].CopyTo(bufferSpan[1..]);
 
                     ArrayPool<LuaValue>.Shared.Return(this.buffer);
 
@@ -192,7 +190,7 @@ public sealed class LuaCoroutine : LuaThread, IValueTaskSource<LuaCoroutine.Yiel
 
                     Volatile.Write(ref status, (byte)LuaThreadStatus.Dead);
                     buffer.Span[0] = false;
-                    buffer.Span[1] = ex is LuaRuntimeException { ErrorObject: not null } luaEx ? luaEx.ErrorObject.Value: ex.Message;
+                    buffer.Span[1] = ex is LuaRuntimeException { ErrorObject: not null } luaEx ? luaEx.ErrorObject.Value : ex.Message;
                     return 2;
                 }
                 else
