@@ -361,7 +361,14 @@ partial class LuaObjectGenerator
 
             foreach (var parameter in methodMetadata.Symbol.Parameters)
             {
-                builder.AppendLine($"var arg{index} = context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index});");
+                if (SymbolEqualityComparer.Default.Equals(parameter.Type, references.LuaValue))
+                {
+                    builder.AppendLine($"var arg{index} = context.GetArgument({index});");
+                }
+                else
+                {
+                    builder.AppendLine($"var arg{index} = context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index});");
+                }
                 index++;
             }
 
