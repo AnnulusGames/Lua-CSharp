@@ -1,5 +1,6 @@
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Lua.SourceGenerator;
 
@@ -361,7 +362,32 @@ partial class LuaObjectGenerator
 
             foreach (var parameter in methodMetadata.Symbol.Parameters)
             {
-                builder.AppendLine($"var arg{index} = context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index});");
+                var isParameterLuaValue = SymbolEqualityComparer.Default.Equals(parameter.Type, references.LuaValue);
+
+                if (parameter.HasExplicitDefaultValue)
+                {
+                    var syntax = (ParameterSyntax)parameter.DeclaringSyntaxReferences[0].GetSyntax();
+
+                    if (isParameterLuaValue)
+                    {
+                        builder.AppendLine($"var arg{index} = context.HasArgument({index}) ? context.GetArgument({index}) : {syntax.Default!.Value.ToFullString()};");
+                    }
+                    else
+                    {
+                        builder.AppendLine($"var arg{index} = context.HasArgument({index}) ?  context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index}) : {syntax.Default!.Value.ToFullString()};");
+                    }
+                }
+                else
+                {
+                    if (isParameterLuaValue)
+                    {
+                        builder.AppendLine($"var arg{index} = context.GetArgument({index});");
+                    }
+                    else
+                    {
+                        builder.AppendLine($"var arg{index} = context.GetArgument<{parameter.Type.ToDisplayString(SymbolDisplayFormat.FullyQualifiedFormat)}>({index});");
+                    }
+                }
                 index++;
             }
 
@@ -398,7 +424,7 @@ partial class LuaObjectGenerator
                 {
                     builder.AppendLine("buffer.Span[0] = new global::Lua.LuaValue(result);");
                 }
-                
+
                 builder.AppendLine($"return {(methodMetadata.IsAsync ? "1" : "new(1)")};");
             }
             else

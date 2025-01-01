@@ -46,6 +46,18 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                     result = Unsafe.As<double, T>(ref v);
                     return true;
                 }
+                else if (t == typeof(int))
+                {
+                    var v = (int)value;
+                    result = Unsafe.As<int, T>(ref v);
+                    return true;
+                }
+                else if (t == typeof(long))
+                {
+                    var v = (long)value;
+                    result = Unsafe.As<long, T>(ref v);
+                    return true;
+                }
                 else if (t == typeof(object))
                 {
                     result = (T)(object)value;
