@@ -45,7 +45,7 @@ namespace Lua.Internal
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
             {
-                ref LuaValue value = ref FindValue(key);
+                ref LuaValue value = ref FindValue(key, out _);
                 if (!Unsafe.IsNullRef(ref value))
                 {
                     return value;
@@ -77,7 +77,7 @@ namespace Lua.Internal
         }
 
         public bool ContainsKey(LuaValue key) =>
-            !Unsafe.IsNullRef(ref FindValue(key));
+            !Unsafe.IsNullRef(ref FindValue(key, out _));
 
         public bool ContainsValue(LuaValue value)
         {
@@ -97,8 +97,9 @@ namespace Lua.Internal
 
         public Enumerator GetEnumerator() => new Enumerator(this);
 
-        internal ref LuaValue FindValue(LuaValue key)
+        internal ref LuaValue FindValue(LuaValue key, out int index)
         {
+            index = -1;
             ref Entry entry = ref Unsafe.NullRef<Entry>();
             if (_buckets != null)
             {
@@ -123,6 +124,7 @@ namespace Lua.Internal
                         entry = ref entries[i];
                         if (entry.hashCode == hashCode && entry.key.Equals(key))
                         {
+                            index = i;
                             goto ReturnFound;
                         }
 
@@ -352,7 +354,7 @@ namespace Lua.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public bool TryGetValue(LuaValue key, out LuaValue value)
         {
-            ref LuaValue valRef = ref FindValue(key);
+            ref LuaValue valRef = ref FindValue(key, out _);
             if (!Unsafe.IsNullRef(ref valRef))
             {
                 value = valRef;
@@ -363,6 +365,27 @@ namespace Lua.Internal
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public bool TryGetNext(LuaValue key, out KeyValuePair<LuaValue,LuaValue> pair)
+        {
+            ref LuaValue valRef = ref FindValue(key, out var index);
+            if (!Unsafe.IsNullRef(ref valRef))
+            {
+                Entry[] entries = _entries!;
+                while (++index  < _count)
+                {
+                    ref Entry entry = ref entries[index];
+                    if (entry is { next: >= -1, value.Type: not LuaValueType.Nil })
+                    {
+                        pair = new(entry.key, entry.value);
+                        return true;
+                    }
+                }
+            }
+
+            pair = default;
+            return false;
+        }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private ref int GetBucket(uint hashCode)
@@ -428,6 +451,7 @@ namespace Lua.Internal
 
             public KeyValuePair<LuaValue, LuaValue> Current => _current;
         }
+
         static class ThrowHelper
         {
             public static void ThrowInvalidOperationException_ConcurrentOperationsNotSupported()

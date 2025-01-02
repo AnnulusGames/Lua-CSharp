@@ -194,19 +194,9 @@ public sealed class LuaTable
         }
         else
         {
-            var foundKey = false;
-            foreach (var kv in dictionary)
+            if(dictionary.TryGetNext(key, out pair))
             {
-                if (foundKey && kv.Value.Type is not LuaValueType.Nil)
-                {
-                    pair = kv;
-                    return true;
-                }
-
-                if (kv.Key.Equals(key))
-                {
-                    foundKey = true;
-                }
+                return true;
             }
         }
 
