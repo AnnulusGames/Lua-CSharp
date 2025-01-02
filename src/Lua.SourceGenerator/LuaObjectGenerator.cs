@@ -30,13 +30,19 @@ public partial class LuaObjectGenerator : IIncrementalGenerator
 
                 var builder = new CodeBuilder();
 
-                var targetTypes = new List<TypeMetadata>();
+                var metaDict = new Dictionary<INamedTypeSymbol, TypeMetadata>(SymbolEqualityComparer.Default);
 
                 foreach (var (x, _) in list)
                 {
-                    var typeMeta = new TypeMetadata((TypeDeclarationSyntax)x.TargetNode, (INamedTypeSymbol)x.TargetSymbol, references);
+                    var symbol = (INamedTypeSymbol)x.TargetSymbol;
+                    var typeMeta = new TypeMetadata((TypeDeclarationSyntax)x.TargetNode, symbol, references);
+                    metaDict.Add(symbol, typeMeta);
+                }
 
-                    if (TryEmit(typeMeta, builder, references, compilation, in sourceProductionContext))
+                foreach (var pair in metaDict)
+                {
+                    var typeMeta = pair.Value;
+                    if (TryEmit(typeMeta, builder, references, compilation, in sourceProductionContext, metaDict))
                     {
                         var fullType = typeMeta.FullTypeName
                             .Replace("global::", "")
@@ -44,7 +50,6 @@ public partial class LuaObjectGenerator : IIncrementalGenerator
                             .Replace(">", "_");
 
                         sourceProductionContext.AddSource($"{fullType}.LuaObject.g.cs", builder.ToString());
-                        targetTypes.Add(typeMeta);
                     }
 
                     builder.Clear();

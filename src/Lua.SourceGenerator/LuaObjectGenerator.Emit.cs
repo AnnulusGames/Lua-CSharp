@@ -6,7 +6,7 @@ namespace Lua.SourceGenerator;
 
 partial class LuaObjectGenerator
 {
-    static bool TryEmit(TypeMetadata typeMetadata, CodeBuilder builder, SymbolReferences references, Compilation compilation, in SourceProductionContext context)
+    static bool TryEmit(TypeMetadata typeMetadata, CodeBuilder builder, SymbolReferences references, Compilation compilation, in SourceProductionContext context, Dictionary<INamedTypeSymbol, TypeMetadata> metaDict)
     {
         try
         {
@@ -42,7 +42,7 @@ partial class LuaObjectGenerator
                 error = true;
             }
 
-            if (!ValidateMembers(typeMetadata, compilation, references, context))
+            if (!ValidateMembers(typeMetadata, compilation, references, context, metaDict))
             {
                 error = true;
             }
@@ -126,7 +126,7 @@ partial class LuaObjectGenerator
         }
     }
 
-    static bool ValidateMembers(TypeMetadata typeMetadata, Compilation compilation, SymbolReferences references, in SourceProductionContext context)
+    static bool ValidateMembers(TypeMetadata typeMetadata, Compilation compilation, SymbolReferences references, in SourceProductionContext context, Dictionary<INamedTypeSymbol, TypeMetadata> metaDict)
     {
         var isValid = true;
 
@@ -136,7 +136,7 @@ partial class LuaObjectGenerator
             if (SymbolEqualityComparer.Default.Equals(property.Type, typeMetadata.Symbol)) continue;
 
             var conversion = compilation.ClassifyConversion(property.Type, references.LuaValue);
-            if (!conversion.Exists)
+            if (!conversion.Exists && (property.Type is not INamedTypeSymbol namedTypeSymbol || !metaDict.ContainsKey(namedTypeSymbol)))
             {
                 context.ReportDiagnostic(Diagnostic.Create(
                     DiagnosticDescriptors.InvalidPropertyType,
@@ -165,7 +165,7 @@ partial class LuaObjectGenerator
                 if (SymbolEqualityComparer.Default.Equals(typeSymbol, typeMetadata.Symbol)) goto PARAMETERS;
 
                 var conversion = compilation.ClassifyConversion(typeSymbol, references.LuaValue);
-                if (!conversion.Exists)
+                if (!conversion.Exists && (typeSymbol is not INamedTypeSymbol namedTypeSymbol || !metaDict.ContainsKey(namedTypeSymbol)))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         DiagnosticDescriptors.InvalidReturnType,
@@ -184,7 +184,7 @@ partial class LuaObjectGenerator
                 if (SymbolEqualityComparer.Default.Equals(typeSymbol, typeMetadata.Symbol)) continue;
 
                 var conversion = compilation.ClassifyConversion(typeSymbol, references.LuaValue);
-                if (!conversion.Exists)
+                if (!conversion.Exists && (typeSymbol is not INamedTypeSymbol namedTypeSymbol || !metaDict.ContainsKey(namedTypeSymbol)))
                 {
                     context.ReportDiagnostic(Diagnostic.Create(
                         DiagnosticDescriptors.InvalidParameterType,
