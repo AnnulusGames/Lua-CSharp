@@ -46,4 +46,44 @@ return a + b
             Assert.That(table[3].Read<double>(), Is.EqualTo(9));
         });
     }
+
+    [Test]
+    public async Task Test_Metamethod_Index()
+    {
+        var source = @"
+metatable = {
+    __index = {x=1}
+}
+
+local a = {}
+setmetatable(a, metatable)
+assert(a.x == 1)
+metatable.__index= nil
+assert(a.x == nil)
+metatable.__index= function(a,b) return b end
+assert(a.x == 'x')
+";
+        await state.DoStringAsync(source);
+    }
+
+    [Test]
+    public async Task Test_Metamethod_NewIndex()
+    {
+        var source = @"
+metatable = {
+    __newindex = {}
+}
+
+local a = {}
+a.x = 1
+setmetatable(a, metatable)
+a.x = 2
+assert(a.x == 2)
+a.x = nil
+a.x = 2
+assert(a.x == nil)
+assert(metatable.__newindex.x == 2)
+";
+        await state.DoStringAsync(source);
+    }
 }
