@@ -1404,7 +1404,7 @@ public static partial class LuaVirtualMachine
                 skip = false;
                 if (!Unsafe.IsNullRef(ref valueRef) && valueRef.Type != LuaValueType.Nil)
                 {
-                    luaTable[key] = value;
+                    valueRef = value;
                     return true;
                 }
 
