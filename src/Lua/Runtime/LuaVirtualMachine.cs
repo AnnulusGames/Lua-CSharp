@@ -368,7 +368,6 @@ public static partial class LuaVirtualMachine
                         if (TrySetMetaTableValueWithSync(table, vb, vc, ref context, out doRestart))
                         {
                             if (doRestart) goto Restart;
-
                             continue;
                         }
 
@@ -434,20 +433,6 @@ public static partial class LuaVirtualMachine
                             stack.NotifyTop(iA + frameBase + 2);
                             continue;
                         }
-                        // if (table.TryReadTable(out luaTable) && luaTable.TryGetValue(vc, out resultValue))
-                        // {
-                        //     Unsafe.Add(ref stackHead, iA) = resultValue;
-                        //     Unsafe.Add(ref stackHead, iA + 1) = table;
-                        //     stack.NotifyTop(iA + frameBase + 2);
-                        //     continue;
-                        // }
-                        //
-                        //
-                        // if (TryGetMetaTableValue(table, vc, ref context, out doRestart))
-                        // {
-                        //     if (doRestart) goto Restart;
-                        //     continue;
-                        // }
 
                         postOperation = PostOperationType.Self;
                         return true;
