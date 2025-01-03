@@ -314,7 +314,7 @@ public static partial class LuaVirtualMachine
                         var table = context.Closure.GetUpValue(instruction.B);
 
                         var doRestart = false;
-                        if (table.TryReadTable(out var luaTable) && luaTable.TryGetValue(vc, out var resultValue) || TryGetValueWithSync(table, vc, ref context, out resultValue, out doRestart))
+                        if (table.TryReadTable(out var luaTable) && luaTable.TryGetValue(vc, out var resultValue) || GetTableValueSlowPath(table, vc, ref context, out resultValue, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             stack.GetWithNotifyTop(instruction.A + frameBase) = resultValue;
@@ -329,7 +329,7 @@ public static partial class LuaVirtualMachine
                         ref readonly var vb = ref Unsafe.Add(ref stackHead, instruction.UIntB);
                         vc = ref RKC(ref stackHead, ref constHead, instruction);
                         doRestart = false;
-                        if (vb.TryReadTable(out luaTable) && luaTable.TryGetValue(vc, out resultValue) || TryGetValueWithSync(vb, vc, ref context, out resultValue, out doRestart))
+                        if (vb.TryReadTable(out luaTable) && luaTable.TryGetValue(vc, out resultValue) || GetTableValueSlowPath(vb, vc, ref context, out resultValue, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             stack.GetWithNotifyTop(instruction.A + frameBase) = resultValue;
@@ -365,7 +365,7 @@ public static partial class LuaVirtualMachine
                         }
 
                         vc = ref RKC(ref stackHead, ref constHead, instruction);
-                        if (TrySetMetaTableValueWithSync(table, vb, vc, ref context, out doRestart))
+                        if (SetTableValueSlowPath(table, vb, vc, ref context, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             continue;
@@ -405,7 +405,7 @@ public static partial class LuaVirtualMachine
                         }
 
                         vc = ref RKC(ref stackHead, ref constHead, instruction);
-                        if (TrySetMetaTableValueWithSync(table, vb, vc, ref context, out doRestart))
+                        if (SetTableValueSlowPath(table, vb, vc, ref context, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             continue;
@@ -425,7 +425,7 @@ public static partial class LuaVirtualMachine
                         table = Unsafe.Add(ref stackHead, instruction.UIntB);
 
 
-                        if (TryGetValueWithSync(table, vc, ref context, out resultValue, out doRestart))
+                        if (GetTableValueSlowPath(table, vc, ref context, out resultValue, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             Unsafe.Add(ref stackHead, iA) = resultValue;
@@ -1309,7 +1309,7 @@ public static partial class LuaVirtualMachine
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    static bool TryGetValueWithSync(LuaValue table, LuaValue key, ref VirtualMachineExecutionContext context, out LuaValue value, out bool doRestart)
+    static bool GetTableValueSlowPath(LuaValue table, LuaValue key, ref VirtualMachineExecutionContext context, out LuaValue value, out bool doRestart)
     {
         var targetTable = table;
         const int MAX_LOOP = 100;
@@ -1389,7 +1389,7 @@ public static partial class LuaVirtualMachine
     }
 
     [MethodImpl(MethodImplOptions.NoInlining)]
-    static bool TrySetMetaTableValueWithSync(LuaValue table, LuaValue key, LuaValue value,
+    static bool SetTableValueSlowPath(LuaValue table, LuaValue key, LuaValue value,
         ref VirtualMachineExecutionContext context, out bool doRestart)
     {
         var targetTable = table;
