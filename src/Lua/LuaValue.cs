@@ -48,12 +48,14 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                 }
                 else if (t == typeof(int))
                 {
+                    if (!MathEx.IsInteger(value)) break;
                     var v = (int)value;
                     result = Unsafe.As<int, T>(ref v);
                     return true;
                 }
                 else if (t == typeof(long))
                 {
+                    if (!MathEx.IsInteger(value)) break;
                     var v = (long)value;
                     result = Unsafe.As<long, T>(ref v);
                     return true;
@@ -144,8 +146,8 @@ public readonly struct LuaValue : IEquatable<LuaValue>
                         result = tValue;
                         return true;
                     }
-                    result = default!;
-                    return false;
+
+                    break;
                 }
                 else if (t == typeof(object))
                 {
