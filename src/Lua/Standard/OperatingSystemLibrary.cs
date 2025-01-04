@@ -119,14 +119,9 @@ public sealed class OperatingSystemLibrary
             {
                 Environment.Exit(b ? 0 : 1);
             }
-            else if (code.TryRead<double>(out var d))
+            else if (code.TryRead<int>(out var d))
             {
-                if (!MathEx.IsInteger(d))
-                {
-                    throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #1 to 'exit' (number has no integer representation)");
-                }
-
-                Environment.Exit((int)d);
+                Environment.Exit(d);
             }
             else
             {

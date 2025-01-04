@@ -201,17 +201,12 @@ public class FileHandle : ILuaUserData
             ? context.GetArgument<string>(1)
             : "cur";
         var offset = context.HasArgument(2)
-            ? context.GetArgument<double>(2)
+            ? context.GetArgument<int>(2)
             : 0;
 
         if (whence is not ("set" or "cur" or "end"))
         {
             throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #2 to 'seek' (invalid option '{whence}')");
-        }
-
-        if (!MathEx.IsInteger(offset))
-        {
-            throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #3 to 'seek' (number has no integer representation)");
         }
 
         try
@@ -233,15 +228,10 @@ public class FileHandle : ILuaUserData
         var file = context.GetArgument<FileHandle>(0);
         var mode = context.GetArgument<string>(1);
         var size = context.HasArgument(2)
-            ? context.GetArgument<double>(2)
+            ? context.GetArgument<int>(2)
             : -1;
 
-        if (!MathEx.IsInteger(size))
-        {
-            throw new LuaRuntimeException(context.State.GetTraceback(), $"bad argument #3 to 'setvbuf' (number has no integer representation)");
-        }
-
-        file.SetVBuf(mode, (int)size);
+        file.SetVBuf(mode, size);
 
         buffer.Span[0] = true;
         return new(1);
