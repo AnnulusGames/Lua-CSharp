@@ -365,15 +365,8 @@ public sealed class BasicLibrary
     {
         var arg0 = context.GetArgument(0);
 
-        if (arg0.TryRead<double>(out var d))
+        if (arg0.TryRead<int>(out var index))
         {
-            if (!MathEx.IsInteger(d))
-            {
-                throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #1 to 'select' (number has no integer representation)");
-            }
-
-            var index = (int)d;
-
             if (Math.Abs(index) > context.ArgumentCount)
             {
                 throw new LuaRuntimeException(context.State.GetTraceback(), "bad argument #1 to 'select' (index out of range)");

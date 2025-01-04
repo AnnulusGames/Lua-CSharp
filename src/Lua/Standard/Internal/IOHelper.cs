@@ -117,14 +117,8 @@ internal static class IOHelper
                             break;
                     }
                 }
-                else if (format.TryRead<double>(out var d))
+                else if (format.TryRead<int>(out var count))
                 {
-                    if (!MathEx.IsInteger(d))
-                    {
-                        throw new LuaRuntimeException(state.GetTraceback(), $"bad argument #{i + startArgumentIndex} to 'read' (number has no integer representation)");
-                    }
-
-                    var count = (int)d;
                     using var byteBuffer = new PooledArray<byte>(count);
 
                     for (int j = 0; j < count; j++)
