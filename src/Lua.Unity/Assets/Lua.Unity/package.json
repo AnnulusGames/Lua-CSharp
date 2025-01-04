@@ -1,6 +1,6 @@
 {
     "name": "com.annulusgames.lua.unity",
-    "version": "0.4.0",
+    "version": "0.4.1",
     "displayName": "Lua.Unity",
     "description": "Lua-CSharp extension for Unity",
     "author": {
