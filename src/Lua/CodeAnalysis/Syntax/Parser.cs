@@ -309,22 +309,20 @@ public ref struct Parser
                     MoveNextWithValidation(ref enumerator);
                     enumerator.SkipEoL();
 
-                    // skip 'then' keyword
-                    CheckCurrentAndSkip(ref enumerator, SyntaxTokenType.Then, out _);
-                    enumerator.SkipEoL();
+                    // check 'then' keyword
+                    CheckCurrent(ref enumerator, SyntaxTokenType.Then);
 
                     // set elseif state
                     state = 1;
+
+                    continue;
                 }
                 else if (tokenType is SyntaxTokenType.Else)
                 {
-                    // skip 'else' keywords
-                    MoveNextWithValidation(ref enumerator);
-
-                    enumerator.SkipEoL();
-
                     // set else state
                     state = 2;
+
+                    continue;
                 }
                 else if (tokenType is SyntaxTokenType.End)
                 {
