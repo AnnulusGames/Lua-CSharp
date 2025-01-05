@@ -424,8 +424,8 @@ public static partial class LuaVirtualMachine
                         vc = ref RKC(ref stackHead, ref constHead, instruction);
                         table = Unsafe.Add(ref stackHead, instruction.UIntB);
 
-
-                        if (GetTableValueSlowPath(table, vc, ref context, out resultValue, out doRestart))
+                        doRestart = false;
+                        if ((table.TryReadTable(out luaTable) && luaTable.TryGetValue(vc, out resultValue)) || GetTableValueSlowPath(table, vc, ref context, out resultValue, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             Unsafe.Add(ref stackHead, iA) = resultValue;
