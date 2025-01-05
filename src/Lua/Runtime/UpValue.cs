@@ -45,6 +45,19 @@ public sealed class UpValue
             return Thread!.Stack.Get(RegisterIndex);
         }
     }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ref readonly LuaValue GetValueRef()
+    {
+        if (IsClosed)
+        {
+            return ref value;
+        }
+        else
+        {
+            return ref Thread!.Stack.Get(RegisterIndex);
+        }
+    }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public void SetValue(LuaValue value)

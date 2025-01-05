@@ -308,28 +308,13 @@ public static partial class LuaVirtualMachine
                         stack.GetWithNotifyTop(instruction.A + frameBase) = context.Closure.GetUpValue(instruction.B);
                         continue;
                     case OpCode.GetTabUp:
-                        instruction = instructionRef;
-                        stackHead = ref stack.FastGet(frameBase);
-                        ref readonly var vc = ref RKC(ref stackHead, ref constHead, instruction);
-                        var table = context.Closure.GetUpValue(instruction.B);
-
-                        var doRestart = false;
-                        if (table.TryReadTable(out var luaTable) && luaTable.TryGetValue(vc, out var resultValue) || GetTableValueSlowPath(table, vc, ref context, out resultValue, out doRestart))
-                        {
-                            if (doRestart) goto Restart;
-                            stack.GetWithNotifyTop(instruction.A + frameBase) = resultValue;
-                            continue;
-                        }
-
-                        postOperation = PostOperationType.SetResult;
-                        return true;
                     case OpCode.GetTable:
                         instruction = instructionRef;
                         stackHead = ref stack.FastGet(frameBase);
-                        ref readonly var vb = ref Unsafe.Add(ref stackHead, instruction.UIntB);
-                        vc = ref RKC(ref stackHead, ref constHead, instruction);
-                        doRestart = false;
-                        if (vb.TryReadTable(out luaTable) && luaTable.TryGetValue(vc, out resultValue) || GetTableValueSlowPath(vb, vc, ref context, out resultValue, out doRestart))
+                        ref readonly var vc = ref RKC(ref stackHead, ref constHead, instruction);
+                        ref readonly var vb = ref (instruction.OpCode == OpCode.GetTable ? ref Unsafe.Add(ref stackHead, instruction.UIntB) : ref context.Closure.GetUpValueRef(instruction.B));
+                        var doRestart = false;
+                        if (vb.TryReadTable(out var luaTable) && luaTable.TryGetValue(vc, out var resultValue) || GetTableValueSlowPath(vb, vc, ref context, out resultValue, out doRestart))
                         {
                             if (doRestart) goto Restart;
                             stack.GetWithNotifyTop(instruction.A + frameBase) = resultValue;
@@ -351,9 +336,8 @@ public static partial class LuaVirtualMachine
                             }
                         }
 
-                        table = context.Closure.GetUpValue(instruction.A);
-
-
+                        var table = context.Closure.GetUpValue(instruction.A);
+                        
                         if (table.TryReadTable(out luaTable))
                         {
                             ref var valueRef = ref luaTable.FindValue(vb);
