@@ -149,7 +149,11 @@ public sealed class LuaTable
         }
 
         var arrayIndex = index - 1;
-        EnsureArrayCapacity(array.Length + 1);
+        
+        if (index > array.Length)
+        {
+            EnsureArrayCapacity(array.Length + 1);
+        }
 
         if (arrayIndex != array.Length - 1)
         {
