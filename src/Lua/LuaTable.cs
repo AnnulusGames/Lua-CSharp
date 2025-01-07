@@ -149,8 +149,8 @@ public sealed class LuaTable
         }
 
         var arrayIndex = index - 1;
-        
-        if (index > array.Length)
+
+        if (index > array.Length || array[^1].Type != LuaValueType.Nil)
         {
             EnsureArrayCapacity(array.Length + 1);
         }
