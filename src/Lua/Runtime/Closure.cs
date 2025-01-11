@@ -32,6 +32,12 @@ public sealed class Closure : LuaFunction
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal ref readonly LuaValue GetUpValueRef(int index)
+    {
+        return ref upValues[index].GetValueRef();
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal void SetUpValue(int index, LuaValue value)
     {
         upValues[index].SetValue(value);
@@ -43,17 +49,17 @@ public sealed class Closure : LuaFunction
         {
             return state.GetOrAddUpValue(thread, thread.GetCallStackFrames()[^1].Base + description.Index);
         }
-        
+
         if (description.Index == -1) // -1 is global environment
         {
             return envUpValue;
         }
-        
+
         if (thread.GetCallStackFrames()[^1].Function is Closure parentClosure)
         {
-             return parentClosure.UpValues[description.Index];
+            return parentClosure.UpValues[description.Index];
         }
-        
+
         throw new Exception();
     }
 }
