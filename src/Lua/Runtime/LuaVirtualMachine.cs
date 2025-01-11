@@ -92,20 +92,19 @@ public static partial class LuaVirtualMachine
             switch (opCode)
             {
                 case OpCode.Call:
-                {
-                    var c = callInstruction.C;
-                    if (c != 0)
                     {
-                        targetCount = c - 1;
-                    }
+                        var c = callInstruction.C;
+                        if (c != 0)
+                        {
+                            targetCount = c - 1;
+                        }
 
-                    break;
-                }
+                        break;
+                    }
                 case OpCode.TForCall:
                     target += 3;
                     targetCount = callInstruction.C;
                     break;
-
                 case OpCode.Self:
                     Stack.Get(target) = result.Length == 0 ? LuaValue.Nil : result[0];
                     Thread.PopCallStackFrameUnsafe(target + 2);
@@ -266,7 +265,7 @@ public static partial class LuaVirtualMachine
 
         try
         {
-            // This is a label to restart the execution when new function is called or restarted
+        // This is a label to restart the execution when new function is called or restarted
         Restart:
             ref var instructionsHead = ref context.Chunk.Instructions[0];
             var frameBase = context.FrameBase;
@@ -337,7 +336,7 @@ public static partial class LuaVirtualMachine
                         }
 
                         var table = context.Closure.GetUpValue(instruction.A);
-                        
+
                         if (table.TryReadTable(out luaTable))
                         {
                             ref var valueRef = ref luaTable.FindValue(vb);

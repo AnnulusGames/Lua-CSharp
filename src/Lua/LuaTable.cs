@@ -109,7 +109,7 @@ public sealed class LuaTable
 
         return dictionary.TryGetValue(key, out value) && value.Type is not LuaValueType.Nil;
     }
-    
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal ref LuaValue FindValue(LuaValue key)
     {
@@ -126,7 +126,7 @@ public sealed class LuaTable
             }
         }
 
-        return ref dictionary.FindValue(key,out _);
+        return ref dictionary.FindValue(key, out _);
     }
 
     public bool ContainsKey(LuaValue key)
@@ -213,7 +213,7 @@ public sealed class LuaTable
         }
         else
         {
-            if(dictionary.TryGetNext(key, out pair))
+            if (dictionary.TryGetNext(key, out pair))
             {
                 return true;
             }
