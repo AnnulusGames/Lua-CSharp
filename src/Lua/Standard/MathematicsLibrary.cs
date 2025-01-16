@@ -229,7 +229,7 @@ public sealed class MathematicsLibrary
         {
             buffer.Span[0] = rand.NextDouble();
         }
-        // When we call it with only one argument, an integer n, it returns an integer pseudo-random number.
+        // When we call it with only one argument, an integer n, it returns an integer pseudo-random number such that 1 <= x <= n.
         // This is different from the C# random functions.
         // See: https://www.lua.org/pil/18.html
         else if (context.ArgumentCount == 1)
@@ -239,7 +239,7 @@ public sealed class MathematicsLibrary
             {
                 LuaRuntimeException.BadArgument(context.State.GetTraceback(), 0, "random");
             }
-            buffer.Span[0] = rand.Next(arg0 + 1);
+            buffer.Span[0] = rand.Next(1, arg0 + 1);
         }
         // Finally, we can call random with two integer arguments, l and u, to get a pseudo-random integer x such that l <= x <= u.
         else
