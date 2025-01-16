@@ -246,7 +246,7 @@ public sealed class MathematicsLibrary
         {
             var arg0 = context.GetArgument<int>(0);
             var arg1 = context.GetArgument<int>(1);
-            if (arg1 <= arg0)
+            if (arg0 < 1 || arg1 <= arg0)
             {
                 LuaRuntimeException.BadArgument(context.State.GetTraceback(), 1, "random");
             }
