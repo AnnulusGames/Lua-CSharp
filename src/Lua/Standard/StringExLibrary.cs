@@ -12,7 +12,7 @@ public sealed class StringExLibrary
         Functions = [
             new("trim", Trim),
             new("trimStart", TrimStart),
-            new("trimStart", TrimEnd),
+            new("trimEnd", TrimEnd),
             new("lowerInvariant", LowerInvariant),
             new("upperInvariant", UpperInvariant),
             new("contains", Contains),
