@@ -23,12 +23,6 @@ public sealed class StringLibrary
             new("reverse", Reverse),
             new("sub", Sub),
             new("upper", Upper),
-            new("lowerInvariant", LowerInvariant),
-            new("upperInvariant", UpperInvariant),
-            new("contains", Contains),
-            new("startsWith", StartsWith),
-            new("endsWith", EndsWith),
-            new("equalsIgnoreCase", EqualsIgnoreCase),
         ];
     }
 
@@ -577,13 +571,6 @@ public sealed class StringLibrary
         return new(1);
     }
 
-    public ValueTask<int> LowerInvariant(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        buffer.Span[0] = s.ToLowerInvariant();
-        return new(1);
-    }
-
     public ValueTask<int> Rep(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
     {
         var s = context.GetArgument<string>(0);
@@ -640,45 +627,6 @@ public sealed class StringLibrary
     {
         var s = context.GetArgument<string>(0);
         buffer.Span[0] = s.ToUpper();
-        return new(1);
-    }
-
-    public ValueTask<int> UpperInvariant(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        buffer.Span[0] = s.ToUpperInvariant();
-        return new(1);
-    }
-    
-    public ValueTask<int> Contains(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        var s2 = context.GetArgument<string>(1);
-        buffer.Span[0] = s.Contains(s2);
-        return new(1);
-    }
-    
-    public ValueTask<int> StartsWith(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        var s2 = context.GetArgument<string>(1);
-        buffer.Span[0] = s.StartsWith(s2);
-        return new(1);
-    }
-    
-    public ValueTask<int> EndsWith(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        var s2 = context.GetArgument<string>(1);
-        buffer.Span[0] = s.EndsWith(s2);
-        return new(1);
-    }
-
-    public ValueTask<int> EqualsIgnoreCase(LuaFunctionExecutionContext context, Memory<LuaValue> buffer, CancellationToken cancellationToken)
-    {
-        var s = context.GetArgument<string>(0);
-        var s2 = context.GetArgument<string>(1);
-        buffer.Span[0] = string.Equals(s, s2, StringComparison.OrdinalIgnoreCase);
         return new(1);
     }
 }
